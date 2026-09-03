@@ -448,7 +448,7 @@ export const COMMITTEE_MEMBERS: CommitteePerson[] = [
   },
   {
     nameEn: 'Haji Moin ud Din',
-    nameUr: 'حاجی معین الدین صاحب',
+    nameUr: 'معین الدین صاحب',
     roleEn: 'President Masjid Committee',
     roleUr: 'صدر انتظامی کمیٹی',
     qualificationEn: 'President & Senior Community Trustee',
