@@ -1,0 +1,6 @@
+{
+  "name": "Jamia Masjid Usman-e-Ghani R.A - North Karachi",
+  "description": "Official community portal of Jamia Masjid Usman-e-Ghani (R.A), ST-11 Sector 5-A/1 North Karachi. Features live Hanafi Karachi prayer timings, Jamaat schedules, Islamic calendar, announcements, and community event gallery.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
