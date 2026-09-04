@@ -6,6 +6,7 @@ import {
   DarseQuranProgram,
   MosqueMediaSettings,
   MosqueVideoItem,
+  IqamahCountdownState,
 } from '../types';
 
 // Coordinates for Usman Ghani (R.A) Masjid, Sector 5-A/1, North Karachi, Pakistan
@@ -666,7 +667,8 @@ export function computeNextPrayer(
     isha: string;
     jumma: string;
   },
-  now = new Date()
+  now = new Date(),
+  adminSettings?: AdminPrayerSettings
 ): {
   nextPrayerId: 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
   nextPrayerNameEn: string;
@@ -676,6 +678,7 @@ export function computeNextPrayer(
   targetDate: Date;
   secondsRemaining: number;
   currentPrayerId: 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+  iqamahCountdown: IqamahCountdownState | null;
 } {
   const currentMinutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   
@@ -724,6 +727,111 @@ export function computeNextPrayer(
 
   const secondsRemaining = Math.max(0, Math.floor((targetDate.getTime() - now.getTime()) / 1000));
 
+  // Compute live Iqamah Countdown & Status
+  // Checks if current time is between any prayer's Adhan and Jamaat, or within 15 mins of Jamaat (congregation window)
+  const isFriday = now.getDay() === 5;
+  const congregationalPrayers = [
+    {
+      id: 'fajr' as const,
+      nameEn: 'Fajr',
+      nameUr: 'فجر',
+      nameAr: 'الفَجْر',
+      adhanStr: adminSettings?.fajrAzan || times.fajr,
+      jamaatStr: jamaatTimes.fajr,
+    },
+    {
+      id: (isFriday ? 'jumma' : 'dhuhr') as 'dhuhr' | 'jumma',
+      nameEn: isFriday ? 'Juma (Friday)' : 'Dhuhr',
+      nameUr: isFriday ? 'جمعۃ المبارک' : 'ظہر',
+      nameAr: isFriday ? 'صَلَاة الجُمُعَة' : 'الظُّهْر',
+      adhanStr: isFriday
+        ? adminSettings?.jummaAzan || '01:00 PM'
+        : adminSettings?.dhuhrAzan || times.dhuhr,
+      jamaatStr: isFriday
+        ? jamaatTimes.jumma || '01:45 PM'
+        : jamaatTimes.dhuhr,
+    },
+    {
+      id: 'asr' as const,
+      nameEn: 'Asr',
+      nameUr: 'عصر',
+      nameAr: 'العَصْر',
+      adhanStr: adminSettings?.asrAzan || times.asr,
+      jamaatStr: jamaatTimes.asr,
+    },
+    {
+      id: 'maghrib' as const,
+      nameEn: 'Maghrib',
+      nameUr: 'مغرب',
+      nameAr: 'المَغْرِب',
+      adhanStr: adminSettings?.maghribAzan || times.maghrib,
+      jamaatStr: jamaatTimes.maghrib,
+    },
+    {
+      id: 'isha' as const,
+      nameEn: 'Isha',
+      nameUr: 'عشاء',
+      nameAr: 'العِشَاء',
+      adhanStr: adminSettings?.ishaAzan || times.isha,
+      jamaatStr: jamaatTimes.isha,
+    },
+  ];
+
+  let activeIqamah: IqamahCountdownState | null = null;
+
+  for (const cp of congregationalPrayers) {
+    const adhanMins = timeStringToMinutes(cp.adhanStr);
+    const jamaatMins = timeStringToMinutes(cp.jamaatStr);
+
+    const adhanDate = new Date(now);
+    adhanDate.setHours(Math.floor(adhanMins / 60), adhanMins % 60, 0, 0);
+
+    const jamaatDate = new Date(now);
+    jamaatDate.setHours(Math.floor(jamaatMins / 60), jamaatMins % 60, 0, 0);
+    if (jamaatDate.getTime() < adhanDate.getTime()) {
+      jamaatDate.setDate(jamaatDate.getDate() + 1);
+    }
+
+    // Grace congregation window (15 mins after Jamaat starts)
+    const congregationEnd = new Date(jamaatDate.getTime() + 15 * 60 * 1000);
+
+    if (now.getTime() >= adhanDate.getTime() && now.getTime() <= congregationEnd.getTime()) {
+      const isTimeForIqamah = now.getTime() >= jamaatDate.getTime();
+      const iqamahSecs = isTimeForIqamah
+        ? 0
+        : Math.max(0, Math.floor((jamaatDate.getTime() - now.getTime()) / 1000));
+      const totalDurationSeconds = Math.max(
+        1,
+        Math.floor((jamaatDate.getTime() - adhanDate.getTime()) / 1000)
+      );
+      const elapsedSeconds = totalDurationSeconds - iqamahSecs;
+      const progressPercent = Math.min(
+        100,
+        Math.max(0, Math.round((elapsedSeconds / totalDurationSeconds) * 100))
+      );
+
+      activeIqamah = {
+        isIqamahPeriod: true,
+        isTimeForIqamah,
+        prayerId: cp.id,
+        prayerNameEn: cp.nameEn,
+        prayerNameUr: cp.nameUr,
+        prayerNameAr: cp.nameAr,
+        adhanTime12h: formatTo12Hour(cp.adhanStr),
+        jamaatTime12h: cp.jamaatStr.includes('AM') || cp.jamaatStr.includes('PM')
+          ? cp.jamaatStr
+          : formatTo12Hour(cp.jamaatStr),
+        secondsRemaining: iqamahSecs,
+        minutesRemaining: Math.floor(iqamahSecs / 60),
+        secondsPart: iqamahSecs % 60,
+        totalDurationSeconds,
+        elapsedSeconds,
+        progressPercent,
+      };
+      break;
+    }
+  }
+
   return {
     nextPrayerId: nextPrayer.id,
     nextPrayerNameEn: nextPrayer.nameEn,
@@ -733,5 +841,58 @@ export function computeNextPrayer(
     targetDate,
     secondsRemaining,
     currentPrayerId: currentPrayer.id,
+    iqamahCountdown: activeIqamah,
+  };
+}
+
+// Helper to create a simulated Iqamah state for instant preview and demonstration
+export function createSimulatedIqamahState(
+  prayerId: 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha' | 'jumma',
+  secondsRemaining: number,
+  times: PrayerTimesApiResponse,
+  jamaatTimes: JamaatTimes,
+  adminSettings?: AdminPrayerSettings
+): IqamahCountdownState {
+  const names: Record<string, { en: string; ur: string; ar: string }> = {
+    fajr: { en: 'Fajr', ur: 'فجر', ar: 'الفَجْر' },
+    dhuhr: { en: 'Dhuhr', ur: 'ظہر', ar: 'الظُّهْر' },
+    jumma: { en: 'Juma (Friday)', ur: 'جمعۃ المبارک', ar: 'صَلَاة الجُمُعَة' },
+    asr: { en: 'Asr', ur: 'عصر', ar: 'العَصْر' },
+    maghrib: { en: 'Maghrib', ur: 'مغرب', ar: 'المَغْرِب' },
+    isha: { en: 'Isha', ur: 'عشاء', ar: 'العِشَاء' },
+  };
+
+  const pName = names[prayerId] || names.asr;
+  const totalDurationSeconds = 20 * 60; // 20 minutes typical window between Azan & Iqamah
+  const isTimeForIqamah = secondsRemaining <= 0;
+  const elapsed = Math.max(0, totalDurationSeconds - secondsRemaining);
+  const progress = Math.min(100, Math.round((elapsed / totalDurationSeconds) * 100));
+
+  let adhanStr = (times as any)[prayerId] || '05:00 PM';
+  let jamaatStr = (jamaatTimes as any)[prayerId] || '05:30 PM';
+  if (prayerId === 'jumma') {
+    adhanStr = adminSettings?.jummaAzan || '01:00 PM';
+    jamaatStr = jamaatTimes.jumma || '01:45 PM';
+  }
+
+  return {
+    isIqamahPeriod: true,
+    isTimeForIqamah,
+    prayerId,
+    prayerNameEn: pName.en,
+    prayerNameUr: pName.ur,
+    prayerNameAr: pName.ar,
+    adhanTime12h: formatTo12Hour(adhanStr),
+    jamaatTime12h:
+      jamaatStr.includes('AM') || jamaatStr.includes('PM')
+        ? jamaatStr
+        : formatTo12Hour(jamaatStr),
+    secondsRemaining: Math.max(0, secondsRemaining),
+    minutesRemaining: Math.floor(Math.max(0, secondsRemaining) / 60),
+    secondsPart: Math.max(0, secondsRemaining) % 60,
+    totalDurationSeconds,
+    elapsedSeconds: elapsed,
+    progressPercent: progress,
+    isSimulated: true,
   };
 }

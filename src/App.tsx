@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Language, PrayerTimesApiResponse, AdminPrayerSettings } from './types';
+import {
+  Language,
+  PrayerTimesApiResponse,
+  AdminPrayerSettings,
+  IqamahCountdownState,
+} from './types';
 import {
   fetchPrayerTimes,
   getLocalKarachiPrayerTimes,
@@ -7,6 +12,7 @@ import {
   calculateJamaatTimes,
   getStoredAdminSettings,
 } from './services/prayerService';
+import { azanAudioEngine } from './services/azanAudioService';
 import { Navbar } from './components/Navbar';
 import { HeroPrayerTimes } from './components/HeroPrayerTimes';
 import { MosqueVideoSection } from './components/MosqueVideoSection';
@@ -20,6 +26,7 @@ import { MonthlyTimetableModal } from './components/MonthlyTimetableModal';
 import { AdminPortalModal } from './components/AdminPortalModal';
 import { AzanPlayerModal } from './components/AzanPlayerModal';
 import { AzanPlayingBanner } from './components/AzanPlayingBanner';
+import { IqamahAlertBanner } from './components/IqamahAlertBanner';
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('ur');
@@ -40,6 +47,7 @@ export default function App() {
   >('fajr');
   const [activeSection, setActiveSection] = useState<string>('prayer-times');
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [simulatedIqamah, setSimulatedIqamah] = useState<IqamahCountdownState | null>(null);
 
   // Load Prayer Times from Ummah API (with graceful fallback)
   const loadTimings = useCallback(async () => {
@@ -61,17 +69,44 @@ export default function App() {
     loadTimings();
   }, [loadTimings]);
 
-  // Live timer tick every second for precision countdown
+  // Live timer tick every second for precision countdown & simulated countdown
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
+
+      setSimulatedIqamah((prev) => {
+        if (!prev) return null;
+        const newSecs = Math.max(0, prev.secondsRemaining - 1);
+        const isTimeForIqamah = newSecs === 0;
+        const elapsed = prev.totalDurationSeconds - newSecs;
+        const progressPercent = Math.min(
+          100,
+          Math.max(0, Math.round((elapsed / prev.totalDurationSeconds) * 100))
+        );
+
+        return {
+          ...prev,
+          secondsRemaining: newSecs,
+          minutesRemaining: Math.floor(newSecs / 60),
+          secondsPart: newSecs % 60,
+          isTimeForIqamah,
+          elapsedSeconds: elapsed,
+          progressPercent,
+        };
+      });
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
   // Compute next prayer & countdown with admin settings overrides
   const jamaatTimes = calculateJamaatTimes(prayerData, adminSettings);
-  const nextPrayer = computeNextPrayer(prayerData, jamaatTimes, currentTime);
+  const nextPrayer = computeNextPrayer(prayerData, jamaatTimes, currentTime, adminSettings);
+
+  // Determine active effective Iqamah state
+  const effectiveIqamah =
+    simulatedIqamah !== null
+      ? simulatedIqamah
+      : nextPrayer.iqamahCountdown || null;
 
   // Format countdown string for navbar
   const formatCountdownPill = (totalSecs: number) => {
@@ -83,6 +118,26 @@ export default function App() {
     }
     return `${mins}m ${secs}s`;
   };
+
+  const navbarCountdownStr = effectiveIqamah?.isIqamahPeriod
+    ? effectiveIqamah.isTimeForIqamah
+      ? language === 'ur'
+        ? 'باجماعت اقامت!'
+        : 'Iqamah Time!'
+      : language === 'ur'
+      ? `اقامت: ${effectiveIqamah.minutesRemaining}m ${effectiveIqamah.secondsPart.toString().padStart(2, '0')}s`
+      : `Iqamah: ${effectiveIqamah.minutesRemaining}m ${effectiveIqamah.secondsPart.toString().padStart(2, '0')}s`
+    : formatCountdownPill(nextPrayer.secondsRemaining);
+
+  const navbarPrayerName = effectiveIqamah?.isIqamahPeriod
+    ? {
+        en: effectiveIqamah.prayerNameEn,
+        ur: effectiveIqamah.prayerNameUr,
+      }
+    : {
+        en: nextPrayer.nextPrayerNameEn,
+        ur: nextPrayer.nextPrayerNameUr,
+      };
 
   const handleNavigate = (sectionId: string) => {
     setActiveSection(sectionId);
@@ -116,14 +171,21 @@ export default function App() {
         onOpenDetails={() => setAzanModalOpen(true)}
       />
 
+      {/* Live Floating Iqamah Banner (Appears when Iqamah is pending or zero-state reached) */}
+      <IqamahAlertBanner
+        language={language}
+        iqamahState={effectiveIqamah}
+        onScrollToPrayerTimes={() => handleNavigate('hero')}
+      />
+
       {/* Navigation Header */}
       <Navbar
         language={language}
         setLanguage={setLanguage}
         nextPrayerInfo={{
-          nameEn: nextPrayer.nextPrayerNameEn,
-          nameUr: nextPrayer.nextPrayerNameUr,
-          countdownStr: formatCountdownPill(nextPrayer.secondsRemaining),
+          nameEn: navbarPrayerName.en,
+          nameUr: navbarPrayerName.ur,
+          countdownStr: navbarCountdownStr,
         }}
         audioMuted={audioMuted}
         setAudioMuted={setAudioMuted}
@@ -150,6 +212,8 @@ export default function App() {
           nextPrayer={nextPrayer}
           audioMuted={audioMuted}
           setAudioMuted={setAudioMuted}
+          simulatedIqamah={simulatedIqamah}
+          onSetSimulatedIqamah={setSimulatedIqamah}
         />
 
         {/* 2. Announcements & Notice Board (Requested feature) */}

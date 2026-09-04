@@ -65,6 +65,24 @@ export interface MosqueMediaSettings {
   videoList?: MosqueVideoItem[];
 }
 
+export interface IqamahCountdownState {
+  isIqamahPeriod: boolean;        // true when between Adhan and Jamaat (+ 15 mins congregation window)
+  isTimeForIqamah: boolean;       // true when countdown reaches 0 (Iqamah start)
+  prayerId: 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha' | 'jumma';
+  prayerNameEn: string;
+  prayerNameUr: string;
+  prayerNameAr: string;
+  adhanTime12h: string;
+  jamaatTime12h: string;
+  secondsRemaining: number;
+  minutesRemaining: number;
+  secondsPart: number;
+  totalDurationSeconds: number;
+  elapsedSeconds: number;
+  progressPercent: number;        // 0% at Adhan -> 100% at Iqamah
+  isSimulated?: boolean;
+}
+
 export interface AdminPrayerSettings {
   fajrJamaat: string;
   dhuhrJamaat: string;
@@ -99,6 +117,8 @@ export interface AdminPrayerSettings {
   defaultAzanVoice?: string;
   autoPlayAzan?: boolean;
   azanVolume?: number;
+  // Iqamah Countdown Settings
+  iqamahAlertSound?: boolean;
 }
 
 export interface PrayerTimeItem {
