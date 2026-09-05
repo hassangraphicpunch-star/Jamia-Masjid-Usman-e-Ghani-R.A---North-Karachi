@@ -483,6 +483,95 @@ class AzanAudioEngine {
       console.warn('Iqamah chime audio context error:', e);
     }
   }
+
+  // Authentic Pakistani Ramadan Sehri & Iftar Siren Alert
+  // Synthesizes the authentic rising & falling air-raid style siren used across Pakistan
+  public playRamadanSiren(type: 'sehri' | 'iftar' = 'iftar', durationSeconds: number = 6) {
+    if (this.state.isMuted) return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+
+      // Master gain for fade in and fade out
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.001, now);
+      masterGain.gain.linearRampToValueAtTime(0.38 * (this.state.volume || 0.85), now + 0.6);
+      masterGain.gain.setValueAtTime(0.38 * (this.state.volume || 0.85), now + durationSeconds - 0.8);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSeconds);
+      masterGain.connect(ctx.destination);
+
+      // Primary siren tone (rising & falling sawtooth/sine)
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'sawtooth';
+
+      // Harmonic siren tone (fifth interval overtone with mechanical resonance)
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'sine';
+
+      // Megaphone acoustic lowpass filter
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(type === 'sehri' ? 1200 : 1500, now);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(masterGain);
+
+      if (type === 'sehri') {
+        // Sehri warning siren: rapid rhythmic pulsing siren (1.4s cycle) warning that time is concluding
+        const cycleTime = 1.4;
+        const cycles = Math.ceil(durationSeconds / cycleTime);
+        for (let i = 0; i < cycles; i++) {
+          const t = now + i * cycleTime;
+          if (t >= now + durationSeconds) break;
+          // Sehri pitch envelope (380Hz -> 680Hz -> 400Hz)
+          osc1.frequency.setValueAtTime(380, t);
+          osc1.frequency.exponentialRampToValueAtTime(680, t + 0.6);
+          osc1.frequency.exponentialRampToValueAtTime(400, Math.min(now + durationSeconds, t + 1.35));
+
+          osc2.frequency.setValueAtTime(570, t);
+          osc2.frequency.exponentialRampToValueAtTime(1020, t + 0.6);
+          osc2.frequency.exponentialRampToValueAtTime(600, Math.min(now + durationSeconds, t + 1.35));
+        }
+      } else {
+        // Iftar siren: deep, resonant long waves celebrating sunset & fast breaking (2.2s cycle)
+        const cycleTime = 2.2;
+        const cycles = Math.ceil(durationSeconds / cycleTime);
+        for (let i = 0; i < cycles; i++) {
+          const t = now + i * cycleTime;
+          if (t >= now + durationSeconds) break;
+          // Iftar pitch envelope (420Hz -> 780Hz -> 440Hz)
+          osc1.frequency.setValueAtTime(420, t);
+          osc1.frequency.exponentialRampToValueAtTime(780, t + 0.95);
+          osc1.frequency.exponentialRampToValueAtTime(440, Math.min(now + durationSeconds, t + 2.15));
+
+          osc2.frequency.setValueAtTime(630, t);
+          osc2.frequency.exponentialRampToValueAtTime(1170, t + 0.95);
+          osc2.frequency.exponentialRampToValueAtTime(660, Math.min(now + durationSeconds, t + 2.15));
+        }
+      }
+
+      osc1.start(now);
+      osc2.start(now);
+
+      osc1.stop(now + durationSeconds + 0.1);
+      osc2.stop(now + durationSeconds + 0.1);
+    } catch (e) {
+      console.warn('Ramadan siren audio context error:', e);
+    }
+  }
+
+  // Convenience helper for Sehri siren
+  public playSehriSiren(durationSeconds: number = 6) {
+    this.playRamadanSiren('sehri', durationSeconds);
+  }
+
+  // Convenience helper for Iftar siren
+  public playIftarSiren(durationSeconds: number = 6) {
+    this.playRamadanSiren('iftar', durationSeconds);
+  }
 }
 
 // Global Singleton

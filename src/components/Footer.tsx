@@ -55,8 +55,8 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onOpenAdmi
 
             <p className="text-xs text-stone-400 leading-relaxed">
               {isUrdu
-                ? 'مرکزی جامع مسجد و دارالقرآن عثمانِ غنی رضی اللہ عنہ، نارتھ کراچی۔ پنج وقتہ باجماعت نماز، حفظ و ناظرہ قرآن اور فلاحی خدمات کا مرکز۔'
-                : 'Center for Islamic worship, Quranic memorization, and welfare activities for the residents of Sector 5-A/1 North Karachi, Sindh.'}
+                ? 'مرکزی جامع مسجد عثمانِ غنی رضی اللہ عنہ، نارتھ کراچی۔ پنج وقتہ باجماعت نماز، اسلامی کتب خانہ اور فلاحی خدمات کا مرکز۔'
+                : 'Center for Islamic worship, authentic Islamic library research, and welfare activities for the residents of Sector 5-A/1 North Karachi, Sindh.'}
             </p>
 
             <div className="pt-1 text-xs text-emerald-400 flex items-center gap-1.5">
@@ -101,7 +101,7 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onOpenAdmi
                   onClick={() => onNavigate('facilities')}
                   className="hover:text-emerald-400 transition-colors"
                 >
-                  {isUrdu ? 'شعبہ حفظ و خدمات' : 'Madrasah Hifz & Facilities'}
+                  {isUrdu ? 'سہولیات و اسلامی کتب خانہ' : 'Facilities & Islamic Library'}
                 </button>
               </li>
               <li>

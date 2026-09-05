@@ -8,12 +8,12 @@ import {
   SunMedium,
   CheckCircle2,
   Phone,
-  ArrowRight,
-  Shield,
-  X,
-  Send,
+  MessageCircle,
+  Copy,
+  Check,
+  MapPin,
 } from 'lucide-react';
-import { Language, FacilityItem } from '../types';
+import { Language } from '../types';
 import { FACILITIES, MOSQUE_INFO } from '../data/mockData';
 
 interface ServicesFacilitiesProps {
@@ -23,19 +23,11 @@ interface ServicesFacilitiesProps {
 export const ServicesFacilities: React.FC<ServicesFacilitiesProps> = ({
   language,
 }) => {
-  const [selectedFacility, setSelectedFacility] = useState<FacilityItem | null>(null);
-  const [admissionModalOpen, setAdmissionModalOpen] = useState(false);
-  const [submittedForm, setSubmittedForm] = useState(false);
-  const [formData, setFormData] = useState({
-    studentName: '',
-    parentName: '',
-    phone: '',
-    course: 'hifz',
-    shift: 'evening',
-    notes: '',
-  });
+  const [copiedWA, setCopiedWA] = useState(false);
 
   const isUrdu = language === 'ur';
+  const whatsappNumber = '03233469424';
+  const whatsappLink = 'https://wa.me/923233469424';
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -56,21 +48,10 @@ export const ServicesFacilities: React.FC<ServicesFacilitiesProps> = ({
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmittedForm(true);
-    setTimeout(() => {
-      setSubmittedForm(false);
-      setAdmissionModalOpen(false);
-      setFormData({
-        studentName: '',
-        parentName: '',
-        phone: '',
-        course: 'hifz',
-        shift: 'evening',
-        notes: '',
-      });
-    }, 2500);
+  const handleCopyWhatsApp = () => {
+    navigator.clipboard.writeText(whatsappNumber);
+    setCopiedWA(true);
+    setTimeout(() => setCopiedWA(false), 2500);
   };
 
   return (
@@ -84,13 +65,13 @@ export const ServicesFacilities: React.FC<ServicesFacilitiesProps> = ({
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-2">
             <Building2 className="w-3.5 h-3.5" />
-            <span>{isUrdu ? 'جامع مسجد کے اہم شعبہ جات' : 'Mosque Facilities & Services'}</span>
+            <span>{isUrdu ? 'جامع مسجد کے اہم شعبہ جات و خدمات' : 'Mosque Facilities & Services'}</span>
           </div>
 
           <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
             {isUrdu ? (
               <span className="font-urdu text-3xl sm:text-5xl text-amber-300">
-                خدمات، سہولیات و دارالقرآن اکیڈمی
+                خدمات، سہولیات و کمیونٹی فلاحی نظام
               </span>
             ) : (
               <span>Community Services & Facilities</span>
@@ -99,8 +80,8 @@ export const ServicesFacilities: React.FC<ServicesFacilitiesProps> = ({
 
           <p className="text-xs sm:text-sm text-stone-400 mt-2">
             {isUrdu
-              ? 'نمازیوں اور نارتھ کراچی کے باسیوں کے لیے کشادہ ہالز، دارالقرآن، وضو خانہ، نمازِ جنازہ کا اہتمام اور 10 KV سولر پاور'
-              : 'Serving the Sector 5-A/1 community with spacious worship spaces, certified Quranic education, clean wudu facilities, and 10 KV solar power backup.'}
+              ? 'اہل علاقہ اور نمازیوں کے لیے کشادہ ہالز، وضو خانہ، اسلامی کتب خانہ، فلٹریشن واٹر پلانٹ، نمازِ جنازہ کا اہتمام اور 10 KV سولر پاور'
+              : 'Serving the Sector 5-A/1 North Karachi community with spacious prayer halls, clean wudu facilities, Islamic research library, RO water plant, and 10 KV solar energy setup.'}
           </p>
         </div>
 
@@ -144,216 +125,95 @@ export const ServicesFacilities: React.FC<ServicesFacilitiesProps> = ({
                 </ul>
               </div>
 
-              {/* Action Button for specific services */}
-              {facility.id === 'fac-2' ? (
-                <button
-                  id="btn-apply-madrasah"
-                  onClick={() => setAdmissionModalOpen(true)}
-                  className="w-full mt-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all"
-                >
-                  <BookOpen className="w-3.5 h-3.5 fill-current" />
-                  <span>{isUrdu ? 'داخلہ فارم پر کریں' : 'Apply for Madrasah Admission'}</span>
-                </button>
-              ) : (
-                <div className="pt-2 text-[11px] text-stone-400 flex items-center justify-between">
-                  <span>{MOSQUE_INFO.addressEn.split(',')[0]}</span>
-                  <span className="text-emerald-400 font-semibold">
-                    {isUrdu ? 'سہولت دستیاب ہے' : 'Active Facility'}
-                  </span>
-                </div>
-              )}
+              <div className="pt-3 border-t border-stone-800/60 text-[11px] text-stone-400 flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-emerald-400" />
+                  <span>ST-11 Sector 5-A/1</span>
+                </span>
+                <span className="text-emerald-400 font-semibold">
+                  {isUrdu ? 'فعال و دستیاب' : 'Active Facility'}
+                </span>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Emergency & Janazah Contact Help Strip */}
-        <div className="mt-10 rounded-2xl bg-gradient-to-r from-stone-900 via-emerald-950/60 to-stone-900 border border-emerald-700/40 p-5 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4 text-center md:text-left">
-            <div className="w-12 h-12 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0">
-              <Phone className="w-6 h-6 text-rose-400 animate-pulse" />
+        {/* OFFICIAL WHATSAPP & MOSQUE CONTACT BANNER */}
+        <div
+          id="mosque-whatsapp-contact-card"
+          className="mt-10 rounded-2xl bg-gradient-to-r from-emerald-950 via-stone-900 to-teal-950 border border-emerald-500/50 p-6 sm:p-7 shadow-2xl relative overflow-hidden"
+        >
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4 text-center lg:text-left">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center shrink-0 shadow-lg">
+                <MessageCircle className="w-8 h-8 text-emerald-400 animate-bounce" />
+              </div>
+              <div>
+                <div className="flex items-center justify-center lg:justify-start gap-2 flex-wrap">
+                  <h3 className="text-lg sm:text-xl font-bold text-white">
+                    {isUrdu ? 'مسجد عثمانِ غنی کا باضابطہ واٹس ایپ نمبر' : 'Official Mosque WhatsApp Desk'}
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-[11px] font-bold">
+                    {isUrdu ? '24/7 فعال' : 'Active 24/7'}
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-stone-300 mt-1">
+                  {isUrdu
+                    ? 'نماز کے اوقات، اعلانات، نمازِ جنازہ، مسائل یا فلاحی تعاون کے لیے براہ راست واٹس ایپ پر رابطہ کریں:'
+                    : 'For prayer schedules, notices, Janazah coordination, questions, or charitable donations, connect via WhatsApp:'}
+                </p>
+                <div className="mt-2 inline-flex items-center gap-2 bg-stone-950/80 px-3.5 py-1.5 rounded-xl border border-emerald-700/60 font-mono text-base font-black text-amber-300">
+                  <span>{whatsappNumber}</span>
+                  <span className="text-xs text-stone-400">({MOSQUE_INFO.phone})</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <h4 className="text-base sm:text-lg font-bold text-white">
-                {isUrdu ? 'نمازِ جنازہ کا اہتمام و رابطہ' : 'Janazah Prayer Arrangement & Mosque Contact'}
-              </h4>
-              <p className="text-xs text-stone-400">
-                {isUrdu
-                  ? 'نمازِ جنازہ کے وقت اور اعلان کے لیے نگران مسجد یا دفتر سے فوری رابطہ کریں'
-                  : 'For Janazah prayer scheduling, announcements, and coordination in Sector 5-A/1'}
-              </p>
+
+            {/* Action Buttons: Chat on WhatsApp & Copy Number */}
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              <a
+                id="btn-open-whatsapp-chat"
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xl shadow-emerald-950/60 transition-transform hover:scale-105"
+              >
+                <MessageCircle className="w-4 h-4 fill-current" />
+                <span>{isUrdu ? 'واٹس ایپ پر میسج بھیجیں' : 'Chat on WhatsApp'}</span>
+              </a>
+
+              <button
+                id="btn-copy-whatsapp-number"
+                onClick={handleCopyWhatsApp}
+                className="px-4 py-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700 text-xs sm:text-sm font-semibold flex items-center gap-2 transition-colors"
+                title="Copy WhatsApp number"
+              >
+                {copiedWA ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span className="text-emerald-300">{isUrdu ? 'کاپی ہو گیا!' : 'Copied!'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 text-stone-400" />
+                    <span>{isUrdu ? 'نمبر کاپی کریں' : 'Copy Number'}</span>
+                  </>
+                )}
+              </button>
+
+              <a
+                id="btn-call-phone-masjid"
+                href={`tel:${MOSQUE_INFO.phone}`}
+                className="p-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700 text-xs transition-colors"
+                title="Call Mosque Landline"
+              >
+                <Phone className="w-4 h-4 text-emerald-400" />
+              </a>
             </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <a
-              href={`tel:${MOSQUE_INFO.phone}`}
-              className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700 text-xs font-bold font-mono flex items-center gap-2"
-            >
-              <Phone className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{MOSQUE_INFO.phone}</span>
-            </a>
-
-            <a
-              href={`https://wa.me/${MOSQUE_INFO.whatsapp.replace(/[^0-9]/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-950/50"
-            >
-              <span>{isUrdu ? 'واٹس ایپ رابطہ' : 'WhatsApp Desk'}</span>
-            </a>
           </div>
         </div>
 
       </div>
-
-      {/* MADRASAH ADMISSION FORM MODAL */}
-      {admissionModalOpen && (
-        <div
-          id="madrasah-admission-modal"
-          className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
-        >
-          <div className="bg-stone-900 border border-amber-500/50 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            
-            {/* Header */}
-            <div className="p-5 bg-gradient-to-r from-emerald-950 to-stone-900 border-b border-stone-800 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
-                  <BookOpen className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">
-                    {isUrdu ? 'مدرسہ عثمان غنی - آن لائن رجسٹریشن' : 'Madrasah Usman-e-Ghani Online Admission'}
-                  </h3>
-                  <p className="text-xs text-stone-400">
-                    Hifz-ul-Quran & Nazra Tajweed Session 2026
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setAdmissionModalOpen(false)}
-                className="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Form Body */}
-            {submittedForm ? (
-              <div className="p-8 text-center space-y-3">
-                <div className="w-14 h-14 rounded-full bg-emerald-900/60 border border-emerald-500 text-emerald-300 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <h4 className="text-lg font-bold text-white">
-                  {isUrdu ? 'درخواست کامیابی سے موصول ہو گئی!' : 'Application Submitted Successfully!'}
-                </h4>
-                <p className="text-xs text-stone-300">
-                  {isUrdu
-                    ? 'مسجد کا شعبہ تعلیم جلد آپ سے رابطہ کرے گا اور انٹرویو کا وقت طے ہوگا۔ جزاکم اللہ۔'
-                    : 'The Maktab administration will contact you shortly to schedule an introductory Tajweed assessment.'}
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleFormSubmit} className="p-5 sm:p-6 space-y-3.5 text-xs">
-                <div>
-                  <label className="block text-stone-300 font-semibold mb-1">
-                    {isUrdu ? 'طالب علم / طالبہ کا نام' : 'Student Full Name'} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.studentName}
-                    onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
-                    placeholder={isUrdu ? 'نام درج کریں...' : 'Enter student name...'}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-white placeholder-stone-600 focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-stone-300 font-semibold mb-1">
-                    {isUrdu ? 'والد / سرپرست کا نام' : 'Father / Guardian Name'} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.parentName}
-                    onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
-                    placeholder={isUrdu ? 'والد کا نام...' : 'Father / Guardian name...'}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-white placeholder-stone-600 focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-stone-300 font-semibold mb-1">
-                    {isUrdu ? 'واٹس ایپ یا موبائل نمبر' : 'WhatsApp / Mobile Number'} *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="0300-XXXXXXX"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 font-mono"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-stone-300 font-semibold mb-1">
-                      {isUrdu ? 'شعبہ منتخب کریں' : 'Program'}
-                    </label>
-                    <select
-                      value={formData.course}
-                      onChange={(e) => setFormData({ ...formData, course: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-stone-950 border border-stone-800 text-white focus:outline-none focus:border-amber-400"
-                    >
-                      <option value="hifz">{isUrdu ? 'حفظ القرآن الکریم' : 'Hifz-ul-Quran'}</option>
-                      <option value="nazra">{isUrdu ? 'ناظرہ مع تجوید' : 'Nazra with Tajweed'}</option>
-                      <option value="qaida">{isUrdu ? 'نورانی قاعدہ و بنیادی دینیات' : 'Noorani Qaida & Basics'}</option>
-                      <option value="adults">{isUrdu ? 'بالغان تجوید کلاس' : 'Adult Quran Class'}</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-stone-300 font-semibold mb-1">
-                      {isUrdu ? 'اوقات / شفٹ' : 'Shift'}
-                    </label>
-                    <select
-                      value={formData.shift}
-                      onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-stone-950 border border-stone-800 text-white focus:outline-none focus:border-amber-400"
-                    >
-                      <option value="morning">{isUrdu ? 'صبح (8:00 تا 11:30)' : 'Morning (8:00 - 11:30 AM)'}</option>
-                      <option value="evening">{isUrdu ? 'شام (4:30 تا 7:30)' : 'Evening (4:30 - 7:30 PM)'}</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-stone-300 font-semibold mb-1">
-                    {isUrdu ? 'علاقہ / ایڈریس نارتھ کراچی' : 'Address / Sector in North Karachi'}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="e.g. Sector 5-A/1 or nearby area"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-white placeholder-stone-600 focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg hover:brightness-110 transition-all mt-2"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>{isUrdu ? 'درخواست جمع کروائیں' : 'Submit Admission Application'}</span>
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
     </section>
   );
 };

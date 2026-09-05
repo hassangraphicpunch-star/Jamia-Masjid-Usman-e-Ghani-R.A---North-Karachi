@@ -12,9 +12,11 @@ import {
   MapPin,
   Calendar,
   ShieldCheck,
+  Moon,
 } from 'lucide-react';
 import { Language } from '../types';
 import { MOSQUE_INFO } from '../data/mockData';
+import { getStoredNotifications, getReadNotificationIds } from '../services/notificationService';
 
 interface NavbarProps {
   language: Language;
@@ -30,6 +32,8 @@ interface NavbarProps {
   activeSection: string;
   onOpenAdminModal?: () => void;
   onOpenAzanModal?: () => void;
+  onOpenNotifications?: () => void;
+  onOpenRamadanModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -42,9 +46,34 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeSection,
   onOpenAdminModal,
   onOpenAzanModal,
+  onOpenNotifications,
+  onOpenRamadanModal,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unreadNotifsCount, setUnreadNotifsCount] = useState<number>(0);
+
+  const checkUnread = () => {
+    try {
+      const all = getStoredNotifications().filter((n) => n.isActive);
+      const read = getReadNotificationIds();
+      const count = all.filter((n) => !read.includes(n.id)).length;
+      setUnreadNotifsCount(count);
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    checkUnread();
+    const handleUpd = () => checkUnread();
+    window.addEventListener('mosque_notifications_updated', handleUpd);
+    window.addEventListener('mosque_notifications_read_updated', handleUpd);
+    return () => {
+      window.removeEventListener('mosque_notifications_updated', handleUpd);
+      window.removeEventListener('mosque_notifications_read_updated', handleUpd);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -184,6 +213,36 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
 
+            {/* Ramadan 2027 Quick Calendar Button */}
+            {onOpenRamadanModal && (
+              <button
+                id="btn-nav-ramadan-calendar"
+                onClick={onOpenRamadanModal}
+                className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all shadow-sm"
+                title="Ramadan 2027 Calendar (30 Days)"
+              >
+                <Moon className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isUrdu ? 'رمضان ۲۰۲۷ء' : 'Ramadan 2027'}</span>
+              </button>
+            )}
+
+            {/* Notifications Bell Button */}
+            {onOpenNotifications && (
+              <button
+                id="btn-nav-notifications"
+                onClick={onOpenNotifications}
+                className="relative p-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-300 border border-stone-800 transition-colors"
+                title={isUrdu ? 'اعلانات و الرٹس' : 'Notifications & Alerts'}
+              >
+                <Bell className="w-4 h-4 text-amber-300" />
+                {unreadNotifsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-[10px] font-bold text-white flex items-center justify-center animate-pulse">
+                    {unreadNotifsCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Admin Portal Button */}
             {onOpenAdminModal && (
               <button
@@ -293,6 +352,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span>{isUrdu ? 'صدائے اذان و دعائے بعد اذان' : 'Adhan Voice & Dua'}</span>
                 </div>
                 <span className="text-emerald-400 text-xs">Play ›</span>
+              </button>
+            )}
+
+            {onOpenNotifications && (
+              <button
+                onClick={() => {
+                  onOpenNotifications();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-semibold text-amber-200 bg-stone-900 border border-stone-800 flex items-center justify-between mt-1"
+              >
+                <div className="flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-amber-300" />
+                  <span>{isUrdu ? 'اعلانات و الرٹس' : 'Notifications & Alerts'}</span>
+                </div>
+                {unreadNotifsCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold">
+                    {unreadNotifsCount}
+                  </span>
+                )}
               </button>
             )}
 

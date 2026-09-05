@@ -312,6 +312,16 @@ export const DEFAULT_ADMIN_SETTINGS: AdminPrayerSettings = {
   jummaKhateebEn: 'Maulana Younus Mansori (Khateeb-e-Masjid)',
   jummaKhateebUr: 'حضرت مولانا یونس منصوری صاحب (خطیب جامع مسجد)',
   ishraqTime: '+12 mins after Tuloo',
+  // Chasht (Salat al-Duha) & Zawal (Makruh) Times
+  chashtTime: '08:45 AM - 11:30 AM',
+  zawalTime: '12:12 PM - 12:28 PM',
+  // Ramadan Timing and Demo Settings (Displayed only in Ramadan or Demo Mode)
+  ramadanDemoMode: false,
+  ramadanSehriTime: '05:00 AM',
+  ramadanIftarTime: '06:45 PM',
+  ramadanRozaNo: 1,
+  ramadanSirenSound: true,
+  whatsappNumber: '03233469424',
   showAlertBanner: false,
   alertBannerEn: '',
   alertBannerUr: '',
@@ -320,6 +330,7 @@ export const DEFAULT_ADMIN_SETTINGS: AdminPrayerSettings = {
   defaultAzanVoice: 'makkah',
   autoPlayAzan: true,
   azanVolume: 0.85,
+  iqamahAlertSound: true,
 };
 
 // UmmahAPI endpoint provided in the prompt
@@ -377,12 +388,18 @@ export function getOffsetTime(timeStr: string, offsetMinutes: number): string {
   return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
 }
 
-// Storage Key
+// Storage Keys for Permanent Live Portal Persistence
 const STORAGE_KEY = 'mosque_admin_prayer_settings';
+const BACKUP_STORAGE_KEY = 'mosque_admin_live_backup';
 
 export function getStoredAdminSettings(): AdminPrayerSettings {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    let saved = localStorage.getItem(STORAGE_KEY);
+    // If primary key is empty or corrupted, fallback to live backup key
+    if (!saved) {
+      saved = localStorage.getItem(BACKUP_STORAGE_KEY);
+    }
+
     if (saved) {
       const parsed = JSON.parse(saved);
       const merged: AdminPrayerSettings = {
@@ -401,6 +418,18 @@ export function getStoredAdminSettings(): AdminPrayerSettings {
       if (!merged.jummaKhutbah) merged.jummaKhutbah = '01:35 PM';
       if (!merged.jummaJamaat) merged.jummaJamaat = '01:45 PM';
       if (!merged.jummaKhateebUr) merged.jummaKhateebUr = 'حضرت مولانا یونس منصوری صاحب (خطیب جامع مسجد)';
+
+      // Fill in defaults for Chasht & Zawal if missing in legacy saved state
+      if (!merged.chashtTime) merged.chashtTime = '08:45 AM - 11:30 AM';
+      if (!merged.zawalTime) merged.zawalTime = '12:12 PM - 12:28 PM';
+
+      // Fill in defaults for Ramadan if missing
+      if (merged.ramadanDemoMode === undefined) merged.ramadanDemoMode = false;
+      if (!merged.ramadanSehriTime) merged.ramadanSehriTime = '05:00 AM';
+      if (!merged.ramadanIftarTime) merged.ramadanIftarTime = '06:45 PM';
+      if (!merged.ramadanRozaNo) merged.ramadanRozaNo = 1;
+      if (merged.ramadanSirenSound === undefined) merged.ramadanSirenSound = true;
+      if (!merged.whatsappNumber) merged.whatsappNumber = '03233469424';
 
       // Fill in defaults for video options if missing
       if (!merged.mediaSettings?.featuredVideoUrl) {
@@ -430,9 +459,28 @@ export function getStoredAdminSettings(): AdminPrayerSettings {
   return DEFAULT_ADMIN_SETTINGS;
 }
 
+// Save settings to permanent browser storage and broadcast live event to all tabs/components
 export function saveAdminSettings(settings: AdminPrayerSettings): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    const updatedSettings: AdminPrayerSettings = {
+      ...settings,
+      lastSavedTimestamp: new Date().toISOString(),
+    };
+    const serialized = JSON.stringify(updatedSettings);
+    
+    // Save to primary storage
+    localStorage.setItem(STORAGE_KEY, serialized);
+    // Save to permanent backup storage for safety
+    localStorage.setItem(BACKUP_STORAGE_KEY, serialized);
+
+    // Broadcast live event across the app for instantaneous synchronization
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('mosque_admin_settings_updated', {
+          detail: updatedSettings,
+        })
+      );
+    }
   } catch (e) {
     console.error('Error saving admin prayer settings', e);
   }
@@ -441,10 +489,113 @@ export function saveAdminSettings(settings: AdminPrayerSettings): void {
 export function resetAdminSettings(): AdminPrayerSettings {
   try {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(BACKUP_STORAGE_KEY);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('mosque_admin_settings_updated', {
+          detail: DEFAULT_ADMIN_SETTINGS,
+        })
+      );
+    }
   } catch (e) {
     console.error('Error resetting admin prayer settings', e);
   }
   return DEFAULT_ADMIN_SETTINGS;
+}
+
+// Compute daily Chasht (Duha / صلاۃ الضحیٰ) time based on sunrise & zawal
+export function getComputedChashtTime(
+  sunriseStr: string,
+  dhuhrStr: string,
+  customSetting?: string
+): { start12h: string; end12h: string; displayStr: string } {
+  if (customSetting && customSetting.trim().length > 3) {
+    const parts = customSetting.split('-');
+    return {
+      start12h: parts[0]?.trim() || '08:45 AM',
+      end12h: parts[1]?.trim() || '11:30 AM',
+      displayStr: customSetting,
+    };
+  }
+
+  // Chasht begins ~45-60 mins after sunrise, ends ~20 mins before Dhuhr (Zawal onset)
+  const sunriseMins = timeStringToMinutes(sunriseStr);
+  const dhuhrMins = timeStringToMinutes(dhuhrStr);
+
+  const chashtStartMins = sunriseMins + 45;
+  const chashtEndMins = Math.max(chashtStartMins + 60, dhuhrMins - 20);
+
+  const formatMins = (mins: number) => {
+    const h = Math.floor(mins / 60) % 24;
+    const m = mins % 60;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+  };
+
+  const start12h = formatMins(chashtStartMins);
+  const end12h = formatMins(chashtEndMins);
+
+  return {
+    start12h,
+    end12h,
+    displayStr: `${start12h} - ${end12h}`,
+  };
+}
+
+// Compute daily Zawal (وقتِ زوال / استواء الشمس / مکروہ وقت برائے نماز)
+// Fiqh rule: Peak sun meridian. Offering Salah is strictly Makruh ~15 mins before Dhuhr
+export function getComputedZawalTime(
+  dhuhrStr: string,
+  customSetting?: string
+): { zawalStart12h: string; zawalEnd12h: string; displayStr: string } {
+  if (customSetting && customSetting.trim().length > 3) {
+    const parts = customSetting.split('-');
+    return {
+      zawalStart12h: parts[0]?.trim() || '12:12 PM',
+      zawalEnd12h: parts[1]?.trim() || '12:28 PM',
+      displayStr: customSetting,
+    };
+  }
+
+  const dhuhrMins = timeStringToMinutes(dhuhrStr);
+  const zawalStartMins = Math.max(0, dhuhrMins - 16);
+  const zawalEndMins = dhuhrMins;
+
+  const formatMins = (mins: number) => {
+    const h = Math.floor(mins / 60) % 24;
+    const m = mins % 60;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+  };
+
+  const zawalStart12h = formatMins(zawalStartMins);
+  const zawalEnd12h = formatMins(zawalEndMins);
+
+  return {
+    zawalStart12h,
+    zawalEnd12h,
+    displayStr: `${zawalStart12h} - ${zawalEnd12h}`,
+  };
+}
+
+// Check whether Ramadan Sehri & Iftar should be displayed:
+// Strict user requirement: "These should be displayed only during Ramadan and in Demo Mode."
+export function isRamadanDisplayActive(
+  adminSettings?: AdminPrayerSettings,
+  hijriDate?: { month?: { en?: string; ar?: string } }
+): boolean {
+  if (adminSettings?.ramadanDemoMode) return true;
+
+  if (hijriDate?.month) {
+    const en = (hijriDate.month.en || '').toLowerCase();
+    const ar = hijriDate.month.ar || '';
+    if (en.includes('ramadan') || ar.includes('رمضان')) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // Standard Jamaat calculation based on Jamia Masjid Usman-e-Ghani customs and Admin Settings
@@ -484,15 +635,64 @@ export function calculateJamaatTimes(
     maghribJamaat = getOffsetTime(athanTimes.maghrib, mins);
   }
 
+  // Chasht (Salat al-Duha): Starts ~25m after sunrise, continues until ~25m before Zawal
+  let chashtTime = settings.chashtTime;
+  if (!chashtTime) {
+    const chashtStart = getOffsetTime(athanTimes.sunrise, 25);
+    const chashtEnd = getOffsetTime(athanTimes.dhuhr, -45);
+    chashtTime = `${chashtStart} - ${chashtEnd}`;
+  }
+
+  // Zawal (Istiwa / Makrooh period): ~15 mins before Dhuhr until Dhuhr Adhan
+  let zawalTime = settings.zawalTime;
+  if (!zawalTime) {
+    const zawalStart = getOffsetTime(athanTimes.dhuhr, -18);
+    const zawalEnd = formatTo12Hour(athanTimes.dhuhr);
+    zawalTime = `${zawalStart} - ${zawalEnd}`;
+  }
+
   return {
     fajr: fajrJamaat || '05:40 AM',
     sunrise: formatTo12Hour(athanTimes.sunrise),
     ishraq: ishraqTime,
+    chasht: chashtTime,
+    zawal: zawalTime,
     dhuhr: settings.dhuhrJamaat || '01:30 PM',
     asr: settings.asrJamaat || '05:30 PM',
     maghrib: maghribJamaat,
     isha: settings.ishaJamaat || '08:45 PM',
     jumma: settings.jummaJamaat || '01:45 PM',
+  };
+}
+
+// Evaluate whether the current time is inside the prohibited Zawal window
+export function evaluateZawalStatus(zawalTimeStr: string, now = new Date()): {
+  isInsideZawal: boolean;
+  minutesRemainingUntilZawal: number;
+  minutesRemainingInZawal: number;
+  zawalStart12h: string;
+  zawalEnd12h: string;
+} {
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  
+  // parse "12:12 PM - 12:28 PM" or fallback "12:15 PM - 12:30 PM"
+  const parts = (zawalTimeStr || '12:15 PM - 12:30 PM').split('-').map((s) => s.trim());
+  const startStr = parts[0] || '12:15 PM';
+  const endStr = parts[1] || '12:30 PM';
+  
+  const startM = timeStringToMinutes(startStr);
+  const endM = timeStringToMinutes(endStr);
+  
+  const isInside = currentMinutes >= startM && currentMinutes < endM;
+  const minsUntil = startM > currentMinutes ? startM - currentMinutes : 0;
+  const minsInZawalLeft = isInside ? endM - currentMinutes : 0;
+  
+  return {
+    isInsideZawal: isInside,
+    minutesRemainingUntilZawal: minsUntil,
+    minutesRemainingInZawal: minsInZawalLeft,
+    zawalStart12h: startStr,
+    zawalEnd12h: endStr,
   };
 }
 

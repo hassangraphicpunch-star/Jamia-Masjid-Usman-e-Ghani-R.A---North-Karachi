@@ -19,6 +19,7 @@ interface MonthlyTimetableModalProps {
   onClose: () => void;
   language: Language;
   adminSettings?: AdminPrayerSettings;
+  onOpenRamadanCalendar?: () => void;
 }
 
 export const MonthlyTimetableModal: React.FC<MonthlyTimetableModalProps> = ({
@@ -26,6 +27,7 @@ export const MonthlyTimetableModal: React.FC<MonthlyTimetableModalProps> = ({
   onClose,
   language,
   adminSettings,
+  onOpenRamadanCalendar,
 }) => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const isUrdu = language === 'ur';
@@ -176,6 +178,21 @@ export const MonthlyTimetableModal: React.FC<MonthlyTimetableModalProps> = ({
               </button>
             ))}
           </div>
+
+          {onOpenRamadanCalendar && (
+            <button
+              id="btn-switch-to-ramadan-calendar"
+              onClick={() => {
+                onClose();
+                onOpenRamadanCalendar();
+              }}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 flex items-center gap-1.5 shrink-0 transition-colors shadow-sm"
+              title="Open full Ramadan 2027 Schedule"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>{isUrdu ? 'تقویمِ رمضان المبارک 2027' : 'Ramadan 2027 Calendar'}</span>
+            </button>
+          )}
         </div>
 
         {/* Timetable Table Body */}

@@ -4,6 +4,8 @@ export interface JamaatTimes {
   fajr: string;
   sunrise: string;
   ishraq: string;
+  chasht?: string;
+  zawal?: string;
   dhuhr: string;
   asr: string;
   maghrib: string;
@@ -98,6 +100,18 @@ export interface AdminPrayerSettings {
   jummaKhateebEn?: string;
   jummaKhateebUr?: string;
   ishraqTime: string;
+  // Chasht (Duha) and Zawal Time Settings
+  chashtTime?: string;      // Daily Chasht (Salat al-Duha) Time (e.g. '08:45 AM - 11:30 AM')
+  zawalTime?: string;       // Daily Zawal (Makruh) Time (e.g. '12:12 PM - 12:28 PM')
+  // Ramadan Timing and Demo Settings
+  ramadanDemoMode?: boolean;      // Toggle Ramadan demo mode
+  ramadanSehriTime?: string;     // Sehri ends / Subh Sadiq (e.g. '05:00 AM')
+  ramadanIftarTime?: string;     // Iftar time / Maghrib (e.g. '06:45 PM')
+  ramadanRozaNo?: number;        // Roza / Fast number (e.g. 1)
+  ramadanSirenSound?: boolean;   // Sehri/Iftar sound siren alert enabled
+  // WhatsApp & Contact settings
+  whatsappNumber?: string;       // e.g. '03233469424'
+  lastSavedTimestamp?: string;   // ISO timestamp of last permanent live portal save
   // Azan overrides (optional, empty means use API / astronomical Karachi calculations)
   fajrAzan?: string;
   sunriseTime?: string;
@@ -228,3 +242,58 @@ export interface ZikrItem {
   virtueUr: string;
   targetCount: number;
 }
+
+export interface DonationReceipt {
+  receiptNo: string;              // e.g. "JMUG-REC-2026-7842"
+  donorName: string;
+  donorPhone: string;
+  donorEmail?: string;
+  fundCategoryEn: string;
+  fundCategoryUr: string;
+  amount: number;
+  amountInWordsEn: string;
+  amountInWordsUr: string;
+  paymentMethodEn: string;
+  paymentMethodUr: string;
+  transactionRef: string;
+  date: string;
+  time: string;
+  notes?: string;
+  status: 'completed' | 'verified';
+  whatsappShared?: boolean;
+}
+
+export interface AppNotification {
+  id: string;
+  titleEn: string;
+  titleUr: string;
+  messageEn: string;
+  messageUr: string;
+  type: 'prayer' | 'iqamah' | 'ramadan' | 'announcement' | 'general' | 'janazah';
+  category?: string;
+  timestamp: string;
+  timeAgoUr: string;
+  timeAgoEn: string;
+  isRead: boolean;
+  isActive?: boolean;
+  priority?: 'high' | 'normal' | 'medium' | 'low';
+  linkTarget?: string;
+}
+
+export interface QuranHadithItem {
+  id: string;
+  type: 'ayah' | 'hadith';
+  category: 'prayer' | 'sadaqah' | 'patience' | 'parents' | 'character' | 'zikr' | 'quran' | 'virtue_usman';
+  categoryLabelEn: string;
+  categoryLabelUr: string;
+  arabic: string;
+  translationUr: string;
+  translationEn: string;
+  referenceUr: string;
+  referenceEn: string;
+  narratorUr?: string;
+  narratorEn?: string;
+  themeBadgeUr: string;
+  themeBadgeEn: string;
+}
+

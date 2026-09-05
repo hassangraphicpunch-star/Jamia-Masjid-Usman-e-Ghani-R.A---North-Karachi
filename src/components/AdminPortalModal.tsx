@@ -682,6 +682,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                   </div>
 
                   {/* Sunrise & Ishraq Card */}
+                  {/* Ishraq Card */}
                   <div className="p-3.5 rounded-xl bg-stone-950/90 border border-amber-900/40 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-amber-300 uppercase tracking-wide">
@@ -702,6 +703,56 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         onChange={(e) => setSettings({ ...settings, ishraqTime: e.target.value })}
                         placeholder="+12 mins after Tuloo"
                         className="w-full px-3 py-2 bg-stone-900 border border-amber-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-amber-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Chasht (Duha) Card */}
+                  <div className="p-3.5 rounded-xl bg-stone-950/90 border border-teal-900/40 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-teal-300 uppercase tracking-wide">
+                        {isUrdu ? 'صلوٰۃ الضحیٰ (چاشت)' : 'Chasht (Duha) Prayer'}
+                      </span>
+                      <span className="text-[11px] px-2 py-0.5 rounded bg-teal-950 text-teal-400 border border-teal-800">
+                        {isUrdu ? 'نفل' : 'Duha'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-stone-400 mb-1">
+                        {isUrdu ? 'چاشت کا وقت (Chasht Timing Range):' : 'Chasht Timing Range:'}
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.chashtTime || '08:45 AM - 11:30 AM'}
+                        onChange={(e) => setSettings({ ...settings, chashtTime: e.target.value })}
+                        placeholder="08:45 AM - 11:30 AM"
+                        className="w-full px-3 py-2 bg-stone-900 border border-teal-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-teal-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Zawal Prohibited Window Card */}
+                  <div className="p-3.5 rounded-xl bg-stone-950/90 border border-rose-900/40 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-rose-300 uppercase tracking-wide">
+                        {isUrdu ? 'وقتِ زوال / استواء (مکروہ وقت)' : 'Zawal Prohibited Window'}
+                      </span>
+                      <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800 font-bold">
+                        {isUrdu ? 'ممنوعہ وقت' : 'Makrooh'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-stone-400 mb-1">
+                        {isUrdu ? 'زوال کا وقت (Zawal Window):' : 'Zawal Timing Window:'}
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.zawalTime || '12:12 PM - 12:28 PM'}
+                        onChange={(e) => setSettings({ ...settings, zawalTime: e.target.value })}
+                        placeholder="12:12 PM - 12:28 PM"
+                        className="w-full px-3 py-2 bg-stone-900 border border-rose-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-rose-400"
                       />
                     </div>
                   </div>

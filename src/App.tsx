@@ -27,6 +27,9 @@ import { AdminPortalModal } from './components/AdminPortalModal';
 import { AzanPlayerModal } from './components/AzanPlayerModal';
 import { AzanPlayingBanner } from './components/AzanPlayingBanner';
 import { IqamahAlertBanner } from './components/IqamahAlertBanner';
+import { NotificationBanner } from './components/NotificationBanner';
+import { NotificationModal } from './components/NotificationModal';
+import { RamadanCalendarModal } from './components/RamadanCalendarModal';
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('ur');
@@ -40,7 +43,9 @@ export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [audioMuted, setAudioMuted] = useState<boolean>(false);
   const [monthlyModalOpen, setMonthlyModalOpen] = useState<boolean>(false);
+  const [ramadanModalOpen, setRamadanModalOpen] = useState<boolean>(false);
   const [adminModalOpen, setAdminModalOpen] = useState<boolean>(false);
+  const [notificationModalOpen, setNotificationModalOpen] = useState<boolean>(false);
   const [azanModalOpen, setAzanModalOpen] = useState<boolean>(false);
   const [selectedAzanPrayer, setSelectedAzanPrayer] = useState<
     'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha'
@@ -68,6 +73,23 @@ export default function App() {
   useEffect(() => {
     loadTimings();
   }, [loadTimings]);
+
+  // Synchronize live admin portal updates across tabs and internal events
+  useEffect(() => {
+    const handleSettingsUpdate = (e: any) => {
+      if (e.detail) {
+        setAdminSettings(e.detail);
+      } else {
+        setAdminSettings(getStoredAdminSettings());
+      }
+    };
+    window.addEventListener('mosque_admin_settings_updated', handleSettingsUpdate);
+    window.addEventListener('storage', handleSettingsUpdate);
+    return () => {
+      window.removeEventListener('mosque_admin_settings_updated', handleSettingsUpdate);
+      window.removeEventListener('storage', handleSettingsUpdate);
+    };
+  }, []);
 
   // Live timer tick every second for precision countdown & simulated countdown
   useEffect(() => {
@@ -178,6 +200,12 @@ export default function App() {
         onScrollToPrayerTimes={() => handleNavigate('hero')}
       />
 
+      {/* Notification Announcement Banner */}
+      <NotificationBanner
+        language={language}
+        onOpenNotifications={() => setNotificationModalOpen(true)}
+      />
+
       {/* Navigation Header */}
       <Navbar
         language={language}
@@ -193,6 +221,8 @@ export default function App() {
         activeSection={activeSection}
         onOpenAdminModal={() => setAdminModalOpen(true)}
         onOpenAzanModal={() => handleOpenAzanModal()}
+        onOpenNotifications={() => setNotificationModalOpen(true)}
+        onOpenRamadanModal={() => setRamadanModalOpen(true)}
       />
 
       {/* Main Content Sections */}
@@ -208,6 +238,7 @@ export default function App() {
           onOpenMonthlyModal={() => setMonthlyModalOpen(true)}
           onOpenAdminModal={() => setAdminModalOpen(true)}
           onOpenAzanModal={handleOpenAzanModal}
+          onOpenRamadanModal={() => setRamadanModalOpen(true)}
           adminSettings={adminSettings}
           nextPrayer={nextPrayer}
           audioMuted={audioMuted}
@@ -279,6 +310,21 @@ export default function App() {
         onClose={() => setAzanModalOpen(false)}
         language={language}
         initialPrayerId={selectedAzanPrayer}
+      />
+
+      {/* Mosque Notification & Announcement Center Modal */}
+      <NotificationModal
+        isOpen={notificationModalOpen}
+        onClose={() => setNotificationModalOpen(false)}
+        language={language}
+      />
+
+      {/* Official Ramadan 2027 Calendar Modal */}
+      <RamadanCalendarModal
+        isOpen={ramadanModalOpen}
+        onClose={() => setRamadanModalOpen(false)}
+        language={language}
+        adminSettings={adminSettings}
       />
 
     </div>

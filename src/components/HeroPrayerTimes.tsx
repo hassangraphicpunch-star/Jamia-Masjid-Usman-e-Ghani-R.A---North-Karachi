@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Clock,
   Sunrise,
@@ -25,6 +25,10 @@ import {
   Smartphone,
   Play,
   RotateCcw,
+  MoonStar,
+  Flame,
+  ShieldAlert,
+  ChevronLeft,
 } from 'lucide-react';
 import {
   Language,
@@ -37,12 +41,20 @@ import {
   calculateJamaatTimes,
   MOSQUE_COORDINATES,
   createSimulatedIqamahState,
+  evaluateZawalStatus,
 } from '../services/prayerService';
 import {
   azanAudioEngine,
   AzanPlaybackState,
 } from '../services/azanAudioService';
 import { MOSQUE_INFO, DAILY_WISDOM } from '../data/mockData';
+import {
+  getAdjustedRamadanDay,
+  RAMADAN_LOCATIONS,
+  RAMADAN_DUAS,
+  isDateInRamadan2027,
+  RamadanLocationConfig,
+} from '../data/ramadan2027Data';
 
 interface HeroPrayerTimesProps {
   language: Language;
@@ -53,6 +65,7 @@ interface HeroPrayerTimesProps {
   onOpenMonthlyModal: () => void;
   onOpenAdminModal?: () => void;
   onOpenAzanModal: (prayerId?: 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha') => void;
+  onOpenRamadanModal?: () => void;
   adminSettings?: AdminPrayerSettings;
   nextPrayer: {
     nextPrayerId: 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
@@ -79,6 +92,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
   onOpenMonthlyModal,
   onOpenAdminModal,
   onOpenAzanModal,
+  onOpenRamadanModal,
   adminSettings,
   nextPrayer,
   audioMuted,
@@ -135,6 +149,79 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
 
   // Calculate formatted times with custom admin settings overrides
   const jamaatTimes = calculateJamaatTimes(prayerData, adminSettings);
+
+  // Ramadan State & Demo controls
+  const isRamadanActive = !!adminSettings?.ramadanDemoMode || isDateInRamadan2027(new Date());
+  const [selectedRoza, setSelectedRoza] = useState<number>(() => adminSettings?.ramadanRozaNo || 1);
+  const [selectedLocation, setSelectedLocation] = useState<string>('north_karachi');
+  const [sirenPlaying, setSirenPlaying] = useState<'sehri' | 'iftar' | null>(null);
+
+  // Synchronize when adminSettings update
+  useEffect(() => {
+    if (adminSettings?.ramadanRozaNo) {
+      setSelectedRoza(adminSettings.ramadanRozaNo);
+    }
+  }, [adminSettings?.ramadanRozaNo]);
+
+  // Compute Ramadan Day
+  const ramadanDay = getAdjustedRamadanDay(selectedRoza, selectedLocation);
+
+  // Zawal Evaluation
+  const zawalWindow = jamaatTimes.zawal || '12:12 PM - 12:28 PM';
+  const [zawalInfo, setZawalInfo] = useState(() => evaluateZawalStatus(zawalWindow));
+
+  useEffect(() => {
+    setZawalInfo(evaluateZawalStatus(zawalWindow));
+    const timer = setInterval(() => {
+      setZawalInfo(evaluateZawalStatus(zawalWindow));
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [zawalWindow]);
+
+  // Auto trigger Sehri & Iftar Siren in Demo Mode at scheduled times
+  const lastTriggeredSirenMinute = useRef<string>('');
+  useEffect(() => {
+    if (!adminSettings?.ramadanDemoMode || audioMuted || adminSettings.ramadanSirenSound === false) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const current12h = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+
+      if (lastTriggeredSirenMinute.current === current12h) return;
+
+      if (current12h === ramadanDay.sehriEnd) {
+        lastTriggeredSirenMinute.current = current12h;
+        setSirenPlaying('sehri');
+        azanAudioEngine.playSehriSiren(8);
+        setTimeout(() => setSirenPlaying(null), 8000);
+      } else if (current12h === ramadanDay.iftarTime) {
+        lastTriggeredSirenMinute.current = current12h;
+        setSirenPlaying('iftar');
+        azanAudioEngine.playIftarSiren(8);
+        setTimeout(() => setSirenPlaying(null), 8000);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [adminSettings?.ramadanDemoMode, adminSettings?.ramadanSirenSound, audioMuted, ramadanDay.sehriEnd, ramadanDay.iftarTime]);
+
+  const handlePlaySiren = (type: 'sehri' | 'iftar') => {
+    setSirenPlaying(type);
+    azanAudioEngine.playRamadanSiren(type, 7);
+    setTimeout(() => {
+      setSirenPlaying(null);
+    }, 7500);
+  };
+
+  const handleStopSiren = () => {
+    setSirenPlaying(null);
+  };
 
   // Time format helper
   const formatSeconds = (totalSecs: number) => {
@@ -200,6 +287,20 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
       badgeColor: 'text-amber-300 bg-amber-950 border-amber-800',
       noteEn: 'Ishraq: ' + jamaatTimes.ishraq,
       noteUr: 'اشراق کا وقت: ' + jamaatTimes.ishraq,
+    },
+    {
+      id: 'chasht' as const,
+      nameEn: 'Chasht (Duha)',
+      nameUr: 'صلوٰۃ الضحیٰ (چاشت)',
+      nameAr: 'الضُّحَىٰ',
+      athan: 'Ishraq + 20m',
+      jamaat: jamaatTimes.chasht || '08:45 AM - 11:30 AM',
+      icon: SunMedium,
+      color: 'from-teal-950/40 to-emerald-950/50',
+      borderColor: 'border-teal-700/40',
+      badgeColor: 'text-teal-300 bg-teal-950 border-teal-800',
+      noteEn: 'Sunnah Duha: ' + (jamaatTimes.chasht || '08:45 AM - 11:30 AM'),
+      noteUr: 'نفل چاشت: 2 تا 12 رکعات سنت',
     },
     {
       id: 'dhuhr' as const,
@@ -751,7 +852,317 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
           </div>
         </div>
 
-        {/* PRIMARY PRAYER TIMETABLE 6-CARD GRID */}
+        {/* CONDITIONAL RAMADAN SEHRI & IFTAR BANNER / CARD (Only in Ramadan & Demo Mode) */}
+        {isRamadanActive && (
+          <div
+            id="ramadan-hero-section"
+            className="mb-6 rounded-2xl bg-gradient-to-r from-amber-950/70 via-stone-900 to-emerald-950/80 border-2 border-amber-500/50 p-4 sm:p-6 shadow-2xl relative overflow-hidden"
+          >
+            {/* Decorative background Islamic geometry glow */}
+            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-44 h-44 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-44 h-44 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+
+            {/* Header row */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-amber-500/30">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-amber-300 shadow-inner">
+                  <MoonStar className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                      <span>{isUrdu ? 'ماہِ رمضان المبارک ۱۴۴۸ھ - سحری و افطار شیڈول' : 'Ramadan Mubarak 1448 AH (2027) - Sehri & Iftar'}</span>
+                    </h3>
+                    {adminSettings?.ramadanDemoMode && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 text-[10px] font-bold uppercase tracking-wider">
+                        {isUrdu ? 'ڈیمو موڈ فعال ہے' : 'Ramadan Demo Mode'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-amber-200/80 mt-0.5">
+                    {isUrdu
+                      ? `روزہ نمبر: ${ramadanDay.rozaNumber} • ${ramadanDay.hijriDate} • عشرہ: ${ramadanDay.ashra}`
+                      : `Roza #${ramadanDay.rozaNumber} • ${ramadanDay.gregorianDate} • ${ramadanDay.hijriDate} (${ramadanDay.ashra})`}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons & Selectors */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Roza / Date Selector */}
+                <div className="flex items-center gap-1.5 bg-stone-950/80 px-2.5 py-1.5 rounded-xl border border-stone-800 text-xs">
+                  <span className="text-stone-400 font-semibold">{isUrdu ? 'روزہ:' : 'Roza:'}</span>
+                  <select
+                    id="select-ramadan-roza-hero"
+                    value={selectedRoza}
+                    onChange={(e) => setSelectedRoza(parseInt(e.target.value, 10))}
+                    aria-label={isUrdu ? 'روزہ کا انتخاب کریں' : 'Select Roza'}
+                    className="bg-stone-900 text-amber-300 font-bold border border-amber-500/40 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
+                  >
+                    {Array.from({ length: 30 }, (_, i) => i + 1).map((r) => (
+                      <option key={r} value={r}>
+                        {isUrdu ? `روزہ ${r}` : `Roza #${r}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Location / Zone Selector */}
+                <div className="flex items-center gap-1.5 bg-stone-950/80 px-2.5 py-1.5 rounded-xl border border-stone-800 text-xs">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                  <select
+                    id="select-ramadan-location-hero"
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    aria-label={isUrdu ? 'علاقے کا انتخاب کریں' : 'Select Location'}
+                    className="bg-stone-900 text-stone-200 font-semibold border border-stone-700 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400 cursor-pointer"
+                  >
+                    {RAMADAN_LOCATIONS.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {isUrdu ? loc.nameUr : loc.nameEn}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Button to Open Full Ramadan Calendar Modal */}
+                {onOpenRamadanModal && (
+                  <button
+                    id="btn-open-full-ramadan-calendar"
+                    onClick={onOpenRamadanModal}
+                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-md"
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>{isUrdu ? 'مکمل ۳۰ روزہ تقویم' : 'Full 30-Day Table'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Primary Timings Display Cards (Sehri & Iftar) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+              {/* SEHRI CARD */}
+              <div className="p-4 rounded-xl bg-stone-950/80 border border-amber-500/40 relative flex flex-col justify-between shadow-inner">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Sunrise className="w-3.5 h-3.5 text-amber-300" />
+                      <span>{isUrdu ? 'وقتِ ختمِ سحری (صبح صادق)' : 'Sehri End Time (Subh Sadiq)'}</span>
+                    </span>
+                    <span className="text-xs text-stone-400 font-mono">
+                      {ramadanDay.sehriWarning ? `احتیاطی سائرن: ${ramadanDay.sehriWarning}` : ''}
+                    </span>
+                  </div>
+
+                  <div className="flex items-baseline gap-3 my-2">
+                    <span className="text-3xl sm:text-4xl font-black text-amber-300 font-mono tracking-tight">
+                      {ramadanDay.sehriEnd}
+                    </span>
+                    <span className="text-xs text-amber-200/90 font-medium">
+                      {isUrdu ? '(سحری کا اختتام و آغازِ روزہ)' : '(Fast Begins)'}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-stone-300 leading-relaxed font-arabic text-right mt-2 border-t border-stone-800/80 pt-2">
+                    {RAMADAN_DUAS.sehri.arabic}
+                  </p>
+                  <p className="text-[10px] text-stone-400 italic">
+                    {isUrdu ? RAMADAN_DUAS.sehri.urdu : RAMADAN_DUAS.sehri.english}
+                  </p>
+                </div>
+
+                {/* Sehri Siren Trigger Buttons */}
+                <div className="mt-3 pt-2.5 border-t border-stone-800 flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-[11px] text-stone-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-amber-400" />
+                    <span>{isUrdu ? 'سائرن الارم:' : 'Siren Alarm:'}</span>
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      id="btn-play-sehri-siren"
+                      onClick={() => handlePlaySiren('sehri')}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all shadow-sm ${
+                        sirenPlaying === 'sehri'
+                          ? 'bg-rose-600 text-white animate-pulse'
+                          : 'bg-amber-950/80 hover:bg-amber-900 text-amber-200 border border-amber-600/60'
+                      }`}
+                      title="Play Sehri warning siren"
+                    >
+                      <Volume2 className="w-3.5 h-3.5 text-amber-300" />
+                      <span>{sirenPlaying === 'sehri' ? (isUrdu ? 'سائرن جاری ہے...' : 'Siren Active...') : (isUrdu ? 'سحری سائرن سنیں' : 'Sehri Siren')}</span>
+                    </button>
+                    {sirenPlaying && (
+                      <button
+                        onClick={handleStopSiren}
+                        className="px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs"
+                      >
+                        {isUrdu ? 'بند کریں' : 'Stop'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* IFTAR CARD */}
+              <div className="p-4 rounded-xl bg-stone-950/80 border border-emerald-500/40 relative flex flex-col justify-between shadow-inner">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Sunset className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{isUrdu ? 'وقتِ افطار (غروبِ آفتاب)' : 'Iftar Time (Sunset / Fast Breaking)'}</span>
+                    </span>
+                    <span className="text-xs text-stone-400 font-mono">
+                      {isUrdu ? 'اذانِ مغرب کے ساتھ' : 'With Maghrib Adhan'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-baseline gap-3 my-2">
+                    <span className="text-3xl sm:text-4xl font-black text-emerald-400 font-mono tracking-tight">
+                      {ramadanDay.iftarTime}
+                    </span>
+                    <span className="text-xs text-emerald-300/90 font-medium">
+                      {isUrdu ? '(افطار و اذانِ مغرب)' : '(Fast Breaking Time)'}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-emerald-200/90 leading-relaxed font-arabic text-right mt-2 border-t border-stone-800/80 pt-2">
+                    {RAMADAN_DUAS.iftar.arabic}
+                  </p>
+                  <p className="text-[10px] text-stone-400 italic">
+                    {isUrdu ? RAMADAN_DUAS.iftar.urdu : RAMADAN_DUAS.iftar.english}
+                  </p>
+                </div>
+
+                {/* Iftar Siren Trigger Buttons */}
+                <div className="mt-3 pt-2.5 border-t border-stone-800 flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-[11px] text-stone-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-emerald-400" />
+                    <span>{isUrdu ? 'افطار سائرن:' : 'Iftar Siren:'}</span>
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      id="btn-play-iftar-siren"
+                      onClick={() => handlePlaySiren('iftar')}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all shadow-sm ${
+                        sirenPlaying === 'iftar'
+                          ? 'bg-rose-600 text-white animate-pulse'
+                          : 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border border-emerald-600/60'
+                      }`}
+                      title="Play Iftar siren"
+                    >
+                      <Volume2 className="w-3.5 h-3.5 text-amber-300" />
+                      <span>{sirenPlaying === 'iftar' ? (isUrdu ? 'افطار سائرن جاری...' : 'Siren Active...') : (isUrdu ? 'افطار سائرن سنیں' : 'Iftar Siren')}</span>
+                    </button>
+                    {sirenPlaying && (
+                      <button
+                        onClick={handleStopSiren}
+                        className="px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs"
+                      >
+                        {isUrdu ? 'بند کریں' : 'Stop'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Location adjustment note */}
+            <div className="pt-2 border-t border-stone-800/70 flex items-center justify-between gap-2 flex-wrap text-xs text-stone-400">
+              <div className="flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>
+                  {isUrdu
+                    ? 'جامع مسجد عثمان غنی سیکٹر 5-اے/1 اور نارتھ کراچی کے لیے معیاری اوقات، دیگر علاقوں کے لیے متعلقہ فرق خودکار لاگو ہوتا ہے۔'
+                    : 'Standard timings for Sector 5-A/1 North Karachi. Location offsets update automatically.'}
+                </span>
+              </div>
+              <div className="text-[11px] text-amber-300/90 font-medium">
+                {isUrdu ? 'سائرن الرٹ خودکار مقررہ وقت پر بجتا ہے' : 'Siren automatically sounds at exact Sehri & Iftar times'}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PROMINENT DAILY ZAWAL TIME & MAKRUH WINDOW DISPLAY */}
+        <div
+          id="zawal-time-section"
+          className={`mb-6 rounded-2xl border p-4 transition-all shadow-md ${
+            zawalInfo.isInsideZawal
+              ? 'bg-rose-950/80 border-rose-600 ring-2 ring-rose-500/50 shadow-rose-950/50'
+              : zawalInfo.minutesRemainingUntilZawal > 0 && zawalInfo.minutesRemainingUntilZawal <= 40
+              ? 'bg-amber-950/50 border-amber-600/70'
+              : 'bg-stone-950/80 border-stone-800'
+          }`}
+        >
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-start sm:items-center gap-3">
+              <div
+                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${
+                  zawalInfo.isInsideZawal
+                    ? 'bg-rose-900/60 border-rose-500 text-rose-300 animate-bounce'
+                    : 'bg-stone-900 border-stone-700 text-amber-400'
+                }`}
+              >
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                    <span>{isUrdu ? 'روزانہ وقتِ زوال (نصف النہار شرعی)' : 'Daily Zawal Time (Solar Zenith Period)'}</span>
+                  </h4>
+                  
+                  {/* Status Badge */}
+                  {zawalInfo.isInsideZawal ? (
+                    <span className="px-2.5 py-0.5 rounded-full bg-rose-600 text-white font-extrabold text-[11px] animate-pulse uppercase tracking-wider shadow">
+                      {isUrdu
+                        ? `⚠️ وقتِ زوال جاری ہے (${zawalInfo.minutesRemainingInZawal} منٹ باقی) - نماز و سجدہ منع ہے`
+                        : `⚠️ Zawal Active (${zawalInfo.minutesRemainingInZawal}m left) - Salah & Sajdah Prohibited`}
+                    </span>
+                  ) : zawalInfo.minutesRemainingUntilZawal > 0 && zawalInfo.minutesRemainingUntilZawal <= 45 ? (
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500 text-amber-300 text-[11px] font-bold">
+                      {isUrdu
+                        ? `وقتِ زوال قریب ہے (${zawalInfo.minutesRemainingUntilZawal} منٹ بعد شروع)`
+                        : `Zawal approaching in ${zawalInfo.minutesRemainingUntilZawal} mins`}
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-600/60 text-emerald-300 text-[11px] font-medium">
+                      {isUrdu ? 'مباح وقت (نماز جائز ہے)' : 'Regular Prayer Permitted'}
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs text-stone-300 mt-0.5">
+                  {isUrdu
+                    ? 'حنفی فقہ کے مطابق استواء آفتاب تا زوال (تقریباً 16 منٹ) ہر قسم کی نماز اور سجدۂ تلاوت مکروہِ تحریمی ہے۔'
+                    : 'Hanafi Fiqh: Approximately 16-20 minutes during solar zenith when all prayers and Sajdah Tilawat are prohibited.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Zawal Time Clock Display */}
+            <div className="flex items-center gap-3 bg-stone-900/90 px-4 py-2.5 rounded-xl border border-stone-700/80 shrink-0 self-start md:self-auto">
+              <div className="text-right">
+                <span className="block text-[10px] text-stone-400 uppercase font-semibold">
+                  {isUrdu ? 'مکروہ وقتِ زوال' : 'Prohibited Window'}
+                </span>
+                <span className="text-base sm:text-lg font-black text-amber-300 font-mono tracking-tight">
+                  {zawalWindow}
+                </span>
+              </div>
+              <div className="w-2 h-8 rounded-full bg-amber-500/40" />
+              <div className="text-left">
+                <span className="block text-[10px] text-stone-400 uppercase font-semibold">
+                  {isUrdu ? 'ظہر کا وقت شروع' : 'Dhuhr Begins'}
+                </span>
+                <span className="text-base sm:text-lg font-black text-emerald-400 font-mono tracking-tight">
+                  {formatTo12Hour(prayerData.dhuhr)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* PRIMARY PRAYER TIMETABLE 7-CARD GRID (Including Chasht) */}
         <div className="mb-6">
           <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
             <div>
@@ -768,6 +1179,19 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
 
             {/* Quick Action Buttons */}
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Ramadan Calendar Button */}
+              {onOpenRamadanModal && (
+                <button
+                  id="btn-open-ramadan-modal-hero"
+                  onClick={onOpenRamadanModal}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/50 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+                  title="Open full Ramadan 2027 Timetable"
+                >
+                  <MoonStar className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{isUrdu ? 'تقویمِ رمضان' : 'Ramadan 2027'}</span>
+                </button>
+              )}
+
               {/* Azan Voice Modal Button */}
               <button
                 id="btn-open-azan-modal-hero"
@@ -813,7 +1237,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
           </div>
 
           {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
             {prayerCards.map((p) => {
               const isIqamahThis = isIqamahActive && effectiveIqamah?.prayerId === p.id;
               const isNext = nextPrayer.nextPrayerId === p.id && !isIqamahThis;
@@ -865,14 +1289,14 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                       <IconComp className="w-5 h-5 text-amber-300" />
                     </div>
                     <div className="flex items-center gap-1.5">
-                      {p.id !== 'sunrise' && (
+                      {p.id !== 'sunrise' && p.id !== 'chasht' && (
                         <button
                           onClick={() => {
                             if (isThisPlaying) {
                               azanAudioEngine.stop();
                             } else {
                               azanAudioEngine.playPrayerAzan(
-                                p.id,
+                                p.id as any,
                                 p.nameEn + ' Azan',
                                 'اذانِ ' + p.nameUr
                               );
