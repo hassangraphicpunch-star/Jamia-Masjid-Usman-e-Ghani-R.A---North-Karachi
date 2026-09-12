@@ -339,6 +339,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               );
             })}
 
+            {onOpenRamadanModal && (
+              <button
+                onClick={() => {
+                  onOpenRamadanModal();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-semibold text-amber-300 bg-amber-950/40 border border-amber-600/40 flex items-center justify-between mt-1"
+              >
+                <div className="flex items-center gap-2">
+                  <Moon className="w-4 h-4 text-amber-400" />
+                  <span>{isUrdu ? 'رمضان المبارک ۲۰۲۷ء (۱۴۴۸ھ) تقویم' : 'Ramadan 2027 (1448 AH) Calendar'}</span>
+                </div>
+                <span className="text-amber-400 text-xs">View ›</span>
+              </button>
+            )}
+
             {onOpenAzanModal && (
               <button
                 onClick={() => {

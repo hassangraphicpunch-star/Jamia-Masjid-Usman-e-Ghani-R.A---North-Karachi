@@ -4,14 +4,18 @@
 
 export interface RamadanDaySchedule {
   rozaNo: number;
+  rozaNumber?: number;   // Alias for rozaNo
   dateGregorian: string; // e.g. "08 Feb 2027"
+  gregorianDate?: string;// Alias for dateGregorian
   dayNameEn: string;
   dayNameUr: string;
   hijriDateUr: string;   // e.g. "1 رمضان 1448ھ"
+  hijriDate?: string;    // Alias for hijriDateUr
   ashra: 1 | 2 | 3;
   ashraNameEn: string;
   ashraNameUr: string;
   sehriEnd: string;      // e.g. "05:48 AM"
+  sehriWarning?: string; // e.g. "05:38 AM" (10 mins before)
   fajrAzan: string;      // e.g. "05:53 AM"
   fajrJamaat: string;    // e.g. "06:15 AM"
   sunrise: string;       // e.g. "07:05 AM"
@@ -35,6 +39,8 @@ export interface RamadanDua {
   transliteration: string;
   translationUr: string;
   translationEn: string;
+  urdu?: string;         // Alias
+  english?: string;      // Alias
   reference: string;
 }
 
@@ -93,6 +99,18 @@ export const RAMADAN_DUAS: Record<string, RamadanDua> = {
     translationEn: 'O Allah, You are Most Forgiving, and You love forgiveness; so forgive me.',
     reference: 'جامع ترمذی، حدیث: 3513',
   },
+};
+
+// Aliases for convenient consumption in hero & cards
+RAMADAN_DUAS.sehri = {
+  ...RAMADAN_DUAS.sehriNiyyat,
+  urdu: RAMADAN_DUAS.sehriNiyyat.translationUr,
+  english: RAMADAN_DUAS.sehriNiyyat.translationEn,
+};
+RAMADAN_DUAS.iftar = {
+  ...RAMADAN_DUAS.iftarDua,
+  urdu: RAMADAN_DUAS.iftarDua.translationUr,
+  english: RAMADAN_DUAS.iftarDua.translationEn,
 };
 
 // 30 Days of Ramadan 2027 (1448 AH) for North Karachi, Pakistan
@@ -855,6 +873,8 @@ export interface RamadanLocationOption {
   nameUr: string;
   offsetMinutes: number; // positive = later, negative = earlier
 }
+
+export type RamadanLocationConfig = RamadanLocationOption;
 
 export const RAMADAN_LOCATIONS: RamadanLocationOption[] = [
   {
