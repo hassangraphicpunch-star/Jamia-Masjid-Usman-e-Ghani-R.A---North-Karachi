@@ -218,11 +218,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="btn-nav-ramadan-calendar"
                 onClick={onOpenRamadanModal}
-                className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all shadow-sm"
-                title="Ramadan 2027 Calendar (30 Days)"
+                className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 border border-amber-500/50 text-xs font-bold transition-all shadow-sm ring-1 ring-amber-500/30"
+                title="Ramadan Calendar & Timetable (30 Days)"
               >
-                <Moon className="w-3.5 h-3.5 text-amber-400" />
-                <span>{isUrdu ? 'رمضان ۲۰۲۷ء' : 'Ramadan 2027'}</span>
+                <Moon className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
+                <span className="hidden xs:inline">{isUrdu ? 'تقویمِ رمضان' : 'Ramadan'}</span>
               </button>
             )}
 

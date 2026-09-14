@@ -269,7 +269,7 @@ export interface AppNotification {
   titleUr: string;
   messageEn: string;
   messageUr: string;
-  type: 'prayer' | 'iqamah' | 'ramadan' | 'announcement' | 'general' | 'janazah';
+  type: 'prayer' | 'iqamah' | 'ramadan' | 'announcement' | 'general' | 'janazah' | 'donation';
   category?: string;
   timestamp: string;
   timeAgoUr: string;

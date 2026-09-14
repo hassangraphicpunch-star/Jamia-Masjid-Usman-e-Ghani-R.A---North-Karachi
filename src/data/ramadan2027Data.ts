@@ -916,7 +916,7 @@ export const RAMADAN_LOCATIONS: RamadanLocationOption[] = [
 ];
 
 // Helper to add/subtract minutes from "HH:MM AM/PM"
-function adjustTimeByMinutes(time12h: string, offsetMins: number): string {
+export function adjustTimeByMinutes(time12h: string, offsetMins: number): string {
   if (!time12h || offsetMins === 0) return time12h;
   const isPM = /PM/i.test(time12h);
   const cleaned = time12h.replace(/AM|PM/i, '').trim();

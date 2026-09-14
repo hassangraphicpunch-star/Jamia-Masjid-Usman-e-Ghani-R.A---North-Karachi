@@ -77,4 +77,50 @@
     background: white !important;
     color: black !important;
   }
+
+  /* When printing from Ramadan Calendar Modal */
+  body.printing-ramadan-calendar * {
+    visibility: hidden;
+  }
+  body.printing-ramadan-calendar #ramadan-printable-area,
+  body.printing-ramadan-calendar #ramadan-printable-area * {
+    visibility: visible;
+  }
+  body.printing-ramadan-calendar #ramadan-printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 10px;
+    background: white !important;
+    color: black !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  body.printing-ramadan-calendar table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9px !important;
+  }
+
+  body.printing-ramadan-calendar th,
+  body.printing-ramadan-calendar td {
+    border: 1px solid #444 !important;
+    padding: 3px 4px !important;
+    color: black !important;
+    background: transparent !important;
+    text-align: center !important;
+  }
+
+  body.printing-ramadan-calendar th {
+    background-color: #f2f2f2 !important;
+    font-weight: bold !important;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
 }

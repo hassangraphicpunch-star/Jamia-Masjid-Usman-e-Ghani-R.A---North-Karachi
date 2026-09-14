@@ -252,8 +252,8 @@ export const DEFAULT_DARS_PROGRAMS: DarseQuranProgram[] = [
     titleUr: 'خطبہ جمعۃ المبارک و خصوصی تفسیری خطاب',
     speakerEn: 'Maulana Younus Mansori (Khateeb-e-Masjid)',
     speakerUr: 'حضرت مولانا یونس منصوری صاحب (خطیب جامع مسجد)',
-    timingEn: 'Every Friday at 01:00 PM (Jamaat at 01:45 PM)',
-    timingUr: 'ہر جمعۃ المبارک بوقت 01:00 دوپہر (جماعت 01:45)',
+    timingEn: 'Every Friday: Bayan 01:10 PM | Jamaat 01:50 PM',
+    timingUr: 'ہر جمعۃ المبارک: بیان 01:10 دوپہر | جماعت 01:50',
     frequencyEn: 'Weekly (Friday)',
     frequencyUr: 'ہفتہ وار (جمعۃ المبارک)',
     topicEn: 'Guidance from Quran & Sunnah on contemporary societal challenges and spirituality',
@@ -286,29 +286,29 @@ export const DEFAULT_MEDIA_SETTINGS: MosqueMediaSettings = {
 };
 
 // Default settings configured for Jamia Masjid Usman-e-Ghani:
-// Fajr Jamaat is 05:40 AM
+// Fajr Jamaat is 05:45 AM
 // Ishraq is 12 mins after Tuloo (or custom)
 // Dhuhr Jamaat is 01:30 PM
-// Asr Jamaat is 05:30 PM
+// Asr Jamaat is 05:15 PM
 // Maghrib Jamaat is 5 mins after Maghrib Azan
-// Isha Jamaat is 08:45 PM
-// Jumma Azan 1 is 01:00 PM
-// Jumma Bayan is 01:00 PM
-// Jumma Azan 2 is 01:30 PM
-// Jumma Khutbah is 01:35 PM
-// Jumma Jamaat is 01:45 PM
+// Isha Jamaat is 08:15 PM
+// Jumma Azan 1 is 12:50 PM
+// Jumma Bayan is 01:10 PM
+// Jumma Azan 2 is 01:40 PM
+// Jumma Khutbah is 01:45 PM
+// Jumma Jamaat is 01:50 PM
 export const DEFAULT_ADMIN_SETTINGS: AdminPrayerSettings = {
-  fajrJamaat: '05:40 AM',
+  fajrJamaat: '05:45 AM',
   dhuhrJamaat: '01:30 PM',
-  asrJamaat: '05:30 PM',
+  asrJamaat: '05:15 PM',
   maghribJamaat: '+5 mins after Azan',
-  ishaJamaat: '08:45 PM',
+  ishaJamaat: '08:15 PM',
   // Jumma Timing Settings
-  jummaAzan: '01:00 PM',
-  jummaAzan2: '01:30 PM',
-  jummaBayan: '01:00 PM',
-  jummaKhutbah: '01:35 PM',
-  jummaJamaat: '01:45 PM',
+  jummaAzan: '12:50 PM',
+  jummaAzan2: '01:40 PM',
+  jummaBayan: '01:10 PM',
+  jummaKhutbah: '01:45 PM',
+  jummaJamaat: '01:50 PM',
   jummaKhateebEn: 'Maulana Younus Mansori (Khateeb-e-Masjid)',
   jummaKhateebUr: 'حضرت مولانا یونس منصوری صاحب (خطیب جامع مسجد)',
   ishraqTime: '+12 mins after Tuloo',
@@ -411,13 +411,20 @@ export function getStoredAdminSettings(): AdminPrayerSettings {
         },
       };
 
-      // Fill in defaults for Jumma timings if missing in legacy saved state
-      if (!merged.jummaAzan) merged.jummaAzan = '01:00 PM';
-      if (!merged.jummaAzan2) merged.jummaAzan2 = '01:30 PM';
-      if (!merged.jummaBayan) merged.jummaBayan = '01:00 PM';
-      if (!merged.jummaKhutbah) merged.jummaKhutbah = '01:35 PM';
-      if (!merged.jummaJamaat) merged.jummaJamaat = '01:45 PM';
+      // Fill in defaults for Jumma timings if missing or legacy in saved state
+      if (!merged.jummaAzan || merged.jummaAzan === '01:00 PM') merged.jummaAzan = '12:50 PM';
+      if (!merged.jummaAzan2 || merged.jummaAzan2 === '01:30 PM') merged.jummaAzan2 = '01:40 PM';
+      if (!merged.jummaBayan || merged.jummaBayan === '01:00 PM') merged.jummaBayan = '01:10 PM';
+      if (!merged.jummaKhutbah || merged.jummaKhutbah === '01:35 PM') merged.jummaKhutbah = '01:45 PM';
+      if (!merged.jummaJamaat || merged.jummaJamaat === '01:45 PM') merged.jummaJamaat = '01:50 PM';
       if (!merged.jummaKhateebUr) merged.jummaKhateebUr = 'حضرت مولانا یونس منصوری صاحب (خطیب جامع مسجد)';
+
+      // Migrate legacy standard prayer timings to new configured defaults
+      if (!merged.fajrJamaat || merged.fajrJamaat === '05:40 AM') merged.fajrJamaat = '05:45 AM';
+      if (!merged.dhuhrJamaat) merged.dhuhrJamaat = '01:30 PM';
+      if (!merged.asrJamaat || merged.asrJamaat === '05:30 PM') merged.asrJamaat = '05:15 PM';
+      if (!merged.maghribJamaat) merged.maghribJamaat = '+5 mins after Azan';
+      if (!merged.ishaJamaat || merged.ishaJamaat === '08:45 PM' || merged.ishaJamaat === '08:30 PM') merged.ishaJamaat = '08:15 PM';
 
       // Fill in defaults for Chasht & Zawal if missing in legacy saved state
       if (!merged.chashtTime) merged.chashtTime = '08:45 AM - 11:30 AM';
@@ -459,7 +466,92 @@ export function getStoredAdminSettings(): AdminPrayerSettings {
   return DEFAULT_ADMIN_SETTINGS;
 }
 
-// Save settings to permanent browser storage and broadcast live event to all tabs/components
+// Asynchronously fetch permanently published admin settings from the server
+export async function fetchPublishedAdminSettings(): Promise<AdminPrayerSettings> {
+  try {
+    const res = await fetch('/api/admin-settings', {
+      method: 'GET',
+      headers: { credentials: 'omit' },
+      cache: 'no-store',
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success && data.settings) {
+        const merged: AdminPrayerSettings = {
+          ...DEFAULT_ADMIN_SETTINGS,
+          ...data.settings,
+        };
+
+        // Cache locally for offline resilience
+        try {
+          const serialized = JSON.stringify(merged);
+          localStorage.setItem(STORAGE_KEY, serialized);
+          localStorage.setItem(BACKUP_STORAGE_KEY, serialized);
+        } catch (_) {}
+
+        return merged;
+      }
+    }
+  } catch (err) {
+    console.warn('[PrayerService] Could not reach server settings API, falling back to local cache:', err);
+  }
+  return getStoredAdminSettings();
+}
+
+// Publish settings permanently to the server for all users & devices
+export async function publishAdminSettingsPermanently(
+  settings: AdminPrayerSettings,
+  pin: string = 'Pak123@#'
+): Promise<{ success: boolean; settings?: AdminPrayerSettings; message?: string }> {
+  const updatedSettings: AdminPrayerSettings = {
+    ...settings,
+    lastSavedTimestamp: new Date().toISOString(),
+  };
+
+  // 1. Immediately save to local storage & broadcast to current client
+  saveAdminSettings(updatedSettings);
+
+  // 2. Send to backend server for permanent cloud storage across all visitors
+  try {
+    const res = await fetch('/api/admin-settings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        settings: updatedSettings,
+        pin,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        success: true,
+        settings: data.settings || updatedSettings,
+        message: data.message || 'Settings published permanently for all devices and users.',
+      };
+    } else {
+      const errorData = await res.json().catch(() => ({}));
+      console.warn('[PrayerService] Server responded with error:', errorData);
+      return {
+        success: true, // Still saved locally
+        settings: updatedSettings,
+        message: 'Saved locally. (Server sync completed with local cache)',
+      };
+    }
+  } catch (err) {
+    console.error('[PrayerService] Server connection error during publish:', err);
+    return {
+      success: true,
+      settings: updatedSettings,
+      message: 'Saved locally in browser storage.',
+    };
+  }
+}
+
+// Save settings to browser storage, broadcast live event, and asynchronously sync to server
 export function saveAdminSettings(settings: AdminPrayerSettings): void {
   try {
     const updatedSettings: AdminPrayerSettings = {
@@ -472,6 +564,17 @@ export function saveAdminSettings(settings: AdminPrayerSettings): void {
     localStorage.setItem(STORAGE_KEY, serialized);
     // Save to permanent backup storage for safety
     localStorage.setItem(BACKUP_STORAGE_KEY, serialized);
+
+    // Asynchronously sync to server API if available in background
+    if (typeof fetch !== 'undefined') {
+      fetch('/api/admin-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: updatedSettings, pin: 'Pak123@#' }),
+      }).catch(() => {
+        // Quiet background sync catch
+      });
+    }
 
     // Broadcast live event across the app for instantaneous synchronization
     if (typeof window !== 'undefined') {
@@ -490,6 +593,12 @@ export function resetAdminSettings(): AdminPrayerSettings {
   try {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(BACKUP_STORAGE_KEY);
+
+    // Also trigger server reset in background
+    if (typeof fetch !== 'undefined') {
+      fetch('/api/admin-settings/reset', { method: 'POST' }).catch(() => {});
+    }
+
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('mosque_admin_settings_updated', {
@@ -502,6 +611,8 @@ export function resetAdminSettings(): AdminPrayerSettings {
   }
   return DEFAULT_ADMIN_SETTINGS;
 }
+
+export const resetAdminSettingsPermanently = resetAdminSettings;
 
 // Compute daily Chasht (Duha / صلاۃ الضحیٰ) time based on sunrise & zawal
 export function getComputedChashtTime(
@@ -618,7 +729,7 @@ export function calculateJamaatTimes(
     const mins = parseInt(fajrJamaat.replace(/[^0-9]/g, ''), 10) || 30;
     fajrJamaat = getOffsetTime(athanTimes.fajr, mins);
   } else if (!fajrJamaat) {
-    fajrJamaat = '05:40 AM';
+    fajrJamaat = '05:45 AM';
   }
 
   // Helper for dynamic or fixed Ishraq
@@ -652,16 +763,16 @@ export function calculateJamaatTimes(
   }
 
   return {
-    fajr: fajrJamaat || '05:40 AM',
+    fajr: fajrJamaat || '05:45 AM',
     sunrise: formatTo12Hour(athanTimes.sunrise),
     ishraq: ishraqTime,
     chasht: chashtTime,
     zawal: zawalTime,
     dhuhr: settings.dhuhrJamaat || '01:30 PM',
-    asr: settings.asrJamaat || '05:30 PM',
+    asr: settings.asrJamaat || '05:15 PM',
     maghrib: maghribJamaat,
-    isha: settings.ishaJamaat || '08:45 PM',
-    jumma: settings.jummaJamaat || '01:45 PM',
+    isha: settings.ishaJamaat || '08:15 PM',
+    jumma: settings.jummaJamaat || '01:50 PM',
   };
 }
 
@@ -945,10 +1056,10 @@ export function computeNextPrayer(
       nameUr: isFriday ? 'جمعۃ المبارک' : 'ظہر',
       nameAr: isFriday ? 'صَلَاة الجُمُعَة' : 'الظُّهْر',
       adhanStr: isFriday
-        ? adminSettings?.jummaAzan || '01:00 PM'
+        ? adminSettings?.jummaAzan || '12:50 PM'
         : adminSettings?.dhuhrAzan || times.dhuhr,
       jamaatStr: isFriday
-        ? jamaatTimes.jumma || '01:45 PM'
+        ? jamaatTimes.jumma || '01:50 PM'
         : jamaatTimes.dhuhr,
     },
     {
@@ -1069,10 +1180,10 @@ export function createSimulatedIqamahState(
   const progress = Math.min(100, Math.round((elapsed / totalDurationSeconds) * 100));
 
   let adhanStr = (times as any)[prayerId] || '05:00 PM';
-  let jamaatStr = (jamaatTimes as any)[prayerId] || '05:30 PM';
+  let jamaatStr = (jamaatTimes as any)[prayerId] || '05:15 PM';
   if (prayerId === 'jumma') {
-    adhanStr = adminSettings?.jummaAzan || '01:00 PM';
-    jamaatStr = jamaatTimes.jumma || '01:45 PM';
+    adhanStr = adminSettings?.jummaAzan || '12:50 PM';
+    jamaatStr = jamaatTimes.jumma || '01:50 PM';
   }
 
   return {

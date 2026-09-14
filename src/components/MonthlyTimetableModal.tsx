@@ -73,7 +73,7 @@ export const MonthlyTimetableModal: React.FC<MonthlyTimetableModalProps> = ({
       };
 
       // Determine Fajr Jamaat
-      let fajrJamaatStr = adminSettings?.fajrJamaat || '05:40 AM';
+      let fajrJamaatStr = adminSettings?.fajrJamaat || '05:45 AM';
       if (fajrJamaatStr.startsWith('+')) {
         const mins = parseInt(fajrJamaatStr.replace(/[^0-9]/g, ''), 10) || 30;
         fajrJamaatStr = formatMin(fajrM + mins);
@@ -104,11 +104,11 @@ export const MonthlyTimetableModal: React.FC<MonthlyTimetableModalProps> = ({
         dhuhr: formatMin(dhuhrM),
         dhuhrJamaat: adminSettings?.dhuhrJamaat || '01:30 PM',
         asr: formatMin(asrM),
-        asrJamaat: adminSettings?.asrJamaat || '05:30 PM',
+        asrJamaat: adminSettings?.asrJamaat || '05:15 PM',
         maghrib: formatMin(maghribM),
         maghribJamaat: maghribJamaatStr,
         isha: formatMin(ishaM),
-        ishaJamaat: adminSettings?.ishaJamaat || '08:45 PM',
+        ishaJamaat: adminSettings?.ishaJamaat || '08:15 PM',
       });
     }
     return rows;

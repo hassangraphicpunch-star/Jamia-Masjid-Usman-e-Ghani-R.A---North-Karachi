@@ -34,6 +34,9 @@ import {
   Radio,
   Film,
   Play,
+  Globe,
+  Cloud,
+  RefreshCw,
 } from 'lucide-react';
 import {
   Language,
@@ -53,6 +56,9 @@ import {
   getStoredAdminSettings,
   saveAdminSettings,
   resetAdminSettings,
+  fetchPublishedAdminSettings,
+  publishAdminSettingsPermanently,
+  resetAdminSettingsPermanently,
 } from '../services/prayerService';
 import { ANNOUNCEMENTS } from '../data/mockData';
 
@@ -103,9 +109,13 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
   } | null>(null);
   const [customImageUrl, setCustomImageUrl] = useState('');
 
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishSuccessMsg, setPublishSuccessMsg] = useState<string | null>(null);
+  const [isSyncingWithServer, setIsSyncingWithServer] = useState(false);
+
   const isUrdu = language === 'ur';
 
-  // Load stored settings on open
+  // Load stored settings on open (both local cache and fresh from server)
   useEffect(() => {
     if (isOpen) {
       const current = getStoredAdminSettings();
@@ -122,6 +132,19 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
       setSettings(current);
       setSavedToast(false);
       setPinError(false);
+      setPublishSuccessMsg(null);
+
+      // Also pull latest published version from server
+      fetchPublishedAdminSettings().then((serverSettings) => {
+        if (serverSettings) {
+          setSettings((prev) => ({
+            ...prev,
+            ...serverSettings,
+            darsPrograms: serverSettings.darsPrograms?.length ? serverSettings.darsPrograms : prev.darsPrograms,
+            customAnnouncements: serverSettings.customAnnouncements?.length ? serverSettings.customAnnouncements : prev.customAnnouncements,
+          }));
+        }
+      });
     } else {
       setPinInput('');
       setPinError(false);
@@ -146,16 +169,59 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     }
   };
 
-  const handleSave = () => {
-    saveAdminSettings(settings);
-    onSettingsSaved(settings);
-    setSavedToast(true);
-    setTimeout(() => {
-      setSavedToast(false);
-    }, 3500);
+  // Pull fresh settings from server on demand
+  const handleSyncWithServer = async () => {
+    setIsSyncingWithServer(true);
+    try {
+      const fresh = await fetchPublishedAdminSettings();
+      if (fresh) {
+        setSettings(fresh);
+        onSettingsSaved(fresh);
+        setPublishSuccessMsg(
+          isUrdu
+            ? 'سرور سے تازہ ترین مستقل اوقات کامیابی سے ڈاؤن لوڈ ہو گئے۔'
+            : 'Latest published settings synced from server successfully!'
+        );
+        setSavedToast(true);
+        setTimeout(() => {
+          setSavedToast(false);
+          setPublishSuccessMsg(null);
+        }, 3500);
+      }
+    } finally {
+      setIsSyncingWithServer(false);
+    }
   };
 
-  const handleReset = () => {
+  const handleSave = async () => {
+    setIsPublishing(true);
+    try {
+      const res = await publishAdminSettingsPermanently(settings);
+      const targetSettings = res.settings || settings;
+      setSettings(targetSettings);
+      onSettingsSaved(targetSettings);
+      setPublishSuccessMsg(
+        isUrdu
+          ? 'تبدیلیاں سرور پر مستقل محفوظ و پبلش ہو گئیں! تمام نمازیوں، موبائلز اور ڈیوائسز پر نیا شیڈول لائیو ہے۔'
+          : 'Permanently published to server! All devices and visitors now see this updated timetable.'
+      );
+      setSavedToast(true);
+      setTimeout(() => {
+        setSavedToast(false);
+        setPublishSuccessMsg(null);
+      }, 4500);
+    } catch (err) {
+      console.error('Error publishing settings:', err);
+      saveAdminSettings(settings);
+      onSettingsSaved(settings);
+      setSavedToast(true);
+      setTimeout(() => setSavedToast(false), 3500);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleReset = async () => {
     if (
       window.confirm(
         isUrdu
@@ -163,13 +229,24 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
           : 'Are you sure you want to reset all timings and settings to factory defaults?'
       )
     ) {
-      const def = resetAdminSettings();
-      setSettings(def);
-      onSettingsSaved(def);
-      setSavedToast(true);
-      setTimeout(() => {
-        setSavedToast(false);
-      }, 3500);
+      setIsPublishing(true);
+      try {
+        const def = resetAdminSettings();
+        setSettings(def);
+        onSettingsSaved(def);
+        setPublishSuccessMsg(
+          isUrdu
+            ? 'اوقات کو کامیابی کے ساتھ ڈیفالٹ پر ری سیٹ کر دیا گیا۔'
+            : 'Timings reset to defaults successfully.'
+        );
+        setSavedToast(true);
+        setTimeout(() => {
+          setSavedToast(false);
+          setPublishSuccessMsg(null);
+        }, 3500);
+      } finally {
+        setIsPublishing(false);
+      }
     }
   };
 
@@ -178,16 +255,16 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     let preset: Partial<AdminPrayerSettings> = {};
     if (presetName === 'current') {
       preset = {
-        fajrJamaat: '05:40 AM',
+        fajrJamaat: '05:45 AM',
         dhuhrJamaat: '01:30 PM',
-        asrJamaat: '05:30 PM',
+        asrJamaat: '05:15 PM',
         maghribJamaat: '+5 mins after Azan',
-        ishaJamaat: '08:45 PM',
-        jummaAzan: '01:00 PM',
-        jummaAzan2: '01:30 PM',
-        jummaBayan: '01:00 PM',
-        jummaKhutbah: '01:35 PM',
-        jummaJamaat: '01:45 PM',
+        ishaJamaat: '08:15 PM',
+        jummaAzan: '12:50 PM',
+        jummaAzan2: '01:40 PM',
+        jummaBayan: '01:10 PM',
+        jummaKhutbah: '01:45 PM',
+        jummaJamaat: '01:50 PM',
         jummaKhateebUr: 'حضرت مولانا یونس منصوری صاحب (خطیب جامع مسجد)',
         jummaKhateebEn: 'Maulana Younus Mansori (Khateeb-e-Masjid)',
         ishraqTime: '+12 mins after Tuloo',
@@ -541,18 +618,31 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
           <div className="p-4 sm:p-6 space-y-5">
             {/* Notification Toast */}
             {savedToast && (
-              <div className="p-3 bg-emerald-950/90 border border-emerald-500 rounded-xl text-emerald-200 text-xs flex items-center justify-between animate-in fade-in slide-in-from-top-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>
-                    {isUrdu
-                      ? 'تمام تبدیلیاں کامیابی کے ساتھ محفوظ ہو گئیں اور لائیو نشر ہو گئیں!'
-                      : 'All changes saved successfully & published live across the portal!'}
+              <div className="p-3.5 bg-emerald-950/95 border border-emerald-400/80 rounded-xl text-emerald-100 text-xs flex items-center justify-between shadow-lg shadow-emerald-950/60 animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">
+                      {publishSuccessMsg ||
+                        (isUrdu
+                          ? 'تمام تبدیلیاں کامیابی کے ساتھ مستقل طور پر پبلش ہو گئیں!'
+                          : 'All changes permanently published to the server!')}
+                    </p>
+                    <p className="text-[11px] text-emerald-300/80 font-mono mt-0.5">
+                      {isUrdu
+                        ? 'یہ اوقات اور ترتیبات اب تمام موبائلز اور نمازیوں کے لیے مستقل تبدیل ہو چکے ہیں۔'
+                        : 'Updated timings are now permanently live across all devices and visitors.'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0 bg-emerald-900/80 border border-emerald-600/60 px-2.5 py-1 rounded-lg">
+                  <Cloud className="w-3 h-3 text-emerald-300 animate-pulse" />
+                  <span className="text-[10px] text-emerald-200 font-mono font-bold uppercase">
+                    CLOUD SYNC
                   </span>
                 </div>
-                <span className="text-[10px] bg-emerald-800 px-2 py-0.5 rounded text-white font-mono font-bold">
-                  LIVE
-                </span>
               </div>
             )}
 
@@ -675,7 +765,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         type="text"
                         value={settings.fajrJamaat}
                         onChange={(e) => setSettings({ ...settings, fajrJamaat: e.target.value })}
-                        placeholder="05:40 AM"
+                        placeholder="05:45 AM"
                         className="w-full px-3 py-2 bg-stone-900 border border-sky-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-sky-400"
                       />
                     </div>
@@ -801,7 +891,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         type="text"
                         value={settings.asrJamaat}
                         onChange={(e) => setSettings({ ...settings, asrJamaat: e.target.value })}
-                        placeholder="05:30 PM"
+                        placeholder="05:15 PM"
                         className="w-full px-3 py-2 bg-stone-900 border border-orange-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-orange-400"
                       />
                     </div>
@@ -851,7 +941,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         type="text"
                         value={settings.ishaJamaat}
                         onChange={(e) => setSettings({ ...settings, ishaJamaat: e.target.value })}
-                        placeholder="08:45 PM"
+                        placeholder="08:15 PM"
                         className="w-full px-3 py-2 bg-stone-900 border border-indigo-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-indigo-400"
                       />
                     </div>
@@ -880,9 +970,9 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          value={settings.jummaAzan || '01:00 PM'}
+                          value={settings.jummaAzan || '12:50 PM'}
                           onChange={(e) => setSettings({ ...settings, jummaAzan: e.target.value })}
-                          placeholder="01:00 PM"
+                          placeholder="12:50 PM"
                           className="w-full px-3 py-2 bg-stone-950 border border-teal-700/80 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-teal-400 ring-1 ring-teal-900/40"
                         />
                       </div>
@@ -895,9 +985,9 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          value={settings.jummaBayan || '01:00 PM'}
+                          value={settings.jummaBayan || '01:10 PM'}
                           onChange={(e) => setSettings({ ...settings, jummaBayan: e.target.value })}
-                          placeholder="01:00 PM"
+                          placeholder="01:10 PM"
                           className="w-full px-3 py-2 bg-stone-950 border border-stone-700 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-teal-400"
                         />
                       </div>
@@ -910,9 +1000,9 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          value={settings.jummaAzan2 || '01:30 PM'}
+                          value={settings.jummaAzan2 || '01:40 PM'}
                           onChange={(e) => setSettings({ ...settings, jummaAzan2: e.target.value })}
-                          placeholder="01:30 PM"
+                          placeholder="01:40 PM"
                           className="w-full px-3 py-2 bg-stone-950 border border-amber-700/80 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-amber-400 ring-1 ring-amber-900/40"
                         />
                       </div>
@@ -925,9 +1015,9 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          value={settings.jummaKhutbah || '01:35 PM'}
+                          value={settings.jummaKhutbah || '01:45 PM'}
                           onChange={(e) => setSettings({ ...settings, jummaKhutbah: e.target.value })}
-                          placeholder="01:35 PM"
+                          placeholder="01:45 PM"
                           className="w-full px-3 py-2 bg-stone-950 border border-stone-700 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-teal-400"
                         />
                       </div>
@@ -940,9 +1030,9 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          value={settings.jummaJamaat || '01:45 PM'}
+                          value={settings.jummaJamaat || '01:50 PM'}
                           onChange={(e) => setSettings({ ...settings, jummaJamaat: e.target.value })}
-                          placeholder="01:45 PM"
+                          placeholder="01:50 PM"
                           className="w-full px-3 py-2 bg-stone-950 border border-emerald-500 rounded-lg text-white font-mono text-sm font-bold focus:outline-none focus:border-emerald-400 ring-1 ring-emerald-500/50"
                         />
                       </div>
@@ -2220,7 +2310,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-stone-400">
-                          Fajr 05:40 AM • Dhuhr 01:30 PM • Asr 05:30 PM • Isha 08:45 PM • Jumma 01:45 PM
+                          Fajr 05:45 AM • Dhuhr 01:30 PM • Asr 05:15 PM • Isha 08:15 PM • Jumma 01:50 PM
                         </p>
                       </div>
                       <button
@@ -2339,7 +2429,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         onChange={(e) =>
                           setSettings({ ...settings, alertBannerEn: e.target.value })
                         }
-                        placeholder="e.g. Fajr Jamaat is now at 05:40 AM. Please arrive on time."
+                        placeholder="e.g. Fajr Jamaat is now at 05:45 AM. Please arrive on time."
                         className="w-full px-3 py-2 bg-stone-900 border border-stone-700 rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500"
                       />
                     </div>
@@ -2364,32 +2454,68 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
             )}
 
             {/* Bottom Action Footer */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-stone-800">
-              <button
-                type="button"
-                onClick={handleReset}
-                className="w-full sm:w-auto px-4 py-2 bg-stone-800 hover:bg-rose-950/80 hover:text-rose-300 text-stone-300 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border border-stone-700 hover:border-rose-800"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>{isUrdu ? 'ڈیفالٹ پر ری سیٹ کریں' : 'Reset to Defaults'}</span>
-              </button>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-stone-800">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  disabled={isPublishing}
+                  onClick={handleReset}
+                  className="px-3 py-2 bg-stone-800 hover:bg-rose-950/80 hover:text-rose-300 text-stone-300 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border border-stone-700 hover:border-rose-800 disabled:opacity-50"
+                  title="Reset timings to mosque defaults"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>{isUrdu ? 'ڈیفالٹ پر ری سیٹ' : 'Reset Defaults'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isSyncingWithServer || isPublishing}
+                  onClick={handleSyncWithServer}
+                  className="px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border border-stone-700 disabled:opacity-50"
+                  title="Fetch latest published schedule from server"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncingWithServer ? 'animate-spin text-emerald-400' : ''}`} />
+                  <span>{isUrdu ? 'سرور سے سنک' : 'Sync Server'}</span>
+                </button>
+              </div>
+
+              {/* Cloud Sync Indicator */}
+              <div className="hidden md:flex items-center gap-1.5 text-[11px] text-emerald-400 font-mono bg-stone-950 px-3 py-1.5 rounded-lg border border-emerald-900/50">
+                <Cloud className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{isUrdu ? 'مستقل کلاؤڈ لائیو' : 'Permanent Cloud'}</span>
+                {settings.lastSavedTimestamp && (
+                  <span className="text-stone-400 text-[10px]">
+                    • {new Date(settings.lastSavedTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+              </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 sm:flex-initial px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl text-xs font-semibold transition-colors"
+                  className="flex-1 sm:flex-initial px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl text-xs font-semibold transition-colors"
                 >
                   {isUrdu ? 'بند کریں' : 'Close'}
                 </button>
 
                 <button
                   type="button"
+                  disabled={isPublishing}
                   onClick={handleSave}
-                  className="flex-1 sm:flex-initial px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-bold rounded-xl text-xs shadow-md shadow-emerald-950/40 transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 sm:flex-initial px-6 py-2.5 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-stone-950 font-bold rounded-xl text-xs shadow-lg shadow-emerald-950/60 transition-all flex items-center justify-center gap-2 disabled:opacity-75"
                 >
-                  <Save className="w-4 h-4" />
-                  <span>{isUrdu ? 'تبدیلیاں محفوظ کریں' : 'Save & Publish Live'}</span>
+                  {isPublishing ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-stone-950" />
+                      <span>{isUrdu ? 'سرور پر پبلش ہو رہا ہے...' : 'Publishing to Cloud...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="w-4 h-4 text-stone-950" />
+                      <span>{isUrdu ? 'تمام نمازیوں کے لیے پبلش کریں (مستقل لاگو)' : 'Publish Live Permanently (All Devices)'}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

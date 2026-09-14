@@ -361,7 +361,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
   ];
 
   const handleShareSchedule = () => {
-    const shareText = `🕌 Prayer Timetable - Jamia Masjid Usman-e-Ghani (R.A)\nST-11 Sector 5-A/1 North Karachi\n\nFajr: Athan ${formatTo12Hour(prayerData.fajr)} | Jamaat ${jamaatTimes.fajr}\nDhuhr: Athan ${formatTo12Hour(prayerData.dhuhr)} | Jamaat ${jamaatTimes.dhuhr}\nAsr: Athan ${formatTo12Hour(prayerData.asr)} | Jamaat ${jamaatTimes.asr}\nMaghrib: Athan ${formatTo12Hour(prayerData.maghrib)} | Jamaat ${jamaatTimes.maghrib}\nIsha: Athan ${formatTo12Hour(prayerData.isha)} | Jamaat ${jamaatTimes.isha}\nJumma: Bayan ${adminSettings?.jummaBayan || '01:00 PM'} | Jamaat ${jamaatTimes.jumma}\n\nVerified Hanafi Karachi`;
+    const shareText = `🕌 Prayer Timetable - Jamia Masjid Usman-e-Ghani (R.A)\nST-11 Sector 5-A/1 North Karachi\n\nFajr: Athan ${formatTo12Hour(prayerData.fajr)} | Jamaat ${jamaatTimes.fajr}\nDhuhr: Athan ${formatTo12Hour(prayerData.dhuhr)} | Jamaat ${jamaatTimes.dhuhr}\nAsr: Athan ${formatTo12Hour(prayerData.asr)} | Jamaat ${jamaatTimes.asr}\nMaghrib: Athan ${formatTo12Hour(prayerData.maghrib)} | Jamaat ${jamaatTimes.maghrib}\nIsha: Athan ${formatTo12Hour(prayerData.isha)} | Jamaat ${jamaatTimes.isha}\nJumma: Azan 1 ${adminSettings?.jummaAzan || '12:50 PM'} | Bayan ${adminSettings?.jummaBayan || '01:10 PM'} | Azan 2 ${adminSettings?.jummaAzan2 || '01:40 PM'} | Khutbah ${adminSettings?.jummaKhutbah || '01:45 PM'} | Jamaat ${jamaatTimes.jumma}\n\nVerified Hanafi Karachi`;
     
     if (navigator.clipboard) {
       navigator.clipboard.writeText(shareText);
@@ -1233,6 +1233,19 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                 <Printer className="w-3.5 h-3.5" />
                 <span>{isUrdu ? 'ماہانہ ٹائم ٹیبل' : 'Monthly Table'}</span>
               </button>
+
+              {/* Prominent Ramadan 30-Day Timetable & Download Button */}
+              {onOpenRamadanModal && (
+                <button
+                  id="btn-open-ramadan-timetable"
+                  onClick={onOpenRamadanModal}
+                  className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md shadow-amber-950/40 ring-1 ring-amber-300"
+                  title="Ramadan Calendar & Downloads"
+                >
+                  <Moon className="w-3.5 h-3.5 fill-stone-950" />
+                  <span>{isUrdu ? 'تقویمِ رمضان (تمام نمازیں و ڈاؤن لوڈ)' : 'Ramadan Calendar & Download'}</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -1382,13 +1395,13 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
             </div>
 
             {/* Friday Timetable Badges (Azan 1, Bayan, Azan 2, Khutbah & Jamaat) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
               <div className="p-2 rounded-lg bg-stone-950/80 border border-stone-800">
                 <span className="block text-[10px] text-stone-400 uppercase">
                   {isUrdu ? 'اذانِ اول' : '1st Athan'}
                 </span>
                 <span className="font-bold text-stone-200 font-mono">
-                  {adminSettings?.jummaAzan || '01:00 PM'}
+                  {adminSettings?.jummaAzan || '12:50 PM'}
                 </span>
               </div>
 
@@ -1397,7 +1410,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                   {isUrdu ? 'درس / بیان' : 'Urdu Bayan'}
                 </span>
                 <span className="font-bold text-amber-300 font-mono">
-                  {adminSettings?.jummaBayan || '01:00 PM'}
+                  {adminSettings?.jummaBayan || '01:10 PM'}
                 </span>
               </div>
 
@@ -1406,16 +1419,25 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                   {isUrdu ? 'اذانِ ثانی' : '2nd Athan'}
                 </span>
                 <span className="font-bold text-amber-200 font-mono">
-                  {adminSettings?.jummaAzan2 || '01:30 PM'}
+                  {adminSettings?.jummaAzan2 || '01:40 PM'}
                 </span>
               </div>
 
-              <div className="p-2 rounded-lg bg-emerald-900/60 border border-emerald-600 shadow-sm">
+              <div className="p-2 rounded-lg bg-stone-950/80 border border-stone-800">
+                <span className="block text-[10px] text-stone-400 uppercase">
+                  {isUrdu ? 'عربی خطبہ' : 'Khutbah'}
+                </span>
+                <span className="font-bold text-stone-200 font-mono">
+                  {adminSettings?.jummaKhutbah || '01:45 PM'}
+                </span>
+              </div>
+
+              <div className="col-span-2 sm:col-span-1 p-2 rounded-lg bg-emerald-900/60 border border-emerald-600 shadow-sm">
                 <span className="block text-[10px] text-emerald-300 uppercase font-semibold">
-                  {isUrdu ? 'خطبہ و جماعت' : 'Khutbah & Jamaat'}
+                  {isUrdu ? 'جمعہ جماعت' : 'Jumma Jamaat'}
                 </span>
                 <span className="font-extrabold text-white font-mono">
-                  {adminSettings?.jummaJamaat || '01:45 PM'}
+                  {adminSettings?.jummaJamaat || '01:50 PM'}
                 </span>
               </div>
             </div>

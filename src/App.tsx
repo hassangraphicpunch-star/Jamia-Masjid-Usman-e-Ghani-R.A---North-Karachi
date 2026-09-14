@@ -11,6 +11,7 @@ import {
   computeNextPrayer,
   calculateJamaatTimes,
   getStoredAdminSettings,
+  fetchPublishedAdminSettings,
 } from './services/prayerService';
 import { azanAudioEngine } from './services/azanAudioService';
 import { Navbar } from './components/Navbar';
@@ -74,8 +75,15 @@ export default function App() {
     loadTimings();
   }, [loadTimings]);
 
-  // Synchronize live admin portal updates across tabs and internal events
+  // Synchronize live admin portal updates across tabs, internal events, and server backend
   useEffect(() => {
+    // Initial fetch from server to get permanently published settings for all visitors
+    fetchPublishedAdminSettings().then((published) => {
+      if (published) {
+        setAdminSettings(published);
+      }
+    });
+
     const handleSettingsUpdate = (e: any) => {
       if (e.detail) {
         setAdminSettings(e.detail);
@@ -85,9 +93,29 @@ export default function App() {
     };
     window.addEventListener('mosque_admin_settings_updated', handleSettingsUpdate);
     window.addEventListener('storage', handleSettingsUpdate);
+
+    // Periodic sync from server every 45 seconds for automatic live synchronization across all users
+    const syncInterval = setInterval(() => {
+      fetchPublishedAdminSettings().then((published) => {
+        if (published) {
+          setAdminSettings((prev) => {
+            // Only update if timestamp is newer
+            if (
+              published.lastSavedTimestamp &&
+              published.lastSavedTimestamp !== prev.lastSavedTimestamp
+            ) {
+              return published;
+            }
+            return prev;
+          });
+        }
+      });
+    }, 45000);
+
     return () => {
       window.removeEventListener('mosque_admin_settings_updated', handleSettingsUpdate);
       window.removeEventListener('storage', handleSettingsUpdate);
+      clearInterval(syncInterval);
     };
   }, []);
 
