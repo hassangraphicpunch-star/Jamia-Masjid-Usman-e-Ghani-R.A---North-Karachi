@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Play,
   Tv,
@@ -12,9 +12,15 @@ import {
   ChevronRight,
   Film,
   Layers,
+  Youtube,
+  RefreshCw,
 } from 'lucide-react';
 import { Language, AdminPrayerSettings, MosqueVideoItem } from '../types';
 import { getEmbedVideoUrl } from '../services/prayerService';
+import {
+  MOSQUE_YOUTUBE_CONFIG,
+  fetchYouTubeChannelVideos,
+} from '../services/youtubeService';
 
 interface MosqueVideoSectionProps {
   language: Language;
@@ -30,10 +36,41 @@ export const MosqueVideoSection: React.FC<MosqueVideoSectionProps> = ({
   const isUrdu = language === 'ur';
   const mediaSettings = adminSettings.mediaSettings;
 
-  // If video section is hidden by admin setting, do not render
-  if (mediaSettings?.showVideoSection === false) {
-    return null;
-  }
+  // Channel videos loaded from YouTube API / backend
+  const [channelVideos, setChannelVideos] = useState<MosqueVideoItem[]>([]);
+  const [isLoadingChannel, setIsLoadingChannel] = useState<boolean>(false);
+
+  // Load YouTube channel videos
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingChannel(true);
+    fetchYouTubeChannelVideos(8)
+      .then((res) => {
+        if (isMounted && res.videos) {
+          const mapped: MosqueVideoItem[] = res.videos.map((v) => ({
+            id: `yt-${v.video_id}`,
+            titleEn: v.title,
+            titleUr: v.title,
+            category: 'juma',
+            videoUrl: v.url,
+            thumbnailUrl: v.thumbnailUrl,
+            date: v.published_at ? new Date(v.published_at).toLocaleDateString() : 'Recent',
+            speakerEn: 'Jamia Masjid Usman-e-Ghani',
+            speakerUr: 'جامع مسجد عثمانِ غنی نارتھ کراچی',
+            descriptionEn: `Official recording from Mosque YouTube Channel (${MOSQUE_YOUTUBE_CONFIG.channelId})`,
+            descriptionUr: `جامع مسجد عثمانِ غنی کے آفیشل یوٹیوب چینل کی مستند ریکارڈنگ`,
+          }));
+          setChannelVideos(mapped);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingChannel(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const allVideos: MosqueVideoItem[] = useMemo(() => {
     const list = mediaSettings?.videoList && mediaSettings.videoList.length > 0
@@ -57,11 +94,20 @@ export const MosqueVideoSection: React.FC<MosqueVideoSectionProps> = ({
           isLive: mediaSettings.isLiveStream,
           date: 'Featured',
         };
-        return [featuredItem, ...list];
+        return [featuredItem, ...list, ...channelVideos.filter(cv => cv.videoUrl !== mediaSettings.featuredVideoUrl)];
       }
     }
-    return list;
-  }, [mediaSettings]);
+
+    // Merge custom admin list with channel videos
+    const combined = [...list];
+    channelVideos.forEach((cv) => {
+      if (!combined.some((item) => item.videoUrl === cv.videoUrl)) {
+        combined.push(cv);
+      }
+    });
+
+    return combined;
+  }, [mediaSettings, channelVideos]);
 
   const [selectedVideo, setSelectedVideo] = useState<MosqueVideoItem | null>(() => {
     if (allVideos.length > 0) return allVideos[0];
@@ -146,6 +192,36 @@ export const MosqueVideoSection: React.FC<MosqueVideoSectionProps> = ({
                 ? 'جامع مسجد عثمانِ غنی نارتھ کراچی کے خطیب حضرت مولانا یونس منصوری کے جمعہ بیانات، روزانہ درسِ قرآن اور مسجد کی خدمات کی ویڈیو گیلری۔'
                 : 'Watch Friday Khutbahs by Maulana Younus Mansori, daily Tafseer series, and Islamic educational videos from North Karachi.'}
             </p>
+
+            {/* Official YouTube Channel Connect Pill */}
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <a
+                href={MOSQUE_YOUTUBE_CONFIG.channelUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900/90 border border-red-700/60 text-white text-xs font-semibold transition-all group shadow-sm shadow-red-950/50"
+              >
+                <Youtube className="w-4 h-4 text-red-500 fill-current group-hover:scale-110 transition-transform" />
+                <span>
+                  {isUrdu
+                    ? 'آفیشل یوٹیوب چینل: جامع مسجد عثمان غنی'
+                    : 'Official Mosque YouTube Channel'}
+                </span>
+                <span className="text-[10px] font-mono text-red-300 opacity-80 hidden sm:inline">
+                  (ID: {MOSQUE_YOUTUBE_CONFIG.channelId})
+                </span>
+                <ExternalLink className="w-3 h-3 text-red-300" />
+              </a>
+
+              <a
+                href={MOSQUE_YOUTUBE_CONFIG.subscribeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all shadow-md shadow-red-900/40"
+              >
+                <span>{isUrdu ? 'سبسکرائب کریں' : 'Subscribe'}</span>
+              </a>
+            </div>
           </div>
 
           {/* Category Filter Chips */}

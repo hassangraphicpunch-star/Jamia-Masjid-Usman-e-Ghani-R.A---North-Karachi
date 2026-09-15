@@ -297,3 +297,71 @@ export interface QuranHadithItem {
   themeBadgeEn: string;
 }
 
+export interface QuranReciter {
+  id: number;
+  name: string;
+  style: 'Murattal' | 'Mujawwad';
+  audioServerSubpath: string;
+}
+
+export interface QuranSurahItem {
+  number: number;
+  nameAr: string;
+  nameEn: string;
+  nameUr: string;
+  englishMeaning: string;
+  numberOfAyahs: number;
+  revelationType: 'Meccan' | 'Medinan';
+  revelationTypeUr: string;
+  juzNumber: number;
+  pageNumber: number;
+  audioSampleAyah?: string;
+}
+
+export interface QuranAyah {
+  numberInSurah: number;
+  textArabic: string;
+  translation: string;
+  juz?: number;
+  page?: number;
+}
+
+export interface QuranTranslationOption {
+  id: string;
+  name: string;
+  language: string;
+  direction: 'rtl' | 'ltr';
+  author: string;
+}
+
+export interface DuaCategory {
+  id: string;
+  name: string;
+  nameUr: string;
+  description: string;
+  count: number;
+  icon?: string;
+}
+
+export interface MasnoonDuaItem {
+  id: number;
+  category: string;
+  title: string;
+  titleUr?: string;
+  arabic: string;
+  transliteration: string;
+  translation: string;
+  translationUr?: string;
+  source: string;
+  repeat: number;
+}
+
+export interface YouTubeChannelVideo {
+  video_id: string;
+  title: string;
+  url: string;
+  published_at: string;
+  thumbnailUrl?: string;
+  channelTitle?: string;
+}
+

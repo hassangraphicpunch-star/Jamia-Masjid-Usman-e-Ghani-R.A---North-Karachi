@@ -9,15 +9,26 @@ import {
   IqamahCountdownState,
 } from '../types';
 
-// Coordinates for Usman Ghani (R.A) Masjid, Sector 5-A/1, North Karachi, Pakistan
+// Official Coordinates & Qibla Calculation for Jamia Masjid Usman-e-Ghani, Sector 5-A/1, North Karachi, Pakistan
 export const MOSQUE_COORDINATES = {
-  lat: '25°00′17″N',
-  lng: '67°03′27″E',
-  latDecimal: 25.0048211,
-  lngDecimal: 67.0574599,
+  lat: '24°59′46″N',
+  lng: '67°04′02″E',
+  latDecimal: 24.9961,
+  lngDecimal: 67.0673,
   address: 'ST-11, Sector 5-A/1, North Karachi, Karachi, Sindh, Pakistan',
   locationName: 'North Karachi (Sector 5-A/1)',
-  qiblaBearing: 261.5, // Degrees from North
+  qiblaBearing: 267.49, // Degrees from True North (Geographic North)
+  compassBearing: 'W',
+  distanceKm: 2807.34,
+  distanceMiles: 1744.4,
+  kaabaCoordinates: {
+    latitude: 21.4225,
+    longitude: 39.8262,
+    latStr: '21°25′21″N',
+    lngStr: '39°49′34″E',
+  },
+  bearingNote:
+    'Bearing is calculated as true north (geographic north), not magnetic north. Compass apps may show a different angle due to magnetic declination in your area.',
   mapsUrl:
     'https://www.google.com/maps/place/Usman+Ghani+(R.A)+Masjid,+5-A%2F1,+North+Karachi/@25.0048211,67.0574599,18z/data=!4m6!3m5!1s0x3eb3410e0faa7583:0x323fbf6c080bb622!8m2!3d25.0048211!4d67.0574599!16s%2Fg%2F11cspzpxww',
 };

@@ -31,6 +31,8 @@ import { IqamahAlertBanner } from './components/IqamahAlertBanner';
 import { NotificationBanner } from './components/NotificationBanner';
 import { NotificationModal } from './components/NotificationModal';
 import { RamadanCalendarModal } from './components/RamadanCalendarModal';
+import { QuranModal } from './components/QuranModal';
+import { MasnoonDuasModal } from './components/MasnoonDuasModal';
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('ur');
@@ -45,6 +47,8 @@ export default function App() {
   const [audioMuted, setAudioMuted] = useState<boolean>(false);
   const [monthlyModalOpen, setMonthlyModalOpen] = useState<boolean>(false);
   const [ramadanModalOpen, setRamadanModalOpen] = useState<boolean>(false);
+  const [quranModalOpen, setQuranModalOpen] = useState<boolean>(false);
+  const [duasModalOpen, setDuasModalOpen] = useState<boolean>(false);
   const [adminModalOpen, setAdminModalOpen] = useState<boolean>(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState<boolean>(false);
   const [azanModalOpen, setAzanModalOpen] = useState<boolean>(false);
@@ -251,6 +255,8 @@ export default function App() {
         onOpenAzanModal={() => handleOpenAzanModal()}
         onOpenNotifications={() => setNotificationModalOpen(true)}
         onOpenRamadanModal={() => setRamadanModalOpen(true)}
+        onOpenQuranModal={() => setQuranModalOpen(true)}
+        onOpenDuasModal={() => setDuasModalOpen(true)}
       />
 
       {/* Main Content Sections */}
@@ -285,7 +291,7 @@ export default function App() {
         <MosqueVideoSection
           language={language}
           adminSettings={adminSettings}
-          onOpenAdminPortal={() => setAdminModalOpen(true)}
+          onOpenAdminModal={() => setAdminModalOpen(true)}
         />
 
         {/* 4. Mosque Facilities & Dar-ul-Quran Maktab */}
@@ -296,6 +302,8 @@ export default function App() {
         {/* 5. Daily Quran/Hadith Wisdom & Interactive Digital Tasbih */}
         <DailyWisdomAndTasbih
           language={language}
+          onOpenQuranModal={() => setQuranModalOpen(true)}
+          onOpenDuasModal={() => setDuasModalOpen(true)}
         />
 
         {/* 6. Location ST-11 Sector 5-A/1 North Karachi, Directions & Qibla Bearing */}
@@ -353,6 +361,20 @@ export default function App() {
         onClose={() => setRamadanModalOpen(false)}
         language={language}
         adminSettings={adminSettings}
+      />
+
+      {/* The Holy Quran - 114 Surahs, 6236 Verses, 13 Reciters & Translations */}
+      <QuranModal
+        isOpen={quranModalOpen}
+        onClose={() => setQuranModalOpen(false)}
+        language={language}
+      />
+
+      {/* Hisn-ul-Muslim: 126 Masnoon Duas (27 Categories) */}
+      <MasnoonDuasModal
+        isOpen={duasModalOpen}
+        onClose={() => setDuasModalOpen(false)}
+        language={language}
       />
 
     </div>

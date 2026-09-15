@@ -24,12 +24,16 @@ import { QURAN_HADITH_COLLECTION } from '../data/quranHadithData';
 
 interface DailyWisdomAndTasbihProps {
   language: Language;
+  onOpenQuranModal?: () => void;
+  onOpenDuasModal?: () => void;
 }
 
 const ROTATION_INTERVAL_SECONDS = 25;
 
 export const DailyWisdomAndTasbih: React.FC<DailyWisdomAndTasbihProps> = ({
   language,
+  onOpenQuranModal,
+  onOpenDuasModal,
 }) => {
   const isUrdu = language === 'ur';
 
@@ -559,6 +563,32 @@ export const DailyWisdomAndTasbih: React.FC<DailyWisdomAndTasbihProps> = ({
                 </span>
               </div>
             </div>
+
+            {/* Quick Links to Full Quran and 126 Masnoon Duas */}
+            {(onOpenQuranModal || onOpenDuasModal) && (
+              <div className="pt-2 grid grid-cols-2 gap-2">
+                {onOpenQuranModal && (
+                  <button
+                    type="button"
+                    onClick={onOpenQuranModal}
+                    className="p-2.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/70 border border-emerald-700/50 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>{isUrdu ? 'القرآن (13 قراء)' : 'Full Quran (13 Qaris)'}</span>
+                  </button>
+                )}
+                {onOpenDuasModal && (
+                  <button
+                    type="button"
+                    onClick={onOpenDuasModal}
+                    className="p-2.5 rounded-xl bg-amber-950/60 hover:bg-amber-900/70 border border-amber-700/50 text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <Heart className="w-3.5 h-3.5" />
+                    <span>{isUrdu ? '126 مسنون دعائیں' : '126 Masnoon Duas'}</span>
+                  </button>
+                )}
+              </div>
+            )}
 
           </div>
 

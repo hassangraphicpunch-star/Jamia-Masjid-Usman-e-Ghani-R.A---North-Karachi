@@ -13,6 +13,7 @@ import {
   Calendar,
   ShieldCheck,
   Moon,
+  BookOpen,
 } from 'lucide-react';
 import { Language } from '../types';
 import { MOSQUE_INFO } from '../data/mockData';
@@ -34,6 +35,8 @@ interface NavbarProps {
   onOpenAzanModal?: () => void;
   onOpenNotifications?: () => void;
   onOpenRamadanModal?: () => void;
+  onOpenQuranModal?: () => void;
+  onOpenDuasModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -48,6 +51,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAzanModal,
   onOpenNotifications,
   onOpenRamadanModal,
+  onOpenQuranModal,
+  onOpenDuasModal,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -89,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'announcements', labelEn: 'Announcements', labelUr: 'تازہ اعلانات' },
     { id: 'facilities', labelEn: 'Facilities', labelUr: 'خدمات و شعبہ جات' },
     { id: 'wisdom-tasbih', labelEn: 'Wisdom & Tasbih', labelUr: 'تسبیح و حکمت' },
-    { id: 'qibla-location', labelEn: 'Location & Map', labelUr: 'گوگل نقشہ و مقام' },
+    { id: 'qibla-location', labelEn: 'Qibla & Location', labelUr: 'سمتِ قبلہ و مقام' },
     { id: 'donate', labelEn: 'Donate', labelUr: 'تعاون و صدقات' },
   ];
 
@@ -212,6 +217,32 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Volume2 className="w-4 h-4 text-emerald-400" />
               )}
             </button>
+
+            {/* Quran Reader & Audio Modal Button */}
+            {onOpenQuranModal && (
+              <button
+                id="btn-nav-quran"
+                onClick={onOpenQuranModal}
+                className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 border border-emerald-600/50 text-xs font-bold transition-all shadow-sm"
+                title="The Holy Quran - 114 Surahs & 13 Reciters"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">{isUrdu ? 'القرآن' : 'Quran'}</span>
+              </button>
+            )}
+
+            {/* Masnoon Duas 126 Supplications Modal Button */}
+            {onOpenDuasModal && (
+              <button
+                id="btn-nav-duas"
+                onClick={onOpenDuasModal}
+                className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 border border-amber-600/50 text-xs font-bold transition-all shadow-sm"
+                title="126 Masnoon Duas (27 Categories)"
+              >
+                <Heart className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">{isUrdu ? 'مسنون دعائیں' : 'Duas'}</span>
+              </button>
+            )}
 
             {/* Ramadan 2027 Quick Calendar Button */}
             {onOpenRamadanModal && (
@@ -338,6 +369,38 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               );
             })}
+
+            {onOpenQuranModal && (
+              <button
+                onClick={() => {
+                  onOpenQuranModal();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-semibold text-emerald-300 bg-emerald-950/50 border border-emerald-600/50 flex items-center justify-between mt-1"
+              >
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-emerald-400" />
+                  <span>{isUrdu ? 'القرآن الکریم (تلاوت، 13 قراء و تراجم)' : 'The Holy Quran (Recitations & Translations)'}</span>
+                </div>
+                <span className="text-emerald-400 text-xs">Open ›</span>
+              </button>
+            )}
+
+            {onOpenDuasModal && (
+              <button
+                onClick={() => {
+                  onOpenDuasModal();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-semibold text-amber-300 bg-amber-950/50 border border-amber-600/50 flex items-center justify-between mt-1"
+              >
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-amber-400" />
+                  <span>{isUrdu ? 'حصن المسلم: 126 مسنون دعائیں و اذکار' : '126 Masnoon Duas (27 Categories)'}</span>
+                </div>
+                <span className="text-amber-400 text-xs">View ›</span>
+              </button>
+            )}
 
             {onOpenRamadanModal && (
               <button

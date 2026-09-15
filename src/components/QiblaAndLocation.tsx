@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MapPin,
   Compass,
@@ -14,6 +14,12 @@ import {
   Copy,
   Check,
   Layers,
+  Smartphone,
+  RotateCw,
+  Sparkles,
+  Info,
+  Globe,
+  Share2,
 } from 'lucide-react';
 import { Language } from '../types';
 import { MOSQUE_INFO } from '../data/mockData';
@@ -28,6 +34,7 @@ export const QiblaAndLocation: React.FC<QiblaAndLocationProps> = ({
 }) => {
   const [inquirySent, setInquirySent] = useState(false);
   const [copiedCoords, setCopiedCoords] = useState(false);
+  const [copiedQibla, setCopiedQibla] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -35,7 +42,84 @@ export const QiblaAndLocation: React.FC<QiblaAndLocationProps> = ({
     message: '',
   });
 
+  // Mobile Device Orientation Sensor / Interactive Simulator State
+  const [deviceHeading, setDeviceHeading] = useState<number | null>(null);
+  const [isCompassActive, setIsCompassActive] = useState(false);
+  const [sensorSupported, setSensorSupported] = useState<boolean | null>(null);
+  const [manualAngle, setManualAngle] = useState(267.5);
+  const [useSimulator, setUseSimulator] = useState(false);
+
   const isUrdu = language === 'ur';
+
+  // Target Qibla Bearing: 267.49° True North
+  const QIBLA_BEARING = MOSQUE_COORDINATES.qiblaBearing || 267.49;
+  const currentHeading = useSimulator ? manualAngle : (deviceHeading ?? QIBLA_BEARING);
+
+  // Compute angle difference to Kaaba
+  const angleDiff = Math.abs(currentHeading - QIBLA_BEARING);
+  const isAligned = angleDiff <= 4 || angleDiff >= 356;
+
+  // Attempt to activate Device Compass Sensor on mobile
+  const startCompassSensor = async () => {
+    if (typeof window === 'undefined') return;
+
+    if (
+      typeof (DeviceOrientationEvent as any) !== 'undefined' &&
+      typeof (DeviceOrientationEvent as any).requestPermission === 'function'
+    ) {
+      try {
+        const res = await (DeviceOrientationEvent as any).requestPermission();
+        if (res !== 'granted') {
+          setSensorSupported(false);
+          setUseSimulator(true);
+          return;
+        }
+      } catch {
+        setSensorSupported(false);
+        setUseSimulator(true);
+        return;
+      }
+    }
+
+    setIsCompassActive(true);
+    setUseSimulator(false);
+  };
+
+  useEffect(() => {
+    if (!isCompassActive) return;
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      let heading: number | null = null;
+      if ((e as any).webkitCompassHeading !== undefined) {
+        // iOS Safari webkitCompassHeading is degrees clockwise from magnetic north
+        heading = (e as any).webkitCompassHeading;
+      } else if (e.alpha !== null) {
+        // Standard Android / Chrome
+        heading = (360 - e.alpha) % 360;
+      }
+
+      if (heading !== null) {
+        setDeviceHeading(Math.round(heading * 10) / 10);
+        setSensorSupported(true);
+      }
+    };
+
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation, true);
+    };
+  }, [isCompassActive]);
+
+  // Haptic feedback when aligned
+  useEffect(() => {
+    if (isAligned && (isCompassActive || useSimulator)) {
+      try {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate(40);
+        }
+      } catch (_) {}
+    }
+  }, [isAligned, isCompassActive, useSimulator]);
 
   const handleInquirySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +141,19 @@ export const QiblaAndLocation: React.FC<QiblaAndLocationProps> = ({
     setTimeout(() => setCopiedCoords(false), 2500);
   };
 
+  const copyQiblaDetails = () => {
+    const text = `🕋 جامع مسجد عثمانِ غنی (سیکٹر 5-اے/1، نارتھ کراچی):
+• سمتِ قبلہ (Qibla Direction): 267.49° W (مغرب)
+• حقیقی شمال سے زاویہ: 267.49° (True North)
+• فاصلہ تا خانہ کعبہ: 2,807.34 کلومیٹر (1,744.4 میل)
+• مقامِ مسجد (Mosque GPS): 24.9961° N, 67.0673° E
+• خانہ کعبہ (Kaaba GPS): 21.4225° N, 39.8262° E
+(صدقہ جاریہ برائے امتِ مسلمہ)`;
+    navigator.clipboard.writeText(text);
+    setCopiedQibla(true);
+    setTimeout(() => setCopiedQibla(false), 2500);
+  };
+
   return (
     <section
       id="qibla-location"
@@ -67,8 +164,8 @@ export const QiblaAndLocation: React.FC<QiblaAndLocationProps> = ({
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-2">
-            <MapPin className="w-3.5 h-3.5" />
-            <span>{isUrdu ? 'مقام، نقشہ و قبلہ رخ' : 'Mosque Location & Qibla Direction'}</span>
+            <Compass className="w-3.5 h-3.5" />
+            <span>{isUrdu ? 'مقام، نقشہ و سمتِ قبلہ (267.49° W)' : 'Mosque Location & Qibla Direction (267.49° W)'}</span>
           </div>
 
           <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
@@ -93,52 +190,277 @@ export const QiblaAndLocation: React.FC<QiblaAndLocationProps> = ({
           {/* Left Col: Interactive Qibla Compass & Location Coordinates */}
           <div className="lg:col-span-5 flex flex-col justify-between space-y-6">
             
-            {/* Qibla Direction Visual Card */}
-            <div className="rounded-2xl bg-gradient-to-b from-stone-900 via-stone-950 to-stone-900 border border-emerald-600/40 p-6 shadow-xl relative overflow-hidden text-center">
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-2.5 py-1 rounded-md bg-emerald-950 border border-emerald-700 text-emerald-300 text-[11px] font-bold uppercase flex items-center gap-1.5">
-                  <Compass className="w-3.5 h-3.5" />
-                  <span>{isUrdu ? 'سمتِ قبلہ برائے نارتھ کراچی' : 'Qibla Bearing'}</span>
+            {/* Qibla Direction & Interactive Precision Compass Card */}
+            <div
+              className={`rounded-2xl bg-gradient-to-b from-stone-900 via-stone-950 to-stone-900 border p-5 sm:p-6 shadow-2xl relative overflow-hidden transition-all duration-300 ${
+                isAligned && (isCompassActive || useSimulator)
+                  ? 'border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.3)]'
+                  : 'border-emerald-600/40'
+              }`}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <span className="px-2.5 py-1 rounded-md bg-emerald-950/90 border border-emerald-700/80 text-emerald-300 text-[11px] font-bold uppercase flex items-center gap-1.5 shadow-sm">
+                  <Compass className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>{isUrdu ? 'سمتِ قبلہ برائے نارتھ کراچی' : 'Qibla Direction (North Karachi)'}</span>
                 </span>
-                <span className="font-mono text-xs text-amber-300 font-bold">
-                  261.5° WNW
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono text-sm sm:text-base text-amber-300 font-extrabold bg-stone-900 px-2.5 py-0.5 rounded-lg border border-amber-500/30">
+                    267.49° W
+                  </span>
+                </div>
               </div>
 
-              {/* Graphical Compass Dial */}
-              <div className="relative w-44 h-44 mx-auto my-3 flex items-center justify-center">
-                {/* Outer Ring */}
-                <div className="absolute inset-0 rounded-full border-2 border-dashed border-emerald-500/30 animate-[spin_60s_linear_infinite]" />
-                <div className="absolute inset-2 rounded-full border border-stone-700 bg-stone-950/80 shadow-inner" />
-                
-                {/* Cardinal Points */}
-                <span className="absolute top-3 font-bold text-stone-400 text-xs">N</span>
-                <span className="absolute bottom-3 font-bold text-stone-400 text-xs">S</span>
-                <span className="absolute right-3 font-bold text-stone-400 text-xs">E</span>
-                <span className="absolute left-3 font-bold text-stone-400 text-xs">W</span>
-
-                {/* Kaaba Direction Indicator Arrow (261.5 deg) */}
+              {/* Graphical Interactive Compass Dial */}
+              <div className="relative w-48 h-48 sm:w-52 sm:h-52 mx-auto my-2 flex items-center justify-center">
+                {/* Outer Calibration Ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-dashed border-emerald-500/30 animate-[spin_120s_linear_infinite]" />
                 <div
-                  className="absolute w-full h-full flex items-center justify-center pointer-events-none"
-                  style={{ transform: 'rotate(261.5deg)' }}
+                  className={`absolute inset-2 rounded-full border bg-stone-950/90 transition-all duration-500 ${
+                    isAligned && (isCompassActive || useSimulator)
+                      ? 'border-emerald-400 shadow-[inset_0_0_20px_rgba(16,185,129,0.4)]'
+                      : 'border-stone-700 shadow-inner'
+                  }`}
+                />
+
+                {/* Fixed Compass Markings Dial (Rotates in sensor mode to reflect device rotation) */}
+                <div
+                  className="absolute inset-3 rounded-full flex items-center justify-center transition-transform duration-200"
+                  style={{
+                    transform: isCompassActive || useSimulator ? `rotate(${-currentHeading}deg)` : 'rotate(0deg)',
+                  }}
                 >
-                  <div className="flex flex-col items-center -translate-y-8">
-                    <div className="w-6 h-6 rounded-md bg-amber-400 text-stone-950 font-bold text-xs flex items-center justify-center shadow-lg shadow-amber-900/50">
-                      🕋
+                  {/* Cardinal Points */}
+                  <span className="absolute top-2 font-mono font-bold text-red-400 text-xs">N 0°</span>
+                  <span className="absolute bottom-2 font-mono font-bold text-stone-400 text-xs">S 180°</span>
+                  <span className="absolute right-2 font-mono font-bold text-stone-400 text-xs">E 90°</span>
+                  <span className="absolute left-2 font-mono font-bold text-amber-300 text-xs">W 270°</span>
+
+                  {/* Degree ticks */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                    {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
+                      <div
+                        key={deg}
+                        className="absolute w-full h-0.5 bg-stone-500"
+                        style={{ transform: `rotate(${deg}deg)` }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Holy Ka'aba Vector Arrow pointing at exact 267.49° */}
+                  <div
+                    className="absolute w-full h-full flex items-center justify-center pointer-events-none transition-transform duration-200"
+                    style={{ transform: `rotate(${QIBLA_BEARING}deg)` }}
+                  >
+                    <div className="flex flex-col items-center -translate-y-10 sm:-translate-y-12">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-500 text-stone-950 font-bold text-sm flex items-center justify-center shadow-lg shadow-amber-950/80 border border-amber-200">
+                        🕋
+                      </div>
+                      <div className="w-1 h-12 bg-gradient-to-b from-amber-400 via-emerald-400 to-transparent rounded-full shadow-sm" />
+                      <span className="text-[9px] font-mono font-bold text-amber-300 bg-stone-950/90 px-1 rounded -mt-2">
+                        267.49°
+                      </span>
                     </div>
-                    <div className="w-0.5 h-10 bg-gradient-to-b from-amber-400 to-transparent" />
                   </div>
                 </div>
 
-                {/* Center Core */}
-                <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-md z-10" />
+                {/* Center Core Hub */}
+                <div
+                  className={`w-5 h-5 rounded-full border-2 border-white z-10 transition-colors shadow-md flex items-center justify-center ${
+                    isAligned && (isCompassActive || useSimulator)
+                      ? 'bg-emerald-400 animate-pulse'
+                      : 'bg-emerald-600'
+                  }`}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                </div>
+
+                {/* Live Alignment Notification Glow Badge */}
+                {isAligned && (isCompassActive || useSimulator) && (
+                  <div className="absolute -bottom-2 z-20 bg-emerald-950 border border-emerald-400 text-emerald-200 px-3 py-0.5 rounded-full text-[10px] font-bold shadow-lg animate-bounce flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-emerald-400" />
+                    <span>{isUrdu ? 'خانہ کعبہ کی سیدھ درست ہے!' : 'Facing Holy Kaaba!'}</span>
+                  </div>
+                )}
               </div>
 
-              <p className="text-xs text-stone-300 font-medium">
-                {isUrdu
-                  ? 'سیکٹر 5-اے/1 نارتھ کراچی سے خانہ کعبہ کی سمت 261.5 درجے مغرب-شمال-مغرب ہے۔'
-                  : 'From Sector 5-A/1 North Karachi, the Holy Ka’aba in Makkah is at bearing 261.5° (West-North-West).'}
-              </p>
+              {/* Subtitle description */}
+              <div className="text-center mt-2 mb-3">
+                <p className="text-xs text-stone-300 font-medium">
+                  {isUrdu
+                    ? 'جامع مسجد عثمانِ غنی (نارتھ کراچی) سے خانہ کعبہ کا رخ 267.49 درجے (مغرب / West) ہے۔'
+                    : 'From Jamia Masjid Usman-e-Ghani, the Holy Ka’aba in Makkah is at bearing 267.49° (West).'}
+                </p>
+                <p className="text-[11px] text-amber-300/90 font-mono mt-0.5">
+                  {isUrdu
+                    ? 'فاصلہ تا کعبہ شریف: 2,807.34 کلومیٹر (1,744.4 میل)'
+                    : 'Direct Distance to Kaaba: 2,807.34 km (1,744.4 miles)'}
+                </p>
+              </div>
+
+              {/* Interactive Compass Sensor & Simulator Controls */}
+              <div className="p-3 bg-stone-950/80 rounded-xl border border-stone-800/80 mb-3 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-stone-400 flex items-center gap-1.5">
+                    <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{isUrdu ? 'سمارٹ فون سینسر / ٹیسٹ ڈائل' : 'Live Compass / Test Dial'}</span>
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {!isCompassActive ? (
+                      <button
+                        type="button"
+                        onClick={startCompassSensor}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-bold text-[11px] transition-all flex items-center gap-1 shadow-sm"
+                      >
+                        <Compass className="w-3 h-3" />
+                        <span>{isUrdu ? 'سینسر فعال کریں' : 'Start Sensor'}</span>
+                      </button>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500 text-emerald-300 text-[10px] font-mono font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        {Math.round(currentHeading)}°
+                      </span>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setUseSimulator(!useSimulator)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition-all ${
+                        useSimulator
+                          ? 'bg-amber-950/80 border-amber-500 text-amber-300'
+                          : 'bg-stone-800 border-stone-700 text-stone-400 hover:text-white'
+                      }`}
+                    >
+                      {isUrdu ? 'سلائیڈر ٹیسٹ' : 'Simulator'}
+                    </button>
+                  </div>
+                </div>
+
+                {useSimulator && (
+                  <div className="pt-2 border-t border-stone-800 space-y-1">
+                    <div className="flex items-center justify-between text-[11px] text-stone-400 font-mono">
+                      <span>{isUrdu ? 'زاویہ گھمائیں:' : 'Rotate angle:'}</span>
+                      <span className="text-amber-300 font-bold">{Math.round(manualAngle)}°</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={360}
+                      step={0.5}
+                      value={manualAngle}
+                      onChange={(e) => setManualAngle(parseFloat(e.target.value))}
+                      className="w-full h-1.5 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    />
+                    <div className="flex justify-between text-[9px] text-stone-400 font-mono">
+                      <span>N (0°)</span>
+                      <span>E (90°)</span>
+                      <span>S (180°)</span>
+                      <span className="text-amber-400 font-bold">Qibla (267.5°)</span>
+                      <span>N (360°)</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Precision Geodetic Metrics Grid */}
+              <div className="grid grid-cols-2 gap-2 text-left mb-3">
+                <div className="p-2.5 rounded-xl bg-stone-950/90 border border-stone-800/80">
+                  <p className="text-[10px] text-stone-400 uppercase font-semibold">
+                    {isUrdu ? 'سمت و رخ' : 'Qibla Bearing'}
+                  </p>
+                  <p className="text-xs font-bold text-amber-300 font-mono mt-0.5">
+                    267.49° (West)
+                  </p>
+                  <p className="text-[10px] text-stone-400 font-mono">True North</p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-stone-950/90 border border-stone-800/80">
+                  <p className="text-[10px] text-stone-400 uppercase font-semibold">
+                    {isUrdu ? 'فاصلہ تا کعبہ' : 'Kaaba Distance'}
+                  </p>
+                  <p className="text-xs font-bold text-emerald-400 font-mono mt-0.5">
+                    2,807.34 km
+                  </p>
+                  <p className="text-[10px] text-stone-400 font-mono">1,744.4 miles</p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-stone-950/90 border border-stone-800/80">
+                  <p className="text-[10px] text-stone-400 uppercase font-semibold">
+                    {isUrdu ? 'مسجد کوآرڈینیٹس' : 'Mosque GPS'}
+                  </p>
+                  <p className="text-[11px] font-bold text-white font-mono mt-0.5">
+                    24.9961° N
+                  </p>
+                  <p className="text-[10px] text-stone-400 font-mono">67.0673° E</p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-stone-950/90 border border-stone-800/80">
+                  <p className="text-[10px] text-stone-400 uppercase font-semibold">
+                    {isUrdu ? 'خانہ کعبہ (مکہ)' : 'Kaaba (Makkah)'}
+                  </p>
+                  <p className="text-[11px] font-bold text-white font-mono mt-0.5">
+                    21.4225° N
+                  </p>
+                  <p className="text-[10px] text-stone-400 font-mono">39.8262° E</p>
+                </div>
+              </div>
+
+              {/* Shariah / Scientific Calculation Note */}
+              <div className="p-2.5 rounded-xl bg-amber-950/30 border border-amber-700/30 text-stone-300 text-[11px] mb-3 text-left">
+                <div className="flex items-start gap-1.5">
+                  <Info className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    {isUrdu ? (
+                      <span>
+                        <strong>شرعی و سائنسی حساب:</strong> یہ زاویہ حقیقی جغرافیائی شمال (True North) کے مطابق 267.49° مغرب ہے۔ عام موبائل مقناطیسی کمپاس ایپس میں مقناطیسی میلان (Declination) کی وجہ سے معمولی فرق نظر آ سکتا ہے۔
+                      </span>
+                    ) : (
+                      <span>
+                        <strong>True North Bearing:</strong> Calculated as true geographic north (267.49° W). Standard phone magnetic compasses may show slight variance due to local magnetic declination.
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons: Google Qibla AR + Copy Data */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <a
+                  href="https://qiblafinder.withgoogle.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-2 px-3 rounded-xl bg-emerald-700/90 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md"
+                >
+                  <Globe className="w-3.5 h-3.5 text-emerald-200" />
+                  <span>{isUrdu ? 'گوگل کیمرہ قبلہ فائنڈر (AR)' : 'Google Qibla AR Finder'}</span>
+                  <ExternalLink className="w-3 h-3 text-emerald-300" />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={copyQiblaDetails}
+                  className="py-2 px-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-all border border-stone-700"
+                  title="Copy Qibla coordinates and details"
+                >
+                  {copiedQibla ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-emerald-300">{isUrdu ? 'کاپی ہوگیا' : 'Copied!'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-stone-400" />
+                      <span>{isUrdu ? 'قبلہ ڈیٹا کاپی' : 'Copy Qibla'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Sadaqah Jariah Tag */}
+              <div className="mt-2.5 pt-2 border-t border-stone-800/60 flex items-center justify-center gap-1.5 text-[10px] text-emerald-400/80 font-mono">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>{isUrdu ? 'صدقہ جاریہ برائے امتِ مسلمہ' : 'Sadaqah Jariah for the Muslim Ummah'}</span>
+              </div>
             </div>
 
             {/* Landmark Entrance Gate Card */}
