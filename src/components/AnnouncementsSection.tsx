@@ -396,9 +396,9 @@ export const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
           id="dars-detail-modal"
           className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
         >
-          <div className="bg-stone-900 border border-amber-600/60 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            {activeDarsModal.imageUrl && (
-              <div className="relative aspect-video w-full overflow-hidden">
+          <div className="bg-stone-900 border border-amber-600/60 rounded-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            {activeDarsModal.imageUrl ? (
+              <div className="relative aspect-video w-full shrink-0 overflow-hidden">
                 <img
                   src={activeDarsModal.imageUrl}
                   alt={activeDarsModal.titleEn}
@@ -412,9 +412,19 @@ export const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
                   <X className="w-5 h-5" />
                 </button>
               </div>
+            ) : (
+              <div className="p-4 bg-stone-950 border-b border-stone-800 flex items-center justify-between shrink-0">
+                <h4 className="font-bold text-amber-300 text-sm">{isUrdu ? activeDarsModal.titleUr : activeDarsModal.titleEn}</h4>
+                <button
+                  onClick={() => setActiveDarsModal(null)}
+                  className="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             )}
 
-            <div className="p-5 sm:p-6 space-y-4">
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">
                   {isUrdu ? activeDarsModal.frequencyUr : activeDarsModal.frequencyEn}
@@ -487,9 +497,9 @@ export const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
           id="announcement-detail-modal"
           className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
         >
-          <div className="bg-stone-900 border border-emerald-700/60 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-stone-900 border border-emerald-700/60 rounded-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             {activeModalItem.imageUrl && (
-              <div className="relative aspect-video w-full overflow-hidden">
+              <div className="relative aspect-video w-full shrink-0 overflow-hidden">
                 <img
                   src={activeModalItem.imageUrl}
                   alt={activeModalItem.titleEn}
@@ -500,7 +510,7 @@ export const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
             )}
 
             {/* Modal Header */}
-            <div className="p-5 bg-gradient-to-r from-emerald-950 via-stone-900 to-emerald-950 border-b border-stone-800 flex items-start justify-between gap-3">
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-950 via-stone-900 to-emerald-950 border-b border-stone-800 flex items-start justify-between gap-3 shrink-0">
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">
@@ -524,7 +534,7 @@ export const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
             </div>
 
             {/* Modal Content */}
-            <div className="p-5 sm:p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
               {/* Speaker / Time info */}
               {(activeModalItem.speakerEn || activeModalItem.time) && (
                 <div className="p-3.5 rounded-xl bg-stone-950 border border-stone-800 space-y-2 text-xs sm:text-sm">
@@ -567,7 +577,7 @@ export const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-stone-950 border-t border-stone-800 flex items-center justify-between">
+            <div className="p-4 bg-stone-950 border-t border-stone-800 flex items-center justify-between shrink-0">
               <button
                 onClick={(e) => handleShare(activeModalItem, e)}
                 className="px-4 py-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold flex items-center gap-2 transition-colors"

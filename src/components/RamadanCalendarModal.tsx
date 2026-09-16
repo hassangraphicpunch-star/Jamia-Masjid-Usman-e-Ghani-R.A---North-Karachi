@@ -56,6 +56,7 @@ export const RamadanCalendarModal: React.FC<RamadanCalendarModalProps> = ({
   const [selectedDuaTab, setSelectedDuaTab] = useState<'sehri' | 'iftar' | 'ashra' | 'qadr'>('iftar');
   const [copiedNotification, setCopiedNotification] = useState(false);
   const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
+  const [displayMode, setDisplayMode] = useState<'table' | 'cards'>('table');
 
   const isUrdu = language === 'ur';
 
@@ -490,7 +491,7 @@ export const RamadanCalendarModal: React.FC<RamadanCalendarModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
             {/* Button: PDF / Print */}
             <button
               onClick={handlePrint}
@@ -854,25 +855,51 @@ export const RamadanCalendarModal: React.FC<RamadanCalendarModalProps> = ({
           {/* COMPLETE 30 DAYS RAMADAN TABLE: FULL SHOW TAMAM NAMAZ */}
           <div className="rounded-2xl border border-stone-800 shadow-2xl overflow-hidden bg-stone-950">
             <div className="p-3 bg-stone-900 border-b border-stone-800 flex items-center justify-between gap-2 flex-wrap">
-              <span className="text-xs font-bold text-stone-200">
-                {isUrdu
-                  ? `مکمل ۳۰ یومیہ جدول (${filteredDays.length} روزے ظاہر ہیں)`
-                  : `Complete 30-Day Ramadan Timetable (${filteredDays.length} days shown)`}
-              </span>
-              <span className="text-[11px] text-emerald-400 font-semibold">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-stone-200">
+                  {isUrdu
+                    ? `مکمل ۳۰ یومیہ جدول (${filteredDays.length} روزے ظاہر ہیں)`
+                    : `Complete 30-Day Ramadan Timetable (${filteredDays.length} days shown)`}
+                </span>
+                {/* View Mode Toggle: Table vs Cards (Ideal for Mobile Devices) */}
+                <div className="inline-flex rounded-lg bg-stone-950 p-0.5 border border-stone-800 text-xs">
+                  <button
+                    onClick={() => setDisplayMode('table')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                      displayMode === 'table'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'text-stone-400 hover:text-stone-200'
+                    }`}
+                  >
+                    {isUrdu ? 'جدول (Table)' : 'Table'}
+                  </button>
+                  <button
+                    onClick={() => setDisplayMode('cards')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                      displayMode === 'cards'
+                        ? 'bg-amber-600 text-white shadow-sm'
+                        : 'text-stone-400 hover:text-stone-200'
+                    }`}
+                  >
+                    {isUrdu ? 'کارڈز (Cards)' : 'Cards'}
+                  </button>
+                </div>
+              </div>
+              <span className="text-[11px] text-emerald-400 font-semibold hidden sm:inline">
                 {isUrdu
                   ? 'تمام ۵ نمازیں، سحر و افطار، اشراق، زوال اور تراویح'
                   : 'All 5 Daily Prayers + Sehri, Iftar, Ishraq & Taraweeh'}
               </span>
             </div>
 
-            <div className="overflow-x-auto max-h-[58vh]">
-              <table className="w-full text-center text-xs border-collapse font-sans">
-                <thead className="sticky top-0 bg-stone-950 z-10 text-stone-300 border-b border-stone-800 shadow">
-                  <tr className="divide-x divide-stone-800 text-[11px]">
-                    <th className="p-2.5 font-bold text-stone-200 bg-stone-900">
-                      {isUrdu ? 'روزہ #' : 'Roza #'}
-                    </th>
+            {displayMode === 'table' ? (
+              <div className="overflow-x-auto max-h-[58vh]">
+                <table className="w-full text-center text-xs border-collapse font-sans">
+                  <thead className="sticky top-0 bg-stone-950 z-10 text-stone-300 border-b border-stone-800 shadow">
+                    <tr className="divide-x divide-stone-800 text-[11px]">
+                      <th className="p-2.5 font-bold text-stone-200 bg-stone-900 sticky left-0 z-20 shadow-md">
+                        {isUrdu ? 'روزہ #' : 'Roza #'}
+                      </th>
                     <th className="p-2.5 font-bold text-stone-200 whitespace-nowrap bg-stone-900">
                       {isUrdu ? 'عیسوی تاریخ' : 'Gregorian'}
                     </th>
@@ -947,8 +974,8 @@ export const RamadanCalendarModal: React.FC<RamadanCalendarModalProps> = ({
                             : 'bg-stone-900/10'
                         }`}
                       >
-                        {/* Roza Number */}
-                        <td className="p-2.5 font-bold text-white">
+                        {/* Roza Number - Sticky on horizontal scroll */}
+                        <td className="p-2.5 font-bold text-white sticky left-0 bg-stone-950 z-10 shadow-md">
                           <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-900/80 text-amber-300 border border-emerald-600/60 font-mono text-[10px]">
                             {row.rozaNo}
                           </div>
@@ -1081,6 +1108,118 @@ export const RamadanCalendarModal: React.FC<RamadanCalendarModalProps> = ({
                 </tbody>
               </table>
             </div>
+          ) : (
+            /* Mobile & Tablet Friendly Day Cards View */
+            <div className="p-3 sm:p-4 max-h-[60vh] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredDays.map((row) => {
+                const isSpecialNight = row.isLaylatulQadrCandidate;
+                const isFriday = row.isFriday;
+
+                return (
+                  <div
+                    key={row.rozaNo}
+                    className={`rounded-xl p-3.5 border transition-all ${
+                      isFriday
+                        ? 'bg-amber-950/40 border-amber-500/50 shadow-md'
+                        : isSpecialNight
+                        ? 'bg-purple-950/40 border-purple-500/50 shadow-md'
+                        : 'bg-stone-900/80 border-stone-800 hover:border-emerald-700/60'
+                    }`}
+                  >
+                    {/* Card Header: Roza #, Date, Day */}
+                    <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-stone-800">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-emerald-900/80 text-amber-300 border border-emerald-600/60 font-mono text-xs font-bold flex items-center justify-center">
+                          {row.rozaNo}
+                        </div>
+                        <div>
+                          <span className="font-bold text-white text-xs block">
+                            {isUrdu ? `روزہ ${row.rozaNo}` : `Roza #${row.rozaNo}`}
+                          </span>
+                          <span className="text-[10px] text-stone-400">
+                            {row.dateGregorian} • {isUrdu ? row.dayNameUr : row.dayNameEn}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-xs font-arabic text-amber-300 font-bold block">
+                          {row.hijriDateUr}
+                        </span>
+                        {isSpecialNight && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/80 text-purple-200 border border-purple-600 font-semibold">
+                            ⭐ شبِ قدر
+                          </span>
+                        )}
+                        {isFriday && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-900/80 text-amber-200 border border-amber-600 font-semibold">
+                            جمعہ مبارک
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Key Highlights: Sehri End & Iftar Time */}
+                    <div className="grid grid-cols-2 gap-2 mb-2.5 text-center">
+                      <div className="p-2 rounded-lg bg-amber-950/50 border border-amber-700/50">
+                        <span className="text-[10px] text-amber-300/80 uppercase font-semibold block">
+                          {isUrdu ? 'سحری ختم' : 'Sehri End'}
+                        </span>
+                        <span className="text-sm font-bold text-amber-300 font-mono">
+                          {row.sehriEnd}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-rose-950/50 border border-rose-700/50">
+                        <span className="text-[10px] text-rose-300/80 uppercase font-semibold block">
+                          {isUrdu ? 'وقتِ افطار' : 'Iftar Time'}
+                        </span>
+                        <span className="text-sm font-bold text-rose-300 font-mono">
+                          {row.iftarTime}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Jamaat Timings Grid */}
+                    <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] bg-stone-950/60 p-2 rounded-lg border border-stone-800/80">
+                      <div>
+                        <span className="text-stone-400 block">{isUrdu ? 'فجر' : 'Fajr'}</span>
+                        <span className="font-mono font-bold text-white">{row.fajrJamaat}</span>
+                      </div>
+                      <div>
+                        <span className="text-stone-400 block">{isUrdu ? 'ظہر/جمعہ' : 'Dhuhr'}</span>
+                        <span className="font-mono font-bold text-white">{row.dhuhrJamaat}</span>
+                      </div>
+                      <div>
+                        <span className="text-stone-400 block">{isUrdu ? 'عصر' : 'Asr'}</span>
+                        <span className="font-mono font-bold text-white">{row.asrJamaat}</span>
+                      </div>
+                      <div>
+                        <span className="text-stone-400 block">{isUrdu ? 'مغرب' : 'Maghrib'}</span>
+                        <span className="font-mono font-bold text-white">{row.maghribJamaat}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-stone-400 block">{isUrdu ? 'تراویح (۲۰ رکعات)' : 'Taraweeh'}</span>
+                        <span className="font-mono font-bold text-blue-300">{row.taraweehJamaat}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Demo Button */}
+                    {onSelectRozaDemo && (
+                      <button
+                        onClick={() => {
+                          onSelectRozaDemo(row.rozaNo);
+                          onClose();
+                        }}
+                        className="mt-2 w-full py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <span>{isUrdu ? 'اس دن کا ٹیسٹ ڈیمو چلائیں' : 'Test This Day in Live Demo'}</span>
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
           </div>
 
           {/* JUMMAH & TARAWEEH SPECIAL NOTICE STRIP */}

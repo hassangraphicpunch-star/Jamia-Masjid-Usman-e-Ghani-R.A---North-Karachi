@@ -162,13 +162,13 @@ export const MonthlyTimetableModal: React.FC<MonthlyTimetableModalProps> = ({
         </div>
 
         {/* Month Selector Strip */}
-        <div className="px-4 py-3 bg-stone-950/80 border-b border-stone-800 flex items-center justify-between gap-4 overflow-x-auto">
-          <div className="flex items-center gap-1.5 min-w-max">
+        <div className="px-3 sm:px-4 py-2.5 bg-stone-950/80 border-b border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 w-full sm:w-auto">
             {months.map((m, idx) => (
               <button
                 key={m}
                 onClick={() => setSelectedMonth(idx)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
                   selectedMonth === idx
                     ? 'bg-emerald-600 text-white shadow-md'
                     : 'bg-stone-900 text-stone-400 hover:text-stone-200 hover:bg-stone-800'
@@ -186,7 +186,7 @@ export const MonthlyTimetableModal: React.FC<MonthlyTimetableModalProps> = ({
                 onClose();
                 onOpenRamadanCalendar();
               }}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 flex items-center gap-1.5 shrink-0 transition-colors shadow-sm"
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 flex items-center justify-center gap-1.5 shrink-0 transition-colors shadow-sm w-full sm:w-auto"
               title="Open full Ramadan 2027 Schedule"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -201,14 +201,14 @@ export const MonthlyTimetableModal: React.FC<MonthlyTimetableModalProps> = ({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-stone-950 text-stone-300 border-b border-stone-800">
-                  <th className="p-2.5 font-bold">{isUrdu ? 'تاریخ' : 'Date'}</th>
-                  <th className="p-2.5 font-bold text-amber-300">{isUrdu ? 'سحری ختم' : 'Sehri End'}</th>
-                  <th className="p-2.5 font-bold text-sky-300">{isUrdu ? 'فجر اذان / جماعت' : 'Fajr (Azan/Jamaat)'}</th>
-                  <th className="p-2.5 font-bold text-yellow-400">{isUrdu ? 'طلوع / اشراق' : 'Sunrise / Ishraq'}</th>
-                  <th className="p-2.5 font-bold text-emerald-300">{isUrdu ? 'ظہر اذان / جماعت' : 'Dhuhr (Azan/Jamaat)'}</th>
-                  <th className="p-2.5 font-bold text-orange-300">{isUrdu ? 'عصر حنفی' : 'Asr (Hanafi)'}</th>
-                  <th className="p-2.5 font-bold text-rose-300">{isUrdu ? 'مغرب / افطار' : 'Maghrib (Iftar)'}</th>
-                  <th className="p-2.5 font-bold text-blue-300">{isUrdu ? 'عشاء اذان / جماعت' : 'Isha (Azan/Jamaat)'}</th>
+                  <th className="p-2.5 font-bold sticky left-0 bg-stone-950 z-10">{isUrdu ? 'تاریخ' : 'Date'}</th>
+                  <th className="p-2.5 font-bold text-amber-300 whitespace-nowrap">{isUrdu ? 'سحری ختم' : 'Sehri End'}</th>
+                  <th className="p-2.5 font-bold text-sky-300 whitespace-nowrap">{isUrdu ? 'فجر اذان / جماعت' : 'Fajr (Azan/Jamaat)'}</th>
+                  <th className="p-2.5 font-bold text-yellow-400 whitespace-nowrap">{isUrdu ? 'طلوع / اشراق' : 'Sunrise / Ishraq'}</th>
+                  <th className="p-2.5 font-bold text-emerald-300 whitespace-nowrap">{isUrdu ? 'ظہر اذان / جماعت' : 'Dhuhr (Azan/Jamaat)'}</th>
+                  <th className="p-2.5 font-bold text-orange-300 whitespace-nowrap">{isUrdu ? 'عصر حنفی' : 'Asr (Hanafi)'}</th>
+                  <th className="p-2.5 font-bold text-rose-300 whitespace-nowrap">{isUrdu ? 'مغرب / افطار' : 'Maghrib (Iftar)'}</th>
+                  <th className="p-2.5 font-bold text-blue-300 whitespace-nowrap">{isUrdu ? 'عشاء اذان / جماعت' : 'Isha (Azan/Jamaat)'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-800/60 font-mono">
@@ -219,14 +219,14 @@ export const MonthlyTimetableModal: React.FC<MonthlyTimetableModalProps> = ({
                       row.day % 2 === 0 ? 'bg-stone-900/40' : 'bg-stone-900/10'
                     }`}
                   >
-                    <td className="p-2.5 font-bold text-stone-300 font-sans">{row.dateStr}</td>
-                    <td className="p-2.5 text-amber-300">{row.sehriEnd}</td>
-                    <td className="p-2.5 text-sky-200">{row.fajr} / <span className="font-bold text-white">{row.fajrJamaat}</span></td>
-                    <td className="p-2.5 text-yellow-300/90">{row.sunrise} / <span className="font-semibold text-amber-200">{row.ishraq}</span></td>
-                    <td className="p-2.5 text-emerald-200">{row.dhuhr} / <span className="font-bold text-white">{row.dhuhrJamaat}</span></td>
-                    <td className="p-2.5 text-orange-200">{row.asr} / <span className="font-bold text-white">{row.asrJamaat}</span></td>
-                    <td className="p-2.5 text-rose-300 font-bold">{row.maghrib} / {row.maghribJamaat}</td>
-                    <td className="p-2.5 text-blue-200">{row.isha} / <span className="font-bold text-white">{row.ishaJamaat}</span></td>
+                    <td className="p-2.5 font-bold text-stone-300 font-sans sticky left-0 bg-stone-900 z-10 whitespace-nowrap">{row.dateStr}</td>
+                    <td className="p-2.5 text-amber-300 whitespace-nowrap">{row.sehriEnd}</td>
+                    <td className="p-2.5 text-sky-200 whitespace-nowrap">{row.fajr} / <span className="font-bold text-white">{row.fajrJamaat}</span></td>
+                    <td className="p-2.5 text-yellow-300/90 whitespace-nowrap">{row.sunrise} / <span className="font-semibold text-amber-200">{row.ishraq}</span></td>
+                    <td className="p-2.5 text-emerald-200 whitespace-nowrap">{row.dhuhr} / <span className="font-bold text-white">{row.dhuhrJamaat}</span></td>
+                    <td className="p-2.5 text-orange-200 whitespace-nowrap">{row.asr} / <span className="font-bold text-white">{row.asrJamaat}</span></td>
+                    <td className="p-2.5 text-rose-300 font-bold whitespace-nowrap">{row.maghrib} / {row.maghribJamaat}</td>
+                    <td className="p-2.5 text-blue-200 whitespace-nowrap">{row.isha} / <span className="font-bold text-white">{row.ishaJamaat}</span></td>
                   </tr>
                 ))}
               </tbody>

@@ -223,11 +223,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="btn-nav-quran"
                 onClick={onOpenQuranModal}
-                className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 border border-emerald-600/50 text-xs font-bold transition-all shadow-sm"
+                className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 border border-emerald-600/50 text-xs font-bold transition-all shadow-sm"
                 title="The Holy Quran - 114 Surahs & 13 Reciters"
               >
                 <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="hidden sm:inline">{isUrdu ? 'القرآن' : 'Quran'}</span>
+                <span>{isUrdu ? 'القرآن' : 'Quran'}</span>
               </button>
             )}
 
@@ -236,11 +236,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="btn-nav-duas"
                 onClick={onOpenDuasModal}
-                className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 border border-amber-600/50 text-xs font-bold transition-all shadow-sm"
+                className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 border border-amber-600/50 text-xs font-bold transition-all shadow-sm"
                 title="126 Masnoon Duas (27 Categories)"
               >
                 <Heart className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden sm:inline">{isUrdu ? 'مسنون دعائیں' : 'Duas'}</span>
+                <span>{isUrdu ? 'مسنون دعائیں' : 'Duas'}</span>
               </button>
             )}
 
@@ -249,11 +249,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="btn-nav-ramadan-calendar"
                 onClick={onOpenRamadanModal}
-                className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 border border-amber-500/50 text-xs font-bold transition-all shadow-sm ring-1 ring-amber-500/30"
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 border border-amber-500/50 text-xs font-bold transition-all shadow-sm ring-1 ring-amber-500/30"
                 title="Ramadan Calendar & Timetable (30 Days)"
               >
                 <Moon className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
-                <span className="hidden xs:inline">{isUrdu ? 'تقویمِ رمضان' : 'Ramadan'}</span>
+                <span>{isUrdu ? 'تقویمِ رمضان' : 'Ramadan'}</span>
               </button>
             )}
 
@@ -335,7 +335,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {mobileMenuOpen && (
         <div
           id="mobile-drawer-menu"
-          className="lg:hidden bg-stone-950 border-b border-stone-800 px-4 py-4 space-y-2 animate-in slide-in-from-top-4 duration-200"
+          className="lg:hidden bg-stone-950 border-b border-stone-800 px-4 py-4 space-y-2 animate-in slide-in-from-top-4 duration-200 max-h-[85vh] overflow-y-auto"
         >
           {nextPrayerInfo && (
             <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-950/70 border border-emerald-800/60 text-xs">

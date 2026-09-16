@@ -401,7 +401,7 @@ export const MosqueVideoSection: React.FC<MosqueVideoSectionProps> = ({
             </div>
 
             {/* Scrollable playlist column */}
-            <div className="space-y-2.5 max-h-[560px] overflow-y-auto pr-1">
+            <div className="space-y-2.5 max-h-[360px] sm:max-h-[460px] lg:max-h-[560px] overflow-y-auto pr-1 scrollbar-thin">
               {filteredVideos.map((video) => {
                 const isCurrent = currentVideo?.id === video.id || currentVideo?.videoUrl === video.videoUrl;
                 return (

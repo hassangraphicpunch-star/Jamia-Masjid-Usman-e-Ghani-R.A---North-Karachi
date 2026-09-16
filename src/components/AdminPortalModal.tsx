@@ -515,24 +515,24 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
       <div
         id="admin-portal-modal"
-        className="relative w-full max-w-4xl bg-stone-900 border border-emerald-700/50 rounded-2xl shadow-2xl shadow-emerald-950/60 overflow-hidden my-auto"
+        className="relative w-full max-w-4xl bg-stone-900 border border-emerald-700/50 rounded-2xl shadow-2xl shadow-emerald-950/60 overflow-hidden my-auto max-h-[92vh] flex flex-col"
       >
         {/* Header bar */}
-        <div className="bg-gradient-to-r from-emerald-950 via-stone-900 to-emerald-950 border-b border-emerald-800/40 p-4 sm:p-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-              <ShieldCheck className="w-6 h-6" />
+        <div className="bg-gradient-to-r from-emerald-950 via-stone-900 to-emerald-950 border-b border-emerald-800/40 p-3 sm:p-5 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold text-white tracking-tight">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h3 className="text-sm sm:text-lg font-bold text-white tracking-tight truncate">
                   {isUrdu ? 'انتظامی کنٹرول پورٹل - جامع مسجد عثمانِ غنی' : 'Mosque Admin Portal - Management'}
                 </h3>
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
+                <span className="text-[9px] sm:text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 shrink-0">
                   {isUrdu ? 'سیکٹر 5-اے/1' : 'Sector 5-A/1'}
                 </span>
               </div>
-              <p className="text-xs text-stone-400">
+              <p className="text-[11px] sm:text-xs text-stone-400 truncate">
                 {isUrdu
                   ? 'اوقاتِ نماز، درسِ قرآن، تصاویر، اعلانات و الرٹ بینر میں لائیو تبدیلی'
                   : 'Manage Namaz timings, Dars-e-Quran, pictures, announcements & live notices'}
@@ -542,7 +542,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-lg bg-stone-800/80 hover:bg-stone-700 text-stone-400 hover:text-white transition-colors"
+            className="p-1.5 sm:p-2 rounded-lg bg-stone-800/80 hover:bg-stone-700 text-stone-400 hover:text-white transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -615,7 +615,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
           </div>
         ) : (
           /* Authenticated Admin Management Tabs */
-          <div className="p-4 sm:p-6 space-y-5">
+          <div className="p-3 sm:p-6 space-y-5 flex-1 overflow-y-auto">
             {/* Notification Toast */}
             {savedToast && (
               <div className="p-3.5 bg-emerald-950/95 border border-emerald-400/80 rounded-xl text-emerald-100 text-xs flex items-center justify-between shadow-lg shadow-emerald-950/60 animate-in fade-in slide-in-from-top-2">

@@ -1249,21 +1249,24 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
             </div>
           </div>
 
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-            {prayerCards.map((p) => {
+          {/* Cards Grid - 2 columns on mobile, 7 columns on xl */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2.5 sm:gap-3">
+            {prayerCards.map((p, pIdx) => {
               const isIqamahThis = isIqamahActive && effectiveIqamah?.prayerId === p.id;
               const isNext = nextPrayer.nextPrayerId === p.id && !isIqamahThis;
               const isCurrent = nextPrayer.currentPrayerId === p.id && !isNext && !isIqamahThis;
               const IconComp = p.icon;
               const isThisPlaying =
                 playbackState.isPlaying && playbackState.activePrayerId === p.id;
+              const isLastOddCard = pIdx === prayerCards.length - 1 && prayerCards.length % 2 !== 0;
 
               return (
                 <div
                   key={p.id}
                   id={`prayer-card-${p.id}`}
-                  className={`relative rounded-2xl p-4 transition-all duration-300 bg-gradient-to-b ${p.color} border ${
+                  className={`relative rounded-2xl p-3 sm:p-4 transition-all duration-300 bg-gradient-to-b ${p.color} border ${
+                    isLastOddCard ? 'col-span-2 sm:col-span-1' : ''
+                  } ${
                     isIqamahThis
                       ? 'border-amber-400 ring-2 ring-amber-400/60 scale-[1.03] shadow-2xl shadow-amber-950/50'
                       : isNext

@@ -300,12 +300,12 @@ export const QiblaAndLocation: React.FC<QiblaAndLocationProps> = ({
 
               {/* Interactive Compass Sensor & Simulator Controls */}
               <div className="p-3 bg-stone-950/80 rounded-xl border border-stone-800/80 mb-3 space-y-2">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                   <span className="text-stone-400 flex items-center gap-1.5">
                     <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
                     <span>{isUrdu ? 'سمارٹ فون سینسر / ٹیسٹ ڈائل' : 'Live Compass / Test Dial'}</span>
                   </span>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     {!isCompassActive ? (
                       <button
                         type="button"
@@ -515,7 +515,7 @@ export const QiblaAndLocation: React.FC<QiblaAndLocationProps> = ({
                 </li>
               </ul>
 
-              <div className="pt-3 border-t border-stone-800 flex items-center justify-between">
+              <div className="pt-3 border-t border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <a
                   href={googleMapsUrl}
                   target="_blank"
