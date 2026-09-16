@@ -95,7 +95,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'facilities', labelEn: 'Facilities', labelUr: 'خدمات و شعبہ جات' },
     { id: 'wisdom-tasbih', labelEn: 'Wisdom & Tasbih', labelUr: 'تسبیح و حکمت' },
     { id: 'qibla-location', labelEn: 'Qibla & Location', labelUr: 'سمتِ قبلہ و مقام' },
-    { id: 'donate', labelEn: 'Donate', labelUr: 'تعاون و صدقات' },
+    { id: 'donate', labelEn: 'Donations', labelUr: 'مسجد عطیات' },
   ];
 
   const handleItemClick = (id: string) => {

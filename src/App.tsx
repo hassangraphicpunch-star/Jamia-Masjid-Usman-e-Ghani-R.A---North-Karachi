@@ -217,7 +217,7 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans ${language === 'ur' ? 'dir-rtl' : 'dir-ltr'}`}>
+    <div className={`min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans overflow-x-hidden w-full ${language === 'ur' ? 'dir-rtl' : 'dir-ltr'}`}>
       
       {/* Live Floating Azan Banner (Appears when Adhan is actively playing) */}
       <AzanPlayingBanner

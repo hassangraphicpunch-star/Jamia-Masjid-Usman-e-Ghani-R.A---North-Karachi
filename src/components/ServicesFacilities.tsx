@@ -144,12 +144,12 @@ export const ServicesFacilities: React.FC<ServicesFacilitiesProps> = ({
           className="mt-10 rounded-2xl bg-gradient-to-r from-emerald-950 via-stone-900 to-teal-950 border border-emerald-500/50 p-6 sm:p-7 shadow-2xl relative overflow-hidden"
         >
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4 text-center lg:text-left">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start lg:items-center gap-4 text-center sm:text-left">
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center shrink-0 shadow-lg">
                 <MessageCircle className="w-8 h-8 text-emerald-400 animate-bounce" />
               </div>
               <div>
-                <div className="flex items-center justify-center lg:justify-start gap-2 flex-wrap">
+                <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
                   <h3 className="text-lg sm:text-xl font-bold text-white">
                     {isUrdu ? 'مسجد عثمانِ غنی کا باضابطہ واٹس ایپ نمبر' : 'Official Mosque WhatsApp Desk'}
                   </h3>

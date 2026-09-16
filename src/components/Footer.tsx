@@ -117,7 +117,7 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onOpenAdmi
                   onClick={() => onNavigate('donate')}
                   className="hover:text-emerald-400 transition-colors"
                 >
-                  {isUrdu ? 'مسجد فنڈ اکاؤنٹ' : 'Bank & EasyPaisa Donation'}
+                  {isUrdu ? 'مسجد دفتر فنڈ و عطیات' : 'Masjid Office Donation'}
                 </button>
               </li>
               {onOpenAdminModal && (
