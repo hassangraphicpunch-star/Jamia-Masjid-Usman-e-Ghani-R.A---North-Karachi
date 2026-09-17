@@ -22,7 +22,7 @@ const DEFAULT_INITIAL_SETTINGS = {
   jummaKhateebUr: 'حضرت مولانا یونس منصوری صاحب (خطیب جامع مسجد)',
   ishraqTime: '+12 mins after Tuloo',
   chashtTime: '08:45 AM - 11:30 AM',
-  zawalTime: '12:12 PM - 12:28 PM',
+  zawalTime: '', // Dynamic daily calculation based on astronomical solar noon
   ramadanDemoMode: false,
   ramadanSehriTime: '05:00 AM',
   ramadanIftarTime: '06:45 PM',
@@ -53,7 +53,11 @@ function readPublishedSettings() {
     ensureDataDir();
     if (fs.existsSync(SETTINGS_FILE)) {
       const data = fs.readFileSync(SETTINGS_FILE, 'utf-8');
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      if (parsed && parsed.zawalTime === '12:12 PM - 12:28 PM') {
+        parsed.zawalTime = '';
+      }
+      return parsed;
     }
   } catch (err) {
     console.error('[Server] Error reading settings file:', err);
@@ -235,6 +239,377 @@ async function startServer() {
           channelTitle: 'Jamia Masjid Usman-e-Ghani Official',
         },
       ],
+    });
+  });
+
+  // API 5.5: Official Islamic Prayer Calculation Methods
+  const PRAYER_METHODS: Record<string, any> = {
+    MuslimWorldLeague: {
+      name: 'Muslim World League',
+      description: 'General purpose method used in many countries',
+      fajr_angle: '18°',
+      isha_angle: '17°',
+    },
+    Egyptian: {
+      name: 'Egyptian General Authority of Survey',
+      description: 'Used in Egypt and some Middle Eastern countries',
+      fajr_angle: '19.5°',
+      isha_angle: '17.5°',
+    },
+    Karachi: {
+      name: 'University of Islamic Sciences, Karachi',
+      description: 'Used in Pakistan, Bangladesh, India, Afghanistan',
+      fajr_angle: '18°',
+      isha_angle: '18°',
+      madhab: 'Hanafi',
+      asr_calculation: 'Shadow length = 2x object length',
+      isOfficialForMasjid: true,
+    },
+    UmmAlQura: {
+      name: 'Umm Al-Qura University, Makkah',
+      description: 'Used in Saudi Arabia',
+      fajr_angle: '18.5°',
+      isha_description: '90 minutes after Maghrib',
+    },
+    Dubai: {
+      name: 'Dubai',
+      description: 'Used in UAE',
+      fajr_angle: '18.2°',
+      isha_angle: '18.2°',
+    },
+    MoonsightingCommittee: {
+      name: 'Moonsighting Committee Worldwide',
+      description: 'Recommended for North America',
+      fajr_angle: '18°',
+      isha_angle: '18°',
+    },
+    NorthAmerica: {
+      name: 'Islamic Society of North America (ISNA)',
+      description: 'Used in North America',
+      fajr_angle: '15°',
+      isha_angle: '15°',
+    },
+    ISNA: {
+      name: 'Islamic Society of North America',
+      description: 'Alias for NorthAmerica method',
+      fajr_angle: '15°',
+      isha_angle: '15°',
+    },
+    Kuwait: {
+      name: 'Kuwait',
+      description: 'Used in Kuwait',
+      fajr_angle: '18°',
+      isha_angle: '17.5°',
+    },
+    Qatar: {
+      name: 'Qatar',
+      description: 'Used in Qatar',
+      fajr_angle: '18°',
+      isha_angle: '18°',
+    },
+    Singapore: {
+      name: 'Singapore',
+      description: 'Used in Singapore and Malaysia',
+      fajr_angle: '20°',
+      isha_angle: '18°',
+    },
+    Turkey: {
+      name: 'Diyanet (Turkey)',
+      description: 'Turkish Presidency of Religious Affairs. Used in Turkey, Balkans, Central Asia',
+      fajr_angle: '18°',
+      isha_angle: '17°',
+    },
+    Diyanet: {
+      name: 'Diyanet (Turkey)',
+      description: 'Alias for Turkey method',
+      fajr_angle: '18°',
+      isha_angle: '17°',
+    },
+    Tehran: {
+      name: 'Institute of Geophysics, University of Tehran',
+      description: 'Used in Iran, parts of Afghanistan',
+      fajr_angle: '17.7°',
+      isha_angle: '14°',
+    },
+    JAKIM: {
+      name: 'Jabatan Kemajuan Islam Malaysia',
+      description: 'Official method for Malaysia',
+      fajr_angle: '20°',
+      isha_angle: '18°',
+    },
+    UOIF: {
+      name: 'Union des Organisations Islamiques de France',
+      description: 'Used in France and parts of Western Europe',
+      fajr_angle: '12°',
+      isha_angle: '12°',
+    },
+    Gulf: {
+      name: 'Gulf Region',
+      description: 'Used in Bahrain, Oman, Yemen. Isha is 90 minutes after Maghrib',
+      fajr_angle: '19.5°',
+      isha_description: '90 minutes after Maghrib',
+    },
+    Algeria: {
+      name: 'Algerian Ministry of Religious Affairs',
+      description: 'Used in Algeria',
+      fajr_angle: '18°',
+      isha_angle: '17°',
+    },
+    Tunisia: {
+      name: 'Tunisian Ministry of Religious Affairs',
+      description: 'Used in Tunisia',
+      fajr_angle: '18°',
+      isha_angle: '18°',
+    },
+    Morocco: {
+      name: 'Moroccan Ministry of Habous and Islamic Affairs',
+      description: 'Used in Morocco',
+      fajr_angle: '19°',
+      isha_angle: '17°',
+    },
+    Jordan: {
+      name: 'Jordan Ministry of Awqaf',
+      description: 'Used in Jordan',
+      fajr_angle: '18°',
+      isha_angle: '18°',
+    },
+    Palestine: {
+      name: 'Palestine Ministry of Awqaf',
+      description: 'Used in Palestine',
+      fajr_angle: '18°',
+      isha_angle: '18°',
+    },
+    Jafari: {
+      name: 'Shia Ithna Ashari (Jafari)',
+      description: 'Leva Institute, Qum. Used by Shia communities. Maghrib follows sunset in this implementation.',
+      fajr_angle: '16°',
+      isha_angle: '14°',
+      madhab: 'Jafari',
+    },
+    Hanafi: {
+      name: 'Hanafi Madhab',
+      description: 'Asr when shadow = 2x object length',
+      fajr_angle: '18°',
+      isha_angle: '17°',
+      asr_calculation: 'Shadow length = 2x object length',
+      madhab: 'Hanafi',
+    },
+    Shafi: {
+      name: 'Shafi Madhab',
+      description: 'Asr when shadow = 1x object length',
+      fajr_angle: '18°',
+      isha_angle: '17°',
+      asr_calculation: 'Shadow length = 1x object length',
+      madhab: 'Shafi/Maliki/Hanbali',
+    },
+    Maliki: {
+      name: 'Maliki Madhab',
+      description: 'Asr when shadow = 1x object length',
+      fajr_angle: '18°',
+      isha_angle: '17°',
+      asr_calculation: 'Shadow length = 1x object length',
+      madhab: 'Shafi/Maliki/Hanbali',
+    },
+    Hanbali: {
+      name: 'Hanbali Madhab',
+      description: 'Asr when shadow = 1x object length',
+      fajr_angle: '18°',
+      isha_angle: '17°',
+      asr_calculation: 'Shadow length = 1x object length',
+      madhab: 'Shafi/Maliki/Hanbali',
+    },
+  };
+
+  // Map method name to Aladhan API method number ID
+  const METHOD_TO_ALADHAN_ID: Record<string, number> = {
+    Karachi: 1,
+    Hanafi: 1,
+    ISNA: 2,
+    NorthAmerica: 2,
+    MuslimWorldLeague: 3,
+    UmmAlQura: 4,
+    Egyptian: 5,
+    Tehran: 7,
+    Gulf: 8,
+    Kuwait: 9,
+    Qatar: 10,
+    Singapore: 11,
+    UOIF: 12,
+    Turkey: 13,
+    Diyanet: 13,
+    MoonsightingCommittee: 15,
+    Dubai: 16,
+    JAKIM: 17,
+    Tunisia: 18,
+    Algeria: 19,
+    Morocco: 21,
+    Jordan: 23,
+    Jafari: 0,
+    Shafi: 3,
+    Maliki: 3,
+    Hanbali: 3,
+  };
+
+  // API 5.5: Return full list of prayer calculation methods
+  app.get('/api/prayer-methods', (req, res) => {
+    res.json({
+      success: true,
+      service: 'prayer-methods',
+      data: {
+        methods: PRAYER_METHODS,
+        default_method: 'MuslimWorldLeague',
+        recommended_masjid_method: 'Karachi',
+        usage: 'Add ?method=MethodName to /api/prayer-times endpoint',
+      },
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // API 5.6: Calculate & fetch prayer times for any specified method and location
+  app.get('/api/prayer-times', async (req, res) => {
+    const rawMethod = (req.query.method as string) || 'Karachi';
+    // Normalize method key
+    const matchedKey = Object.keys(PRAYER_METHODS).find(
+      (k) => k.toLowerCase() === rawMethod.toLowerCase()
+    ) || 'Karachi';
+    const methodInfo = PRAYER_METHODS[matchedKey] || PRAYER_METHODS.Karachi;
+
+    const madhab = (req.query.madhab as string) || (methodInfo.madhab === 'Hanafi' || matchedKey === 'Hanafi' ? 'Hanafi' : 'Hanafi');
+    const school = madhab.toLowerCase() === 'hanafi' ? 1 : 0;
+    
+    // Default coordinates: Jamia Masjid Usman-e-Ghani, North Karachi
+    const lat = parseFloat(req.query.lat as string) || 24.9961;
+    const lng = parseFloat(req.query.lng as string) || 67.0673;
+
+    // 1. Try Ummah API
+    try {
+      const ummahUrl = `https://www.ummahapi.com/api/prayer-times?lat=${lat}&lng=${lng}&method=${encodeURIComponent(matchedKey)}&madhab=${encodeURIComponent(madhab)}&highLatitudeRule=recommended`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const resp = await fetch(ummahUrl, { signal: controller.signal, headers: { Accept: 'application/json' } });
+      clearTimeout(timeoutId);
+
+      if (resp.ok) {
+        const ummahJson: any = await resp.json();
+        const timings = ummahJson?.data?.timings || ummahJson?.timings || ummahJson?.data;
+        if (timings && (timings.fajr || timings.Fajr)) {
+          return res.json({
+            success: true,
+            service: 'prayer-times',
+            method: matchedKey,
+            madhab,
+            method_info: methodInfo,
+            data: {
+              fajr: timings.fajr || timings.Fajr,
+              sunrise: timings.sunrise || timings.Sunrise,
+              dhuhr: timings.dhuhr || timings.Dhuhr,
+              asr: timings.asr || timings.Asr,
+              maghrib: timings.maghrib || timings.Maghrib,
+              isha: timings.isha || timings.Isha,
+              midnight: timings.midnight || timings.Midnight || '00:05',
+              lastThird: timings.lastThird || timings.Lastthird || '03:15',
+              hijriDate: ummahJson?.data?.date?.hijri,
+            },
+            source: 'ummah_api',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    } catch (e) {
+      // Quietly continue to Aladhan proxy
+    }
+
+    // 2. Try Aladhan API with matched method ID & school
+    try {
+      const aladhanMethodId = METHOD_TO_ALADHAN_ID[matchedKey] ?? 1;
+      const aladhanUrl = `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=${aladhanMethodId}&school=${school}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const resp = await fetch(aladhanUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (resp.ok) {
+        const json: any = await resp.json();
+        if (json?.data?.timings) {
+          const t = json.data.timings;
+          const h = json.data.date?.hijri;
+          return res.json({
+            success: true,
+            service: 'prayer-times',
+            method: matchedKey,
+            madhab,
+            method_info: methodInfo,
+            data: {
+              fajr: t.Fajr,
+              sunrise: t.Sunrise,
+              dhuhr: t.Dhuhr,
+              asr: t.Asr,
+              maghrib: t.Maghrib,
+              isha: t.Isha,
+              midnight: t.Midnight,
+              lastThird: t.Lastthird,
+              date: json.data.date?.gregorian?.date,
+              hijriDate: h ? {
+                day: h.day,
+                month: {
+                  en: h.month.en,
+                  ar: h.month.ar,
+                },
+                year: h.year,
+              } : undefined,
+            },
+            source: 'aladhan_api',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    } catch (e) {
+      // Fallback to offline schedule
+    }
+
+    // 3. Fallback to calculated Karachi schedule
+    const now = new Date();
+    const month = now.getMonth();
+    const monthlyTables = [
+      { fajr: '05:50', sunrise: '07:12', dhuhr: '12:40', asr: '16:35', maghrib: '18:05', isha: '19:25' },
+      { fajr: '05:40', sunrise: '07:00', dhuhr: '12:42', asr: '16:50', maghrib: '18:22', isha: '19:40' },
+      { fajr: '05:20', sunrise: '06:36', dhuhr: '12:38', asr: '17:00', maghrib: '18:40', isha: '19:55' },
+      { fajr: '04:50', sunrise: '06:05', dhuhr: '12:30', asr: '17:08', maghrib: '18:55', isha: '20:12' },
+      { fajr: '04:28', sunrise: '05:45', dhuhr: '12:28', asr: '17:15', maghrib: '19:12', isha: '20:30' },
+      { fajr: '04:18', sunrise: '05:40', dhuhr: '12:30', asr: '17:22', maghrib: '19:24', isha: '20:45' },
+      { fajr: '04:26', sunrise: '05:46', dhuhr: '12:35', asr: '17:25', maghrib: '19:25', isha: '20:45' },
+      { fajr: '04:45', sunrise: '06:00', dhuhr: '12:35', asr: '17:18', maghrib: '19:08', isha: '20:25' },
+      { fajr: '04:58', sunrise: '06:12', dhuhr: '12:28', asr: '17:00', maghrib: '18:42', isha: '19:55' },
+      { fajr: '05:10', sunrise: '06:24', dhuhr: '12:20', asr: '16:40', maghrib: '18:12', isha: '19:28' },
+      { fajr: '05:25', sunrise: '06:45', dhuhr: '12:20', asr: '16:25', maghrib: '17:50', isha: '19:10' },
+      { fajr: '05:42', sunrise: '07:05', dhuhr: '12:28', asr: '16:25', maghrib: '17:48', isha: '19:12' },
+    ];
+    const current = monthlyTables[month];
+
+    return res.json({
+      success: true,
+      service: 'prayer-times',
+      method: matchedKey,
+      madhab,
+      method_info: methodInfo,
+      data: {
+        fajr: current.fajr,
+        sunrise: current.sunrise,
+        dhuhr: current.dhuhr,
+        asr: current.asr,
+        maghrib: current.maghrib,
+        isha: current.isha,
+        midnight: '00:05',
+        lastThird: '03:15',
+        date: now.toISOString().split('T')[0],
+        hijriDate: {
+          day: '12',
+          month: { en: 'Safar', ar: 'صفر' },
+          year: '1448',
+        },
+      },
+      source: 'karachi_offline_engine',
+      timestamp: new Date().toISOString(),
     });
   });
 

@@ -33,6 +33,7 @@ import { NotificationModal } from './components/NotificationModal';
 import { RamadanCalendarModal } from './components/RamadanCalendarModal';
 import { QuranModal } from './components/QuranModal';
 import { MasnoonDuasModal } from './components/MasnoonDuasModal';
+import { PrayerMethodsModal } from './components/PrayerMethodsModal';
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('ur');
@@ -41,6 +42,9 @@ export default function App() {
   );
   const [adminSettings, setAdminSettings] = useState<AdminPrayerSettings>(() =>
     getStoredAdminSettings()
+  );
+  const [calculationMethod, setCalculationMethod] = useState<string>(
+    () => adminSettings.calculationMethod || 'Karachi'
   );
   const [apiSource, setApiSource] = useState<'ummah_api' | 'aladhan_api' | 'karachi_offline'>('ummah_api');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -52,6 +56,7 @@ export default function App() {
   const [adminModalOpen, setAdminModalOpen] = useState<boolean>(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState<boolean>(false);
   const [azanModalOpen, setAzanModalOpen] = useState<boolean>(false);
+  const [prayerMethodsModalOpen, setPrayerMethodsModalOpen] = useState<boolean>(false);
   const [selectedAzanPrayer, setSelectedAzanPrayer] = useState<
     'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha'
   >('fajr');
@@ -59,21 +64,31 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [simulatedIqamah, setSimulatedIqamah] = useState<IqamahCountdownState | null>(null);
 
-  // Load Prayer Times from Ummah API (with graceful fallback)
-  const loadTimings = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetchPrayerTimes();
-      setPrayerData(res.data);
-      setApiSource(res.source);
-    } catch (err) {
-      console.warn('Error loading prayer times, using Karachi local calculation:', err);
-      setPrayerData(getLocalKarachiPrayerTimes(new Date()));
-      setApiSource('karachi_offline');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  // Load Prayer Times for selected method and madhab
+  const loadTimings = useCallback(
+    async (customMethod?: string, customMadhab?: string) => {
+      setIsLoading(true);
+      const methodToUse = customMethod || calculationMethod;
+      const madhabToUse = customMadhab || adminSettings.madhab || 'Hanafi';
+      try {
+        const res = await fetchPrayerTimes(methodToUse, madhabToUse);
+        setPrayerData(res.data);
+        setApiSource(res.source as any);
+      } catch (err) {
+        console.warn('Error loading prayer times, using Karachi local calculation:', err);
+        setPrayerData(getLocalKarachiPrayerTimes(new Date()));
+        setApiSource('karachi_offline');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [calculationMethod, adminSettings.madhab]
+  );
+
+  const handleSelectMethod = (methodId: string) => {
+    setCalculationMethod(methodId);
+    loadTimings(methodId);
+  };
 
   useEffect(() => {
     loadTimings();
@@ -279,6 +294,8 @@ export default function App() {
           setAudioMuted={setAudioMuted}
           simulatedIqamah={simulatedIqamah}
           onSetSimulatedIqamah={setSimulatedIqamah}
+          currentMethod={calculationMethod}
+          onOpenMethodsModal={() => setPrayerMethodsModalOpen(true)}
         />
 
         {/* 2. Announcements & Notice Board (Requested feature) */}
@@ -337,7 +354,13 @@ export default function App() {
         isOpen={adminModalOpen}
         onClose={() => setAdminModalOpen(false)}
         language={language}
-        onSettingsSaved={(newSettings) => setAdminSettings({ ...newSettings })}
+        onSettingsSaved={(newSettings) => {
+          setAdminSettings({ ...newSettings });
+          if (newSettings.calculationMethod) {
+            setCalculationMethod(newSettings.calculationMethod);
+            loadTimings(newSettings.calculationMethod, newSettings.madhab);
+          }
+        }}
       />
 
       {/* Azan Voice Player & Post-Azan Dua Modal */}
@@ -375,6 +398,15 @@ export default function App() {
         isOpen={duasModalOpen}
         onClose={() => setDuasModalOpen(false)}
         language={language}
+      />
+
+      {/* Global Prayer Calculation Methods & Juristic Standards Modal (28 Methods) */}
+      <PrayerMethodsModal
+        isOpen={prayerMethodsModalOpen}
+        onClose={() => setPrayerMethodsModalOpen(false)}
+        language={language}
+        currentMethod={calculationMethod}
+        onSelectMethod={handleSelectMethod}
       />
 
     </div>

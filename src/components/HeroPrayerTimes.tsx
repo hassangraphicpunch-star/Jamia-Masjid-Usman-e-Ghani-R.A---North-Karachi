@@ -29,6 +29,7 @@ import {
   Flame,
   ShieldAlert,
   ChevronLeft,
+  Compass,
 } from 'lucide-react';
 import {
   Language,
@@ -36,6 +37,9 @@ import {
   AdminPrayerSettings,
   IqamahCountdownState,
 } from '../types';
+import {
+  PRAYER_CALCULATION_METHODS,
+} from '../data/prayerMethodsData';
 import {
   formatTo12Hour,
   calculateJamaatTimes,
@@ -81,6 +85,8 @@ interface HeroPrayerTimesProps {
   setAudioMuted: (muted: boolean) => void;
   simulatedIqamah?: IqamahCountdownState | null;
   onSetSimulatedIqamah?: (sim: IqamahCountdownState | null) => void;
+  currentMethod?: string;
+  onOpenMethodsModal?: () => void;
 }
 
 export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
@@ -99,6 +105,8 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
   setAudioMuted,
   simulatedIqamah,
   onSetSimulatedIqamah,
+  currentMethod = 'Karachi',
+  onOpenMethodsModal,
 }) => {
   const [copiedNotification, setCopiedNotification] = useState(false);
   const [playbackState, setPlaybackState] = useState<AzanPlaybackState>(() =>
@@ -454,9 +462,28 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               {isUrdu ? MOSQUE_INFO.addressUr : MOSQUE_INFO.addressEn}
             </span>
             <span className="text-stone-600 hidden sm:inline">•</span>
-            <span className="text-amber-400/90 text-xs">
-              {isUrdu ? 'فقہ حنفی (کراچی وقت)' : 'Hanafi Schedule (Karachi Method)'}
-            </span>
+            {onOpenMethodsModal ? (
+              <button
+                id="btn-open-prayer-methods-pill"
+                onClick={onOpenMethodsModal}
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-700/70 hover:border-amber-400 text-amber-300 text-xs transition-all hover:scale-105 shadow-sm"
+                title={isUrdu ? 'اوقاتِ نماز کا طریقہ کار دیکھیں' : 'View calculation methods'}
+              >
+                <Compass className="w-3 h-3 text-emerald-400" />
+                <span>
+                  {isUrdu
+                    ? `${PRAYER_CALCULATION_METHODS[currentMethod]?.nameUr || currentMethod} (فجر ${PRAYER_CALCULATION_METHODS[currentMethod]?.fajr_angle || '18°'})`
+                    : `${PRAYER_CALCULATION_METHODS[currentMethod]?.name || currentMethod} (${PRAYER_CALCULATION_METHODS[currentMethod]?.fajr_angle || '18°'})`}
+                </span>
+                <span className="text-[10px] text-stone-400 underline ml-0.5">
+                  {isUrdu ? 'تبدیل / تفصیل' : 'Details'}
+                </span>
+              </button>
+            ) : (
+              <span className="text-amber-400/90 text-xs">
+                {isUrdu ? 'فقہ حنفی (کراچی وقت)' : 'Hanafi Schedule (Karachi Method)'}
+              </span>
+            )}
           </p>
         </div>
 
@@ -1083,23 +1110,25 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
           </div>
         )}
 
-        {/* PROMINENT DAILY ZAWAL TIME & MAKRUH WINDOW DISPLAY */}
+        {/* PROMINENT DAILY ZAWAL & NISF-UN-NAHAR SHAR'I DISPLAY */}
         <div
           id="zawal-time-section"
-          className={`mb-6 rounded-2xl border p-4 transition-all shadow-md ${
+          className={`mb-6 rounded-2xl border p-4 sm:p-5 transition-all shadow-lg ${
             zawalInfo.isInsideZawal
-              ? 'bg-rose-950/80 border-rose-600 ring-2 ring-rose-500/50 shadow-rose-950/50'
-              : zawalInfo.minutesRemainingUntilZawal > 0 && zawalInfo.minutesRemainingUntilZawal <= 40
-              ? 'bg-amber-950/50 border-amber-600/70'
-              : 'bg-stone-950/80 border-stone-800'
+              ? 'bg-rose-950/90 border-rose-500 ring-2 ring-rose-500/50 shadow-rose-950/50'
+              : zawalInfo.minutesRemainingUntilZawal > 0 && zawalInfo.minutesRemainingUntilZawal <= 45
+              ? 'bg-amber-950/60 border-amber-600/80 shadow-amber-950/30'
+              : 'bg-stone-950/90 border-stone-800 shadow-black/40'
           }`}
         >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div className="flex items-start sm:items-center gap-3">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
               <div
-                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border shadow-inner ${
                   zawalInfo.isInsideZawal
-                    ? 'bg-rose-900/60 border-rose-500 text-rose-300 animate-bounce'
+                    ? 'bg-rose-900/80 border-rose-400 text-rose-200 animate-bounce'
+                    : zawalInfo.minutesRemainingUntilZawal > 0 && zawalInfo.minutesRemainingUntilZawal <= 45
+                    ? 'bg-amber-900/60 border-amber-500 text-amber-300'
                     : 'bg-stone-900 border-stone-700 text-amber-400'
                 }`}
               >
@@ -1108,15 +1137,21 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                    <span>{isUrdu ? 'روزانہ وقتِ زوال (نصف النہار شرعی)' : 'Daily Zawal Time (Solar Zenith Period)'}</span>
+                    <span>{isUrdu ? 'روزانہ وقتِ زوال (نصف النہار شرعی)' : 'Daily Zawal Time & Shar\'i Midday (نصف النہار شرعی)'}</span>
                   </h4>
+
+                  {/* Daily Dynamic Solar Recalculation Badge */}
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-500/70 text-emerald-300 text-[11px] font-bold flex items-center gap-1 shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>{isUrdu ? 'روزانہ خودکار تبدیلی بحسابِ آفتاب' : 'Daily Dynamic Solar Calculation'}</span>
+                  </span>
                   
-                  {/* Status Badge */}
+                  {/* Real-time Status Badge */}
                   {zawalInfo.isInsideZawal ? (
                     <span className="px-2.5 py-0.5 rounded-full bg-rose-600 text-white font-extrabold text-[11px] animate-pulse uppercase tracking-wider shadow">
                       {isUrdu
                         ? `⚠️ وقتِ زوال جاری ہے (${zawalInfo.minutesRemainingInZawal} منٹ باقی) - نماز و سجدہ منع ہے`
-                        : `⚠️ Zawal Active (${zawalInfo.minutesRemainingInZawal}m left) - Salah & Sajdah Prohibited`}
+                        : `⚠️ Zawal Active (${zawalInfo.minutesRemainingInZawal}m left) - Salah Prohibited`}
                     </span>
                   ) : zawalInfo.minutesRemainingUntilZawal > 0 && zawalInfo.minutesRemainingUntilZawal <= 45 ? (
                     <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500 text-amber-300 text-[11px] font-bold">
@@ -1125,37 +1160,62 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                         : `Zawal approaching in ${zawalInfo.minutesRemainingUntilZawal} mins`}
                     </span>
                   ) : (
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-600/60 text-emerald-300 text-[11px] font-medium">
-                      {isUrdu ? 'مباح وقت (نماز جائز ہے)' : 'Regular Prayer Permitted'}
+                    <span className="px-2.5 py-0.5 rounded-full bg-stone-800/80 border border-stone-700 text-stone-300 text-[11px] font-medium">
+                      {isUrdu ? 'مباح وقت (نماز جائز ہے)' : 'Regular Time (Salah Permitted)'}
                     </span>
                   )}
                 </div>
 
-                <p className="text-xs text-stone-300 mt-0.5">
+                <p className="text-xs text-stone-300 mt-1">
                   {isUrdu
-                    ? 'حنفی فقہ کے مطابق استواء آفتاب تا زوال (تقریباً 16 منٹ) ہر قسم کی نماز اور سجدۂ تلاوت مکروہِ تحریمی ہے۔'
-                    : 'Hanafi Fiqh: Approximately 16-20 minutes during solar zenith when all prayers and Sajdah Tilawat are prohibited.'}
+                    ? 'آفتاب کی روزانہ حرکت اور موسم کے اعتبار سے نصف النہار شرعی اور وقتِ زوال ہر روز تبدیل ہوتا ہے۔ استواء آفتاب تا آغازِ ظہر نماز و سجدۂ تلاوت مکروہِ تحریمی ہے۔'
+                    : 'Calculated daily from astronomical solar coordinates. Offering Salah or Sajdah Tilawat is strictly prohibited (Makruh Tahrimi) during the solar zenith window.'}
                 </p>
               </div>
             </div>
 
-            {/* Zawal Time Clock Display */}
-            <div className="flex items-center gap-3 bg-stone-900/90 px-4 py-2.5 rounded-xl border border-stone-700/80 shrink-0 self-start md:self-auto">
-              <div className="text-right">
-                <span className="block text-[10px] text-stone-400 uppercase font-semibold">
-                  {isUrdu ? 'مکروہ وقتِ زوال' : 'Prohibited Window'}
+            {/* Timings Cards: Nisf-un-Nahar Shar'i + Zawal Window + Dhuhr Entry */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-stone-900/90 p-2.5 sm:p-3 rounded-xl border border-stone-700/80 shrink-0">
+              {/* Nisf-un-Nahar Shar'i */}
+              <div className="text-center px-2 py-1 bg-stone-950/80 rounded-lg border border-stone-800">
+                <span className="block text-[10px] text-stone-400 font-semibold truncate">
+                  {isUrdu ? 'نصف النہار شرعی' : 'Shar\'i Midday'}
                 </span>
-                <span className="text-base sm:text-lg font-black text-amber-300 font-mono tracking-tight">
-                  {zawalWindow}
+                <span className="text-sm sm:text-base font-black text-sky-300 font-mono tracking-tight block">
+                  {jamaatTimes.nisfUnNaharShari || '11:47 AM'}
+                </span>
+                <span className="block text-[9px] text-stone-400 truncate">
+                  {isUrdu ? 'اخیر وقت نیت روزہ' : 'Roza Intention'}
                 </span>
               </div>
-              <div className="w-2 h-8 rounded-full bg-amber-500/40" />
-              <div className="text-left">
-                <span className="block text-[10px] text-stone-400 uppercase font-semibold">
+
+              {/* Zawal Prohibited Window */}
+              <div className={`text-center px-2 py-1 rounded-lg border ${
+                zawalInfo.isInsideZawal
+                  ? 'bg-rose-950 border-rose-700 text-rose-200 ring-1 ring-rose-500'
+                  : 'bg-stone-950/80 border-rose-900/60'
+              }`}>
+                <span className="block text-[10px] text-rose-400 font-semibold truncate">
+                  {isUrdu ? 'مکروہ وقتِ زوال' : 'Zawal Window'}
+                </span>
+                <span className="text-sm sm:text-base font-black text-amber-300 font-mono tracking-tight block">
+                  {zawalWindow}
+                </span>
+                <span className="block text-[9px] text-rose-400 truncate">
+                  {isUrdu ? 'نماز و سجدہ منع' : 'Salah Prohibited'}
+                </span>
+              </div>
+
+              {/* Dhuhr Begins */}
+              <div className="text-center px-2 py-1 bg-stone-950/80 rounded-lg border border-stone-800">
+                <span className="block text-[10px] text-stone-400 font-semibold truncate">
                   {isUrdu ? 'ظہر کا وقت شروع' : 'Dhuhr Begins'}
                 </span>
-                <span className="text-base sm:text-lg font-black text-emerald-400 font-mono tracking-tight">
+                <span className="text-sm sm:text-base font-black text-emerald-400 font-mono tracking-tight block">
                   {formatTo12Hour(prayerData.dhuhr)}
+                </span>
+                <span className="block text-[9px] text-emerald-400 truncate">
+                  {isUrdu ? 'زوال ختم، نماز جائز' : 'Zawal Over'}
                 </span>
               </div>
             </div>
@@ -1213,6 +1273,19 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
                   <span>{isUrdu ? 'اوقات ایڈٹ کریں (Admin)' : 'Edit Namaz Times'}</span>
+                </button>
+              )}
+
+              {/* Prayer Calculation Methods Modal Button */}
+              {onOpenMethodsModal && (
+                <button
+                  id="btn-open-prayer-methods-table-header"
+                  onClick={onOpenMethodsModal}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 text-amber-300 border border-emerald-700/80 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                  title="View Prayer Calculation Methods"
+                >
+                  <Compass className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>{isUrdu ? 'طریقۂ حساب (Methods)' : 'Calculation Methods'}</span>
                 </button>
               )}
 

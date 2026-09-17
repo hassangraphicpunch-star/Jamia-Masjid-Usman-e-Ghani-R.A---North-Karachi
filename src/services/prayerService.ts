@@ -7,7 +7,16 @@ import {
   MosqueMediaSettings,
   MosqueVideoItem,
   IqamahCountdownState,
+  PrayerCalculationMethod,
 } from '../types';
+import {
+  PRAYER_CALCULATION_METHODS,
+  DEFAULT_PRAYER_METHOD,
+  MethodDetails,
+} from '../data/prayerMethodsData';
+
+export { PRAYER_CALCULATION_METHODS, DEFAULT_PRAYER_METHOD };
+export type { MethodDetails, PrayerCalculationMethod };
 
 // Official Coordinates & Qibla Calculation for Jamia Masjid Usman-e-Ghani, Sector 5-A/1, North Karachi, Pakistan
 export const MOSQUE_COORDINATES = {
@@ -325,7 +334,7 @@ export const DEFAULT_ADMIN_SETTINGS: AdminPrayerSettings = {
   ishraqTime: '+12 mins after Tuloo',
   // Chasht (Salat al-Duha) & Zawal (Makruh) Times
   chashtTime: '08:45 AM - 11:30 AM',
-  zawalTime: '12:12 PM - 12:28 PM',
+  zawalTime: '', // Automatically changes daily based on astronomical solar noon (Dhuhr start & Subh Sadiq)
   // Ramadan Timing and Demo Settings (Displayed only in Ramadan or Demo Mode)
   ramadanDemoMode: false,
   ramadanSehriTime: '05:00 AM',
@@ -437,9 +446,9 @@ export function getStoredAdminSettings(): AdminPrayerSettings {
       if (!merged.maghribJamaat) merged.maghribJamaat = '+5 mins after Azan';
       if (!merged.ishaJamaat || merged.ishaJamaat === '08:45 PM' || merged.ishaJamaat === '08:30 PM') merged.ishaJamaat = '08:15 PM';
 
-      // Fill in defaults for Chasht & Zawal if missing in legacy saved state
+      // Fill in defaults for Chasht & Zawal: zawalTime is empty by default so it recalculates dynamically every day
       if (!merged.chashtTime) merged.chashtTime = '08:45 AM - 11:30 AM';
-      if (!merged.zawalTime) merged.zawalTime = '12:12 PM - 12:28 PM';
+      if (!merged.zawalTime || merged.zawalTime === '12:12 PM - 12:28 PM') merged.zawalTime = '';
 
       // Fill in defaults for Ramadan if missing
       if (merged.ramadanDemoMode === undefined) merged.ramadanDemoMode = false;
@@ -665,13 +674,99 @@ export function getComputedChashtTime(
   };
 }
 
-// Compute daily Zawal (وقتِ زوال / استواء الشمس / مکروہ وقت برائے نماز)
-// Fiqh rule: Peak sun meridian. Offering Salah is strictly Makruh ~15 mins before Dhuhr
+// Compute daily Zawal (وقتِ زوال / استواء الشمس / مکروہ وقت برائے نماز) and Nisf-un-Nahar Shar'i (نصف النہار شرعی)
+// Fiqh & Astronomical rules (Jamia Uloom-ul-Islamia Banuri Town & Darul Uloom Karachi):
+// 1. نصف النہار شرعی (Nisf-un-Nahar Shar'i / Dahwat-ul-Kubra):
+//    The Shar'i day begins at Subh Sadiq (Fajr start) and ends at Sunset (Maghrib).
+//    The exact mathematical midpoint between Fajr and Maghrib is Nisf-un-Nahar Shar'i.
+// 2. وقتِ زوال / استواء آفتاب (Solar Zenith Makruh window):
+//    During solar midday when the sun is on the meridian, Salah and Sajdah Tilawat are prohibited.
+//    In Karachi and Hanafi timing, this Makruh window begins ~15 to 16 minutes before Dhuhr and ends as soon as Dhuhr starts.
+// Because the sun's position changes every day, both times dynamically update daily!
+export function getComputedZawalAndNisfunNahar(
+  athanTimes: {
+    fajr: string;
+    sunrise?: string;
+    dhuhr: string;
+    maghrib: string;
+  },
+  customSetting?: string
+): {
+  zawalStart12h: string;
+  zawalEnd12h: string;
+  zawalWindow: string;
+  nisfUnNaharShari12h: string;
+  isAutoCalculated: boolean;
+} {
+  const dhuhrMins = timeStringToMinutes(athanTimes.dhuhr);
+  const fajrMins = timeStringToMinutes(athanTimes.fajr);
+  const maghribMins = timeStringToMinutes(athanTimes.maghrib);
+
+  // 1. Calculate Nisf-un-Nahar Shar'i (Fajr + (Maghrib - Fajr)/2)
+  let dayLength = maghribMins - fajrMins;
+  if (dayLength < 0) dayLength += 1440;
+  const nisfMins = (fajrMins + Math.floor(dayLength / 2)) % 1440;
+
+  const formatMins = (mins: number) => {
+    const h = Math.floor(mins / 60) % 24;
+    const m = mins % 60;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+  };
+
+  const nisfUnNaharShari12h = formatMins(nisfMins);
+
+  // 2. Calculate Zawal (Solar Zenith Makruh Window: ~15 mins before Dhuhr until Dhuhr begins)
+  const isCustom = !!(
+    customSetting &&
+    customSetting.trim().length > 3 &&
+    customSetting !== '12:12 PM - 12:28 PM' &&
+    customSetting.toLowerCase() !== 'auto' &&
+    customSetting.trim() !== 'خودکار'
+  );
+
+  if (isCustom) {
+    const parts = (customSetting || '').split('-');
+    const zawalStart12h = parts[0]?.trim() || formatMins(Math.max(0, dhuhrMins - 15));
+    const zawalEnd12h = parts[1]?.trim() || formatMins(dhuhrMins);
+    return {
+      zawalStart12h,
+      zawalEnd12h,
+      zawalWindow: `${zawalStart12h} - ${zawalEnd12h}`,
+      nisfUnNaharShari12h,
+      isAutoCalculated: false,
+    };
+  }
+
+  const zawalStartMins = Math.max(0, dhuhrMins - 15);
+  const zawalEndMins = dhuhrMins;
+
+  const zawalStart12h = formatMins(zawalStartMins);
+  const zawalEnd12h = formatMins(zawalEndMins);
+
+  return {
+    zawalStart12h,
+    zawalEnd12h,
+    zawalWindow: `${zawalStart12h} - ${zawalEnd12h}`,
+    nisfUnNaharShari12h,
+    isAutoCalculated: true,
+  };
+}
+
 export function getComputedZawalTime(
   dhuhrStr: string,
   customSetting?: string
 ): { zawalStart12h: string; zawalEnd12h: string; displayStr: string } {
-  if (customSetting && customSetting.trim().length > 3) {
+  const isCustom = !!(
+    customSetting &&
+    customSetting.trim().length > 3 &&
+    customSetting !== '12:12 PM - 12:28 PM' &&
+    customSetting.toLowerCase() !== 'auto' &&
+    customSetting.trim() !== 'خودکار'
+  );
+
+  if (isCustom) {
     const parts = customSetting.split('-');
     return {
       zawalStart12h: parts[0]?.trim() || '12:12 PM',
@@ -681,7 +776,7 @@ export function getComputedZawalTime(
   }
 
   const dhuhrMins = timeStringToMinutes(dhuhrStr);
-  const zawalStartMins = Math.max(0, dhuhrMins - 16);
+  const zawalStartMins = Math.max(0, dhuhrMins - 15);
   const zawalEndMins = dhuhrMins;
 
   const formatMins = (mins: number) => {
@@ -765,20 +860,34 @@ export function calculateJamaatTimes(
     chashtTime = `${chashtStart} - ${chashtEnd}`;
   }
 
-  // Zawal (Istiwa / Makrooh period): ~15 mins before Dhuhr until Dhuhr Adhan
-  let zawalTime = settings.zawalTime;
-  if (!zawalTime) {
-    const zawalStart = getOffsetTime(athanTimes.dhuhr, -18);
-    const zawalEnd = formatTo12Hour(athanTimes.dhuhr);
-    zawalTime = `${zawalStart} - ${zawalEnd}`;
-  }
+  // Daily Dynamic Zawal (Istiwa / Makruh period) & Nisf-un-Nahar Shar'i (Dahwat-ul-Kubra):
+  // Dynamically changes every day based on the sun's position and today's prayer times!
+  const isCustomZawal = !!(
+    settings.zawalTime &&
+    settings.zawalTime.trim().length > 3 &&
+    settings.zawalTime !== '12:12 PM - 12:28 PM' &&
+    settings.zawalTime.toLowerCase() !== 'auto' &&
+    settings.zawalTime.trim() !== 'خودکار'
+  );
+
+  const zawalCalc = getComputedZawalAndNisfunNahar(
+    {
+      fajr: athanTimes.fajr,
+      sunrise: athanTimes.sunrise,
+      dhuhr: athanTimes.dhuhr,
+      maghrib: athanTimes.maghrib,
+    },
+    isCustomZawal ? settings.zawalTime : undefined
+  );
 
   return {
     fajr: fajrJamaat || '05:45 AM',
     sunrise: formatTo12Hour(athanTimes.sunrise),
     ishraq: ishraqTime,
     chasht: chashtTime,
-    zawal: zawalTime,
+    zawal: zawalCalc.zawalWindow,
+    nisfUnNaharShari: zawalCalc.nisfUnNaharShari12h,
+    isZawalAutoCalculated: zawalCalc.isAutoCalculated,
     dhuhr: settings.dhuhrJamaat || '01:30 PM',
     asr: settings.asrJamaat || '05:15 PM',
     maghrib: maghribJamaat,
@@ -874,26 +983,78 @@ export function getLocalKarachiPrayerTimes(date = new Date()): PrayerTimesApiRes
   };
 }
 
-export async function fetchPrayerTimes(): Promise<{
+// Fetch available prayer calculation methods from server or local dictionary
+export async function fetchPrayerMethods(): Promise<Record<string, MethodDetails>> {
+  try {
+    const res = await fetch('/api/prayer-methods');
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.data?.methods) {
+        return json.data.methods;
+      }
+    }
+  } catch (err) {
+    console.warn('[PrayerService] Local server prayer-methods fallback:', err);
+  }
+  return PRAYER_CALCULATION_METHODS;
+}
+
+export async function fetchPrayerTimes(
+  method = 'Karachi',
+  madhab = 'Hanafi'
+): Promise<{
   data: PrayerTimesApiResponse;
-  source: 'ummah_api' | 'aladhan_api' | 'karachi_offline';
+  source: 'ummah_api' | 'aladhan_api' | 'karachi_offline' | 'server_api';
+  method: string;
 }> {
-  // 1. Try prompt's specified Ummah API
+  // 1. Try local full-stack server proxy /api/prayer-times (Zero CORS, handles Ummah & Aladhan & offline fallbacks)
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 6000);
-    
-    const response = await fetch(UMMAH_API_URL, {
-      signal: controller.signal,
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
+    const serverUrl = `/api/prayer-times?method=${encodeURIComponent(method)}&madhab=${encodeURIComponent(madhab)}`;
+
+    const response = await fetch(serverUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
-    
+
     if (response.ok) {
       const json = await response.json();
-      // Inspect shape
+      if (json?.data && (json.data.fajr || json.data.Fajr)) {
+        return {
+          data: {
+            fajr: json.data.fajr || json.data.Fajr,
+            sunrise: json.data.sunrise || json.data.Sunrise,
+            dhuhr: json.data.dhuhr || json.data.Dhuhr,
+            asr: json.data.asr || json.data.Asr,
+            maghrib: json.data.maghrib || json.data.Maghrib,
+            isha: json.data.isha || json.data.Isha,
+            midnight: json.data.midnight || '00:05',
+            lastThird: json.data.lastThird || '03:15',
+            date: json.data.date,
+            hijriDate: json.data.hijriDate,
+          },
+          source: json.source === 'ummah_api' ? 'ummah_api' : json.source === 'aladhan_api' ? 'aladhan_api' : 'karachi_offline',
+          method: json.method || method,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('[PrayerService] Local /api/prayer-times proxy error, trying direct upstreams:', err);
+  }
+
+  // 2. Direct Ummah API attempt (if server is unreachable)
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const directUmmahUrl = `https://www.ummahapi.com/api/prayer-times?lat=24%C2%B051%E2%80%B236%E2%80%B3N%20&lng=67%C2%B00%E2%80%B236%E2%80%B3E&method=${encodeURIComponent(method)}&madhab=${encodeURIComponent(madhab)}&highLatitudeRule=recommended`;
+
+    const response = await fetch(directUmmahUrl, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const json = await response.json();
       const timings = json?.data?.timings || json?.timings || json?.data || json;
       if (timings && (timings.fajr || timings.Fajr)) {
         return {
@@ -904,34 +1065,28 @@ export async function fetchPrayerTimes(): Promise<{
             asr: timings.asr || timings.Asr,
             maghrib: timings.maghrib || timings.Maghrib,
             isha: timings.isha || timings.Isha,
-            midnight: timings.midnight || timings.Midnight || '00:05',
-            lastThird: timings.lastThird || timings.Lastthird || '03:15',
-            hijriDate: json?.data?.date?.hijri ? {
-              day: json.data.date.hijri.day,
-              month: {
-                en: json.data.date.hijri.month.en,
-                ar: json.data.date.hijri.month.ar,
-              },
-              year: json.data.date.hijri.year,
-            } : undefined,
+            midnight: timings.midnight || '00:05',
+            lastThird: timings.lastThird || '03:15',
+            hijriDate: json?.data?.date?.hijri,
           },
           source: 'ummah_api',
+          method,
         };
       }
     }
   } catch (err) {
-    console.warn('Ummah API fetch error or CORS, trying Aladhan Karachi backup:', err);
+    console.warn('Direct Ummah API error:', err);
   }
 
-  // 2. Try Aladhan with Karachi method & Hanafi school
+  // 3. Direct Aladhan with Karachi method & Hanafi school
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     const aladhanUrl = `https://api.aladhan.com/v1/timings?latitude=24.9780&longitude=67.0600&method=1&school=1`;
-    
+
     const response = await fetch(aladhanUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
-    
+
     if (response.ok) {
       const json = await response.json();
       if (json?.data?.timings) {
@@ -948,16 +1103,19 @@ export async function fetchPrayerTimes(): Promise<{
             midnight: t.Midnight,
             lastThird: t.Lastthird,
             date: json.data.date?.gregorian?.date,
-            hijriDate: h ? {
-              day: h.day,
-              month: {
-                en: h.month.en,
-                ar: h.month.ar,
-              },
-              year: h.year,
-            } : undefined,
+            hijriDate: h
+              ? {
+                  day: h.day,
+                  month: {
+                    en: h.month.en,
+                    ar: h.month.ar,
+                  },
+                  year: h.year,
+                }
+              : undefined,
           },
           source: 'aladhan_api',
+          method,
         };
       }
     }
@@ -965,10 +1123,11 @@ export async function fetchPrayerTimes(): Promise<{
     console.warn('Aladhan backup error:', err);
   }
 
-  // 3. Fallback to offline calculated Karachi Hanafi schedule
+  // 4. Fallback to offline calculated Karachi Hanafi schedule
   return {
     data: getLocalKarachiPrayerTimes(new Date()),
     source: 'karachi_offline',
+    method,
   };
 }
 

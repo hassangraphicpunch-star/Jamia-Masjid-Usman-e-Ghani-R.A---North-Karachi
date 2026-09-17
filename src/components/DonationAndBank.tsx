@@ -264,20 +264,20 @@ export const DonationAndBank: React.FC<DonationAndBankProps> = ({ language }) =>
             <div className="w-full md:w-auto shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-red-800/60 md:pl-4 flex flex-row md:flex-col items-center md:items-end justify-between gap-2">
               <div className="text-left md:text-right">
                 <span className="text-[10px] text-stone-400 block uppercase">
-                  {isUrdu ? 'دفتری رابطہ برائے رہنمائی:' : 'Office Desk Contact:'}
+                  {isUrdu ? 'صرف عطیات کے لیے رابطہ:' : 'Donation Inquiries Only:'}
                 </span>
-                <span className="font-mono text-sm font-bold text-amber-300 block">
-                  0323-3469424
+                <span className="font-mono text-sm font-bold text-amber-300 block tracking-wide">
+                  0323 2456480
                 </span>
               </div>
               <a
-                href="https://wa.me/923233469424?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%DB%8C%DA%A9%D9%85%D8%8C%20%D9%85%DB%8C%DA%BA%20%D8%AC%D8%A7%D9%85%D8%B9%20%D9%85%D8%B3%D8%AC%D8%AF%20%D8%B9%D8%AB%D9%85%D8%A7%D9%86%20%D8%BA%D9%86%DB%8C%20%DA%A9%DB%92%20%D8%AF%D9%81%D8%AA%D8%B1%20%D9%85%DB%8C%DA%BA%20%D8%B9%D8%B7%DB%8C%DB%81%20%D8%AC%D9%85%D8%B9%20%DA%A9%D8%B1%D9%88%D8%A7%D9%86%DB%92%20%DA%A9%DB%92%20%D8%AD%D9%88%D8%A7%D9%84%DB%92%20%D8%B3%DB%92%20%D8%B1%D8%A7%D8%A8%D8%B7%DB%81%20%DA%A9%D8%B1%20%D8%B1%DB%81%D8%A7%20%DB%81%D9%88%DA%BA%DB%94"
+                href="https://wa.me/923232456480?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%DB%8C%DA%A9%D9%85%D8%8C%20%D9%85%DB%8C%DA%BA%20%D8%AC%D8%A7%D9%85%D8%B9%20%D9%85%D8%B3%D8%AC%D8%AF%20%D8%B9%D8%AB%D9%85%D8%A7%D9%86%20%D8%BA%D9%86%DB%8C%20%DA%A9%DB%92%20%D8%AF%D9%81%D8%AA%D8%B1%20%D9%85%DB%8C%DA%BA%20%D8%B9%D8%B7%DB%8C%DB%81%20%D8%AC%D9%85%D8%B9%20%DA%A9%D8%B1%D9%88%D8%A7%D9%86%DB%92%20%DA%A9%DB%92%20%D8%AD%D9%88%D8%A7%D9%84%DB%92%20%D8%B3%DB%92%20%D8%B1%D8%A7%D8%A8%D8%B7%DB%81%20%DA%A9%D8%B1%20%D8%B1%DB%81%D8%A7%20%DB%81%D9%88%DA%BA%DB%94"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-md"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
-                <span>{isUrdu ? 'دفتر واٹس ایپ' : 'Office WhatsApp'}</span>
+                <span>{isUrdu ? 'عطیات واٹس ایپ' : 'Donations WhatsApp'}</span>
               </a>
             </div>
           </div>
@@ -634,7 +634,7 @@ export const DonationAndBank: React.FC<DonationAndBankProps> = ({ language }) =>
 
                 {/* Direct WhatsApp Pre-filled Inquiry */}
                 <a
-                  href={`https://wa.me/923233469424?text=${encodeURIComponent(
+                  href={`https://wa.me/923232456480?text=${encodeURIComponent(
                     isUrdu
                       ? `السلام علیکم! میں جامع مسجد عثمان غنی کے دفتر میں "${activeCategory.nameUr}" کے حوالے سے عطیہ جمع کروانے کے لیے رہنمائی چاہتا ہوں۔ برائے مہربانی دفتر کے اوقات اور طریقہ کار کی تصدیق فرما دیں۔`
                       : `Assalamu Alaikum! I would like to inquire about making an in-person donation at the Masjid Office for "${activeCategory.nameEn}". Please share the office visiting details.`
@@ -646,8 +646,8 @@ export const DonationAndBank: React.FC<DonationAndBankProps> = ({ language }) =>
                   <MessageCircle className="w-4 h-4 fill-current" />
                   <span>
                     {isUrdu
-                      ? `اس شعبہ کے لیے دفتر سے رابطہ کریں`
-                      : `Inquire with Office about this Project`}
+                      ? `عطیات ہیلپ لائن (0323 2456480)`
+                      : `Donation Inquiries (0323 2456480)`}
                   </span>
                 </a>
 
@@ -705,13 +705,32 @@ export const DonationAndBank: React.FC<DonationAndBankProps> = ({ language }) =>
               </div>
 
               <div className="p-3.5 rounded-xl bg-stone-950 border border-stone-800/80 flex items-start gap-3">
-                <Phone className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                <Phone className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold text-white block">
-                    {isUrdu ? 'رابطہ نمبر و واٹس ایپ ہیلپ لائن:' : 'Contact & WhatsApp Helpline:'}
+                    {isUrdu ? 'صرف عطیات و معاونت کے لیے مخصوص رابطہ نمبر:' : 'Dedicated Donation Inquiries & Contributions Number:'}
                   </span>
-                  <span className="font-mono text-emerald-400 font-bold">
-                    0323-3469424 / +92 323 3469424
+                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                    <span className="font-mono text-amber-300 font-bold text-sm">
+                      0323 2456480
+                    </span>
+                    <span className="text-[11px] text-stone-400">
+                      (+92 323 2456480)
+                    </span>
+                    <a
+                      href="https://wa.me/923232456480"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2 py-0.5 rounded bg-emerald-950/90 hover:bg-emerald-900 border border-emerald-600/50 text-emerald-300 text-[11px] font-bold inline-flex items-center gap-1"
+                    >
+                      <MessageCircle className="w-3 h-3" />
+                      <span>WhatsApp</span>
+                    </a>
+                  </div>
+                  <span className="text-[10px] text-amber-400/90 block mt-1">
+                    {isUrdu
+                      ? 'نوٹ: یہ نمبر صرف اور صرف عطیات، فنڈز اور رسید کی معلومات کے لیے مخصوص ہے۔'
+                      : 'Note: This contact is strictly designated for donation inquiries and receipts.'}
                   </span>
                 </div>
               </div>
@@ -858,8 +877,8 @@ export const DonationAndBank: React.FC<DonationAndBankProps> = ({ language }) =>
               </h4>
               <p className="text-xs text-stone-300 leading-relaxed">
                 {isUrdu
-                  ? 'آپ اپنے کسی معتمد عزیز یا نمائندے کو مسجد کے دفتر بھیج سکتے ہیں، یا مسجد کے باضابطہ واٹس ایپ (03233469424) پر رابطہ فرما کر دفتری طریقہ کار سے متعلق رہنمائی حاصل کر سکتے ہیں۔'
-                  : 'You may send a trusted family representative to the office counter, or contact the official Mosque Helpline on WhatsApp (+92 323 3469424) for authorized guidance.'}
+                  ? 'آپ اپنے کسی معتمد عزیز یا نمائندے کو مسجد کے دفتر بھیج سکتے ہیں، یا مسجد کی عطیات ہیلپ لائن (0323 2456480) پر رابطہ فرما کر دفتری طریقہ کار سے متعلق رہنمائی حاصل کر سکتے ہیں۔'
+                  : 'You may send a trusted family representative to the office counter, or contact the dedicated Donation Helpline on WhatsApp (+92 323 2456480 / 0323 2456480) for authorized guidance.'}
               </p>
             </div>
 

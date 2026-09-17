@@ -37,6 +37,7 @@ import {
   Globe,
   Cloud,
   RefreshCw,
+  Compass,
 } from 'lucide-react';
 import {
   Language,
@@ -46,6 +47,9 @@ import {
   MosqueMediaSettings,
   MosqueVideoItem,
 } from '../types';
+import {
+  PRAYER_CALCULATION_METHODS,
+} from '../data/prayerMethodsData';
 import {
   DEFAULT_ADMIN_SETTINGS,
   DEFAULT_DARS_PROGRAMS,
@@ -745,6 +749,74 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                   </p>
                 </div>
 
+                {/* Prayer Calculation Method & Fiqh Standard */}
+                <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/70 to-stone-950 border border-emerald-700/50 space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <Compass className="w-4 h-4 text-emerald-400" />
+                      <span className="text-xs font-bold text-white uppercase tracking-wide">
+                        {isUrdu
+                          ? 'طریقۂ حساب اوقاتِ نماز (Calculation Method)'
+                          : 'Prayer Calculation Method & Fiqh Standard'}
+                      </span>
+                    </div>
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-900/80 text-emerald-300 border border-emerald-700 font-mono font-bold">
+                      {PRAYER_CALCULATION_METHODS[settings.calculationMethod || 'Karachi']?.fajr_angle || '18°'} Fajr / {PRAYER_CALCULATION_METHODS[settings.calculationMethod || 'Karachi']?.isha_angle || '18°'} Isha
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block text-[11px] font-medium text-stone-300 mb-1">
+                        {isUrdu ? 'حساب کا باضابطہ معیار منتخب کریں:' : 'Select Standard Method:'}
+                      </label>
+                      <select
+                        value={settings.calculationMethod || 'Karachi'}
+                        onChange={(e) =>
+                          setSettings({ ...settings, calculationMethod: e.target.value })
+                        }
+                        className="w-full px-3 py-2 bg-stone-900 border border-emerald-600/60 rounded-lg text-white text-xs focus:outline-none focus:border-emerald-400"
+                      >
+                        {Object.values(PRAYER_CALCULATION_METHODS).map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.isOfficialForMasjid ? '★ ' : ''}
+                            {isUrdu ? m.nameUr : m.name} ({m.fajr_angle || '18°'})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-stone-300 mb-1">
+                        {isUrdu ? 'فقہی مکتبِ فکر برائے عصر (Madhab):' : 'Asr Juristic Calculation (Madhab):'}
+                      </label>
+                      <select
+                        value={settings.madhab || 'Hanafi'}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            madhab: e.target.value as 'Hanafi' | 'Shafi',
+                          })
+                        }
+                        className="w-full px-3 py-2 bg-stone-900 border border-emerald-600/60 rounded-lg text-white text-xs focus:outline-none focus:border-emerald-400"
+                      >
+                        <option value="Hanafi">
+                          {isUrdu ? 'فقہ حنفی (عصر وقت سایہ مثلین / 2x Shadow)' : 'Hanafi (2x Shadow - مثلین)'}
+                        </option>
+                        <option value="Shafi">
+                          {isUrdu ? 'فقہ شافعی / مالکی / حنبلی (سایہ مثلِ اول / 1x Shadow)' : 'Shafi / Maliki / Hanbali (1x Shadow - مثل اول)'}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-emerald-300/80 leading-relaxed">
+                    {isUrdu
+                      ? 'جامع مسجد عثمان غنی میں فجر و عشاء کے 18° زاویے اور عصر میں حنفی ضابطہ (مثلین) مستعمل ہے۔'
+                      : 'Jamia Masjid Usman-e-Ghani follows the University of Islamic Sciences, Karachi (18° Fajr & 18° Isha with Hanafi 2x Asr shadow).'}
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {/* Fajr Card */}
                   <div className="p-3.5 rounded-xl bg-stone-950/90 border border-sky-900/40 space-y-2.5">
@@ -822,28 +894,44 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Zawal Prohibited Window Card */}
+                  {/* Zawal Prohibited Window Card (Daily Dynamic Calculation) */}
                   <div className="p-3.5 rounded-xl bg-stone-950/90 border border-rose-900/40 space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-rose-300 uppercase tracking-wide">
-                        {isUrdu ? 'وقتِ زوال / استواء (مکروہ وقت)' : 'Zawal Prohibited Window'}
+                      <span className="text-xs font-bold text-rose-300 uppercase tracking-wide flex items-center gap-1.5">
+                        <span>{isUrdu ? 'روزانہ وقتِ زوال (نصف النہار شرعی)' : 'Daily Zawal & Shar\'i Midday'}</span>
                       </span>
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800 font-bold">
-                        {isUrdu ? 'ممنوعہ وقت' : 'Makrooh'}
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-medium">
+                        {isUrdu ? 'روزانہ خودکار تبدیلی' : 'Daily Dynamic'}
                       </span>
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-medium text-stone-400 mb-1">
-                        {isUrdu ? 'زوال کا وقت (Zawal Window):' : 'Zawal Timing Window:'}
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-medium text-stone-400">
+                          {isUrdu ? 'وقتِ زوال (مکروہ وقت):' : 'Zawal Prohibited Window:'}
+                        </label>
+                        {settings.zawalTime && settings.zawalTime.trim() !== '' && (
+                          <button
+                            type="button"
+                            onClick={() => setSettings({ ...settings, zawalTime: '' })}
+                            className="text-[10px] text-emerald-400 hover:text-emerald-300 underline font-semibold"
+                          >
+                            {isUrdu ? 'خودکار روزانہ حساب پر واپس کریں' : 'Reset to Daily Auto'}
+                          </button>
+                        )}
+                      </div>
                       <input
                         type="text"
-                        value={settings.zawalTime || '12:12 PM - 12:28 PM'}
+                        value={settings.zawalTime || ''}
                         onChange={(e) => setSettings({ ...settings, zawalTime: e.target.value })}
-                        placeholder="12:12 PM - 12:28 PM"
-                        className="w-full px-3 py-2 bg-stone-900 border border-rose-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-rose-400"
+                        placeholder={isUrdu ? 'خودکار روزانہ حساب (تجویز کردہ)' : 'Auto Daily Calculation (Recommended)'}
+                        className="w-full px-3 py-2 bg-stone-900 border border-rose-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-rose-400 placeholder:text-emerald-400/70"
                       />
+                      <p className="text-[10px] text-stone-400 mt-1">
+                        {isUrdu
+                          ? 'خالی رکھنے پر روزانہ آفتاب کے استواء و ظہر کے حساب سے وقتِ زوال اور نصف النہار شرعی خودکار تبدیل ہوتا رہے گا۔'
+                          : 'Leave empty for automatic daily recalculation based on astronomical solar noon.'}
+                      </p>
                     </div>
                   </div>
 

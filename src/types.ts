@@ -6,6 +6,8 @@ export interface JamaatTimes {
   ishraq: string;
   chasht?: string;
   zawal?: string;
+  nisfUnNaharShari?: string;
+  isZawalAutoCalculated?: boolean;
   dhuhr: string;
   asr: string;
   maghrib: string;
@@ -133,6 +135,21 @@ export interface AdminPrayerSettings {
   azanVolume?: number;
   // Iqamah Countdown Settings
   iqamahAlertSound?: boolean;
+  // Prayer Calculation Method (e.g. 'Karachi', 'MuslimWorldLeague', 'UmmAlQura', 'Egyptian')
+  calculationMethod?: string;
+  madhab?: 'Hanafi' | 'Shafi';
+}
+
+export interface PrayerCalculationMethod {
+  id?: string;
+  name: string;
+  description: string;
+  fajr_angle?: string;
+  isha_angle?: string;
+  isha_description?: string;
+  asr_calculation?: string;
+  madhab?: string;
+  isOfficialForMasjid?: boolean;
 }
 
 export interface PrayerTimeItem {

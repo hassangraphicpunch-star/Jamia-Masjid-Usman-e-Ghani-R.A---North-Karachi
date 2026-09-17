@@ -165,6 +165,18 @@ export const Footer: React.FC<FooterProps> = ({ language, onNavigate, onOpenAdmi
                 <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>{MOSQUE_INFO.email}</span>
               </li>
+              <li className="flex items-center gap-2 pt-1 border-t border-stone-800/80">
+                <span className="text-amber-400 font-bold text-[11px]">{isUrdu ? 'صرف عطیات:' : 'Donations:'}</span>
+                <a
+                  href="https://wa.me/923232456480"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-amber-300 font-mono text-amber-300 font-semibold"
+                  title={isUrdu ? 'صرف عطیات سے متعلق معلومات' : 'Donation-related inquiries only'}
+                >
+                  0323 2456480
+                </a>
+              </li>
             </ul>
           </div>
 
