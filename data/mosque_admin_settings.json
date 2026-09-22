@@ -1,5 +1,5 @@
 {
-  "fajrJamaat": "05:45 AM",
+  "fajrJamaat": "05:50 AM",
   "dhuhrJamaat": "01:30 PM",
   "asrJamaat": "05:15 PM",
   "maghribJamaat": "+5 mins after Azan",
@@ -13,7 +13,7 @@
   "jummaKhateebUr": "حضرت مولانا یونس منصوری صاحب (خطیب جامع مسجد)",
   "ishraqTime": "+12 mins after Tuloo",
   "chashtTime": "08:45 AM - 11:30 AM",
-  "zawalTime": "12:12 PM - 12:28 PM",
+  "zawalTime": "",
   "ramadanDemoMode": false,
   "ramadanSehriTime": "05:00 AM",
   "ramadanIftarTime": "06:45 PM",
@@ -27,6 +27,6 @@
   "autoPlayAzan": true,
   "azanVolume": 0.85,
   "iqamahAlertSound": true,
-  "lastSavedTimestamp": "2026-09-14T23:15:17.217Z",
+  "lastSavedTimestamp": "2026-09-22T19:42:00.000Z",
   "lastPublishedBy": "Masjid Administration Portal"
 }
