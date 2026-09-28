@@ -34,9 +34,17 @@ import { RamadanCalendarModal } from './components/RamadanCalendarModal';
 import { QuranModal } from './components/QuranModal';
 import { MasnoonDuasModal } from './components/MasnoonDuasModal';
 import { PrayerMethodsModal } from './components/PrayerMethodsModal';
+import { AlkhidmatQurbaniPage } from './components/AlkhidmatQurbaniPage';
+import { AlkhidmatQurbaniSection } from './components/AlkhidmatQurbaniSection';
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('ur');
+  const [currentView, setCurrentView] = useState<'home' | 'qurbani'>(() => {
+    if (typeof window !== 'undefined' && window.location.hash.toLowerCase().includes('qurbani')) {
+      return 'qurbani';
+    }
+    return 'home';
+  });
   const [prayerData, setPrayerData] = useState<PrayerTimesApiResponse>(() =>
     getLocalKarachiPrayerTimes(new Date())
   );
@@ -208,18 +216,53 @@ export default function App() {
         ur: nextPrayer.nextPrayerNameUr,
       };
 
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash.toLowerCase().includes('qurbani')) {
+        setCurrentView('qurbani');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        setCurrentView('home');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const navigateToQurbani = () => {
+    setCurrentView('qurbani');
+    window.location.hash = 'qurbani';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToHome = () => {
+    setCurrentView('home');
+    window.location.hash = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleNavigate = (sectionId: string) => {
+    if (sectionId === 'ijtemai-qurbani') {
+      navigateToQurbani();
+      return;
+    }
+    if (currentView !== 'home') {
+      setCurrentView('home');
+      window.location.hash = '';
+    }
     setActiveSection(sectionId);
     if (sectionId === 'hero') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    const elem = document.getElementById(sectionId);
-    if (elem) {
-      const yOffset = -70;
-      const y = elem.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
+    setTimeout(() => {
+      const elem = document.getElementById(sectionId);
+      if (elem) {
+        const yOffset = -70;
+        const y = elem.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }, 50);
   };
 
   const handleOpenAzanModal = (
@@ -272,73 +315,89 @@ export default function App() {
         onOpenRamadanModal={() => setRamadanModalOpen(true)}
         onOpenQuranModal={() => setQuranModalOpen(true)}
         onOpenDuasModal={() => setDuasModalOpen(true)}
+        onOpenQurbaniPage={navigateToQurbani}
       />
 
-      {/* Main Content Sections */}
-      <main className="flex-1">
-        
-        {/* 1. Hero & Prominent Prayer Schedule (Requested API integration for Karachi) */}
-        <HeroPrayerTimes
-          language={language}
-          prayerData={prayerData}
-          apiSource={apiSource}
-          isLoading={isLoading}
-          onRefresh={loadTimings}
-          onOpenMonthlyModal={() => setMonthlyModalOpen(true)}
-          onOpenAdminModal={() => setAdminModalOpen(true)}
-          onOpenAzanModal={handleOpenAzanModal}
-          onOpenRamadanModal={() => setRamadanModalOpen(true)}
-          adminSettings={adminSettings}
-          nextPrayer={nextPrayer}
-          audioMuted={audioMuted}
-          setAudioMuted={setAudioMuted}
-          simulatedIqamah={simulatedIqamah}
-          onSetSimulatedIqamah={setSimulatedIqamah}
-          currentMethod={calculationMethod}
-          onOpenMethodsModal={() => setPrayerMethodsModalOpen(true)}
-        />
+      {/* Main Content Sections or Dedicated Alkhidmat Qurbani Page */}
+      {currentView === 'qurbani' ? (
+        <main className="flex-1">
+          <AlkhidmatQurbaniPage
+            language={language}
+            onBackToHome={navigateToHome}
+          />
+        </main>
+      ) : (
+        <main className="flex-1">
+          {/* 1. Hero & Prominent Prayer Schedule (Requested API integration for Karachi) */}
+          <HeroPrayerTimes
+            language={language}
+            prayerData={prayerData}
+            apiSource={apiSource}
+            isLoading={isLoading}
+            onRefresh={loadTimings}
+            onOpenMonthlyModal={() => setMonthlyModalOpen(true)}
+            onOpenAdminModal={() => setAdminModalOpen(true)}
+            onOpenAzanModal={handleOpenAzanModal}
+            onOpenRamadanModal={() => setRamadanModalOpen(true)}
+            adminSettings={adminSettings}
+            nextPrayer={nextPrayer}
+            audioMuted={audioMuted}
+            setAudioMuted={setAudioMuted}
+            simulatedIqamah={simulatedIqamah}
+            onSetSimulatedIqamah={setSimulatedIqamah}
+            currentMethod={calculationMethod}
+            onOpenMethodsModal={() => setPrayerMethodsModalOpen(true)}
+          />
 
-        {/* 2. Announcements & Notice Board (Requested feature) */}
-        <AnnouncementsSection
-          language={language}
-          adminSettings={adminSettings}
-        />
+          {/* Featured Alkhidmat Ijtemai Qurbani Live Status Checker Section */}
+          <AlkhidmatQurbaniSection
+            language={language}
+            onOpenFullPage={navigateToQurbani}
+          />
 
-        {/* 3. Mosque Video Portal & Friday Sermon Stream (Requested video option) */}
-        <MosqueVideoSection
-          language={language}
-          adminSettings={adminSettings}
-          onOpenAdminModal={() => setAdminModalOpen(true)}
-        />
+          {/* 2. Announcements & Notice Board (Requested feature) */}
+          <AnnouncementsSection
+            language={language}
+            adminSettings={adminSettings}
+          />
 
-        {/* 4. Mosque Facilities & Dar-ul-Quran Maktab */}
-        <ServicesFacilities
-          language={language}
-        />
+          {/* 3. Mosque Video Portal & Friday Sermon Stream (Requested video option) */}
+          <MosqueVideoSection
+            language={language}
+            adminSettings={adminSettings}
+            onOpenAdminModal={() => setAdminModalOpen(true)}
+          />
 
-        {/* 5. Daily Quran/Hadith Wisdom & Interactive Digital Tasbih */}
-        <DailyWisdomAndTasbih
-          language={language}
-          onOpenQuranModal={() => setQuranModalOpen(true)}
-          onOpenDuasModal={() => setDuasModalOpen(true)}
-        />
+          {/* 4. Mosque Facilities & Dar-ul-Quran Maktab */}
+          <ServicesFacilities
+            language={language}
+          />
 
-        {/* 6. Location ST-11 Sector 5-A/1 North Karachi, Directions & Qibla Bearing */}
-        <QiblaAndLocation
-          language={language}
-        />
+          {/* 5. Daily Quran/Hadith Wisdom & Interactive Digital Tasbih */}
+          <DailyWisdomAndTasbih
+            language={language}
+            onOpenQuranModal={() => setQuranModalOpen(true)}
+            onOpenDuasModal={() => setDuasModalOpen(true)}
+          />
 
-        {/* 7. Transparent Donation & Mosque Leadership Committee */}
-        <DonationAndBank
-          language={language}
-        />
-      </main>
+          {/* 6. Location ST-11 Sector 5-A/1 North Karachi, Directions & Qibla Bearing */}
+          <QiblaAndLocation
+            language={language}
+          />
+
+          {/* 7. Transparent Donation & Mosque Leadership Committee */}
+          <DonationAndBank
+            language={language}
+          />
+        </main>
+      )}
 
       {/* Footer */}
       <Footer
         language={language}
         onNavigate={handleNavigate}
         onOpenAdminModal={() => setAdminModalOpen(true)}
+        onOpenQurbaniPage={navigateToQurbani}
       />
 
       {/* Monthly Printable Timetable Modal */}

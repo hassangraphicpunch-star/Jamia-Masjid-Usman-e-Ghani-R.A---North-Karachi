@@ -87,6 +87,25 @@ export interface IqamahCountdownState {
   isSimulated?: boolean;
 }
 
+export interface NextPrayerState {
+  nextPrayerId: 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+  nextPrayerNameEn: string;
+  nextPrayerNameUr: string;
+  nextTime12h: string;
+  nextJamaat12h: string;
+  targetDate: Date;
+  secondsRemaining: number;
+  currentPrayerId: 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+  currentPrayerNameEn: string;
+  currentPrayerNameUr: string;
+  currentTime12h: string;
+  currentPrayerStartDate: Date;
+  totalWindowSeconds: number;
+  elapsedSeconds: number;
+  progressPercent: number;
+  iqamahCountdown: IqamahCountdownState | null;
+}
+
 export interface AdminPrayerSettings {
   fajrJamaat: string;
   dhuhrJamaat: string;
@@ -380,5 +399,78 @@ export interface YouTubeChannelVideo {
   published_at: string;
   thumbnailUrl?: string;
   channelTitle?: string;
+}
+
+export type QurbaniStatusStage =
+  | 'booked'
+  | 'animal_allocated'
+  | 'scheduled'
+  | 'slaughtered'
+  | 'butchering_packing'
+  | 'ready_pickup'
+  | 'completed';
+
+export type QurbaniType =
+  | 'cow_share'
+  | 'full_cow'
+  | 'goat'
+  | 'waqf_deserving'
+  | 'waqf_gaza';
+
+export interface QurbaniBookingRecord {
+  receiptNo: string;
+  tokenCode: string;
+  bookerNameEn: string;
+  bookerNameUr: string;
+  phone: string;
+  cnic: string;
+  bookingDate: string;
+  qurbaniType: QurbaniType;
+  sharesCount: number;
+  shareHolderNames: string[];
+  day: 'day1' | 'day2' | 'day3';
+  dayUr: string;
+  timeSlot: string;
+  timeSlotUr: string;
+  currentStage: QurbaniStatusStage;
+  animalTagNo: string;
+  slaughterLocation: {
+    en: string;
+    ur: string;
+  };
+  pickupLocation: {
+    en: string;
+    ur: string;
+    addressUr: string;
+    addressEn: string;
+    counterNo: string;
+    contactPerson: string;
+    contactPhone: string;
+  };
+  meatDetails: {
+    netWeightKg: number;
+    bonelessKg: number;
+    boneKg: number;
+    liverKg: number;
+    siriPayaIncluded: boolean;
+    packagingTypeUr: string;
+  };
+  payment: {
+    amountPaid: number;
+    paymentMethod: string;
+    paymentStatus: 'paid' | 'partial';
+  };
+  timeline: {
+    stage: QurbaniStatusStage;
+    labelEn: string;
+    labelUr: string;
+    completed: boolean;
+    current: boolean;
+    time?: string;
+    noteUr?: string;
+    noteEn?: string;
+  }[];
+  shariahSupervisorUr: string;
+  videoStatusUrl?: string;
 }
 

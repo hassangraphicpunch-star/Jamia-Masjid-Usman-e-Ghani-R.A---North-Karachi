@@ -37,6 +37,7 @@ interface NavbarProps {
   onOpenRamadanModal?: () => void;
   onOpenQuranModal?: () => void;
   onOpenDuasModal?: () => void;
+  onOpenQurbaniPage?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -53,6 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenRamadanModal,
   onOpenQuranModal,
   onOpenDuasModal,
+  onOpenQurbaniPage,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -90,6 +92,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems = [
     { id: 'prayer-times', labelEn: 'Prayer Timings', labelUr: 'اوقات نماز' },
+    { id: 'ijtemai-qurbani', labelEn: 'Alkhidmat Qurbani', labelUr: 'الخدمت اجتماعی قربانی' },
     { id: 'video-gallery', labelEn: 'Videos & Live', labelUr: 'ویڈیوز و بیانات' },
     { id: 'announcements', labelEn: 'Announcements', labelUr: 'تازہ اعلانات' },
     { id: 'facilities', labelEn: 'Facilities', labelUr: 'خدمات و شعبہ جات' },
@@ -99,6 +102,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   const handleItemClick = (id: string) => {
+    if (id === 'ijtemai-qurbani' && onOpenQurbaniPage) {
+      onOpenQurbaniPage();
+      setMobileMenuOpen(false);
+      return;
+    }
     onNavigate(id);
     setMobileMenuOpen(false);
   };
@@ -287,6 +295,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
+            {/* Alkhidmat Ijtemai Qurbani Status Tracker Button */}
+            {onOpenQurbaniPage && (
+              <button
+                id="btn-nav-qurbani"
+                onClick={onOpenQurbaniPage}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-900/90 hover:bg-emerald-800 text-amber-300 border border-amber-500/50 text-xs font-bold transition-all shadow-md hover:scale-105 ring-1 ring-amber-400/20"
+                title="Alkhidmat Ijtemai Qurbani Live Status Tracker"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isUrdu ? 'الخدمت قربانی' : 'Alkhidmat Qurbani'}</span>
+              </button>
+            )}
+
             {/* Quick Donate Button */}
             <button
               id="btn-nav-donate"
@@ -369,6 +390,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               );
             })}
+
+            {onOpenQurbaniPage && (
+              <button
+                onClick={() => {
+                  onOpenQurbaniPage();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-bold text-amber-300 bg-gradient-to-r from-emerald-950 via-emerald-900/80 to-emerald-950 border border-amber-500/50 flex items-center justify-between mt-2 shadow-md ring-1 ring-amber-400/20"
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <span>{isUrdu ? 'الخدمت اجتماعی قربانی (لائیو اسٹیٹس پورٹل)' : 'Alkhidmat Ijtemai Qurbani (Live Status)'}</span>
+                </div>
+                <span className="text-amber-300 text-xs font-bold uppercase">Live ›</span>
+              </button>
+            )}
 
             {onOpenQuranModal && (
               <button

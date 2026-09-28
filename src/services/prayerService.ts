@@ -1159,6 +1159,13 @@ export function computeNextPrayer(
   targetDate: Date;
   secondsRemaining: number;
   currentPrayerId: 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+  currentPrayerNameEn: string;
+  currentPrayerNameUr: string;
+  currentTime12h: string;
+  currentPrayerStartDate: Date;
+  totalWindowSeconds: number;
+  elapsedSeconds: number;
+  progressPercent: number;
   iqamahCountdown: IqamahCountdownState | null;
 } {
   const currentMinutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
@@ -1198,15 +1205,35 @@ export function computeNextPrayer(
     isNextDay = true;
   }
 
-  // Calculate target Date
-  const targetDate = new Date(now);
+  // Calculate target Date and prayer window dates
+  let currentPrayerDate = new Date(now);
+  const curMins = currentPrayer.minutes;
+  currentPrayerDate.setHours(Math.floor(curMins / 60), curMins % 60, 0, 0);
+
+  let targetDate = new Date(now);
   const targetMins = nextPrayer.minutes;
   targetDate.setHours(Math.floor(targetMins / 60), targetMins % 60, 0, 0);
+
   if (isNextDay) {
     targetDate.setDate(targetDate.getDate() + 1);
+  } else if (currentMinutes < listWithMinutes[0].minutes) {
+    // Current time is before Fajr today, so current prayer started yesterday at Isha
+    currentPrayerDate.setDate(currentPrayerDate.getDate() - 1);
   }
 
+  const totalWindowSeconds = Math.max(
+    1,
+    Math.floor((targetDate.getTime() - currentPrayerDate.getTime()) / 1000)
+  );
+  const elapsedSeconds = Math.max(
+    0,
+    Math.min(totalWindowSeconds, Math.floor((now.getTime() - currentPrayerDate.getTime()) / 1000))
+  );
   const secondsRemaining = Math.max(0, Math.floor((targetDate.getTime() - now.getTime()) / 1000));
+  const progressPercent = Math.min(
+    100,
+    Math.max(0, Math.round((elapsedSeconds / totalWindowSeconds) * 100))
+  );
 
   // Compute live Iqamah Countdown & Status
   // Checks if current time is between any prayer's Adhan and Jamaat, or within 15 mins of Jamaat (congregation window)
@@ -1322,6 +1349,13 @@ export function computeNextPrayer(
     targetDate,
     secondsRemaining,
     currentPrayerId: currentPrayer.id,
+    currentPrayerNameEn: currentPrayer.nameEn,
+    currentPrayerNameUr: currentPrayer.nameUr,
+    currentTime12h: formatTo12Hour(currentPrayer.timeStr),
+    currentPrayerStartDate: currentPrayerDate,
+    totalWindowSeconds,
+    elapsedSeconds,
+    progressPercent,
     iqamahCountdown: activeIqamah,
   };
 }

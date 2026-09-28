@@ -30,12 +30,16 @@ import {
   ShieldAlert,
   ChevronLeft,
   Compass,
+  Timer,
+  Hourglass,
+  ArrowRight,
 } from 'lucide-react';
 import {
   Language,
   PrayerTimesApiResponse,
   AdminPrayerSettings,
   IqamahCountdownState,
+  NextPrayerState,
 } from '../types';
 import {
   PRAYER_CALCULATION_METHODS,
@@ -71,7 +75,7 @@ interface HeroPrayerTimesProps {
   onOpenAzanModal: (prayerId?: 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha') => void;
   onOpenRamadanModal?: () => void;
   adminSettings?: AdminPrayerSettings;
-  nextPrayer: {
+  nextPrayer: NextPrayerState | {
     nextPrayerId: 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
     nextPrayerNameEn: string;
     nextPrayerNameUr: string;
@@ -79,6 +83,13 @@ interface HeroPrayerTimesProps {
     nextJamaat12h: string;
     secondsRemaining: number;
     currentPrayerId: 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+    currentPrayerNameEn?: string;
+    currentPrayerNameUr?: string;
+    currentTime12h?: string;
+    currentPrayerStartDate?: Date;
+    totalWindowSeconds?: number;
+    elapsedSeconds?: number;
+    progressPercent?: number;
     iqamahCountdown?: IqamahCountdownState | null;
   };
   audioMuted: boolean;
@@ -244,6 +255,106 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
   };
 
   const countdown = formatSeconds(nextPrayer.secondsRemaining);
+
+  // Prayer Icon Helper
+  const getPrayerIcon = (id: string) => {
+    switch (id) {
+      case 'fajr':
+        return Sunrise;
+      case 'sunrise':
+        return Sparkles;
+      case 'dhuhr':
+        return Sun;
+      case 'asr':
+        return SunMedium;
+      case 'maghrib':
+        return Sunset;
+      case 'isha':
+      default:
+        return Moon;
+    }
+  };
+
+  // Helper for human-readable duration in English & Urdu
+  const formatDurationHM = (totalSecs: number, isUr: boolean) => {
+    const hours = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    if (hours > 0) {
+      return isUr
+        ? `${hours} گھنٹہ${hours > 1 ? 'ے' : ''} ${mins} منٹ`
+        : `${hours}h ${mins}m`;
+    }
+    return isUr ? `${mins} منٹ` : `${mins}m`;
+  };
+
+  // Safe prayer progress calculation between current prayer and next prayer
+  const prayerProgress = React.useMemo(() => {
+    const np = nextPrayer as any;
+    if (
+      typeof np.progressPercent === 'number' &&
+      typeof np.elapsedSeconds === 'number' &&
+      typeof np.totalWindowSeconds === 'number' &&
+      np.currentPrayerNameEn
+    ) {
+      return {
+        currentNameEn: np.currentPrayerNameEn,
+        currentNameUr: np.currentPrayerNameUr || np.currentPrayerNameEn,
+        currentTime12h: np.currentTime12h || '',
+        nextNameEn: np.nextPrayerNameEn,
+        nextNameUr: np.nextPrayerNameUr,
+        nextTime12h: np.nextTime12h,
+        totalWindowSeconds: np.totalWindowSeconds,
+        elapsedSeconds: np.elapsedSeconds,
+        secondsRemaining: np.secondsRemaining,
+        progressPercent: np.progressPercent,
+        currentPrayerId: np.currentPrayerId,
+        nextPrayerId: np.nextPrayerId,
+      };
+    }
+
+    const names: Record<string, { en: string; ur: string }> = {
+      fajr: { en: 'Fajr', ur: 'فجر' },
+      sunrise: { en: 'Sunrise', ur: 'طلوع آفتاب' },
+      dhuhr: { en: 'Dhuhr', ur: 'ظہر' },
+      asr: { en: 'Asr', ur: 'عصر' },
+      maghrib: { en: 'Maghrib', ur: 'مغرب' },
+      isha: { en: 'Isha', ur: 'عشاء' },
+    };
+
+    const curId = nextPrayer.currentPrayerId || 'fajr';
+    const nxtId = nextPrayer.nextPrayerId || 'dhuhr';
+
+    const getPrayerTime = (id: string): string => {
+      switch (id) {
+        case 'fajr': return formatTo12Hour(prayerData.fajr);
+        case 'sunrise': return formatTo12Hour(prayerData.sunrise);
+        case 'dhuhr': return formatTo12Hour(prayerData.dhuhr);
+        case 'asr': return formatTo12Hour(prayerData.asr);
+        case 'maghrib': return formatTo12Hour(prayerData.maghrib);
+        case 'isha': return formatTo12Hour(prayerData.isha);
+        default: return '';
+      }
+    };
+
+    const totalSecs = Math.max(1, (nextPrayer.secondsRemaining || 0) + 3600);
+    const elapsedSecs = Math.max(0, totalSecs - (nextPrayer.secondsRemaining || 0));
+    const pct = Math.min(100, Math.max(0, Math.round((elapsedSecs / totalSecs) * 100)));
+
+    return {
+      currentNameEn: names[curId]?.en || curId,
+      currentNameUr: names[curId]?.ur || curId,
+      currentTime12h: getPrayerTime(curId),
+      nextNameEn: nextPrayer.nextPrayerNameEn || names[nxtId]?.en || nxtId,
+      nextNameUr: nextPrayer.nextPrayerNameUr || names[nxtId]?.ur || nxtId,
+      nextTime12h: nextPrayer.nextTime12h,
+      totalWindowSeconds: totalSecs,
+      elapsedSeconds: elapsedSecs,
+      secondsRemaining: nextPrayer.secondsRemaining,
+      progressPercent: pct,
+      currentPrayerId: curId,
+      nextPrayerId: nxtId,
+    };
+  }, [nextPrayer, prayerData]);
 
   const handleTestIqamah = (seconds: number) => {
     if (onSetSimulatedIqamah) {
@@ -698,6 +809,78 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                     </span>
                   </div>
                 </div>
+
+                {/* Visual Prayer Interval Progress Bar (Current Prayer -> Next Prayer) */}
+                <div className="w-full max-w-xs mt-3.5 px-2">
+                  <div className="flex justify-between items-center text-[11px] text-stone-300 font-medium mb-1.5">
+                    <span className="flex items-center gap-1 text-emerald-400 truncate max-w-[125px]">
+                      {React.createElement(getPrayerIcon(prayerProgress.currentPrayerId), {
+                        className: 'w-3 h-3 text-emerald-400 shrink-0',
+                      })}
+                      <span className="truncate">
+                        {isUrdu ? prayerProgress.currentNameUr : prayerProgress.currentNameEn}
+                      </span>
+                      {prayerProgress.currentTime12h && (
+                        <span className="text-[10px] text-stone-400 font-mono hidden sm:inline">
+                          ({prayerProgress.currentTime12h})
+                        </span>
+                      )}
+                    </span>
+                    <span className="flex items-center gap-1 text-amber-300 font-bold shrink-0">
+                      <span>{prayerProgress.progressPercent}%</span>
+                      <span className="text-[9px] text-stone-400 font-normal">
+                        {isUrdu ? 'مکمل' : 'elapsed'}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1 text-amber-300 truncate max-w-[125px] justify-end">
+                      <span className="truncate">
+                        {isUrdu ? prayerProgress.nextNameUr : prayerProgress.nextNameEn}
+                      </span>
+                      {React.createElement(getPrayerIcon(prayerProgress.nextPrayerId), {
+                        className: 'w-3 h-3 text-amber-400 shrink-0',
+                      })}
+                    </span>
+                  </div>
+
+                  {/* Animated Progress Bar */}
+                  <div
+                    role="progressbar"
+                    aria-valuenow={prayerProgress.progressPercent}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={
+                      isUrdu
+                        ? `نماز کا دورانیہ: ${prayerProgress.progressPercent}%`
+                        : `Prayer Interval Progress: ${prayerProgress.progressPercent}%`
+                    }
+                    className="w-full bg-stone-900/90 h-2.5 rounded-full overflow-hidden border border-emerald-700/50 p-0.5 relative shadow-inner"
+                  >
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400 rounded-full transition-all duration-1000 ease-out relative"
+                      style={{ width: `${prayerProgress.progressPercent}%` }}
+                    >
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white shadow-sm shadow-amber-300 animate-ping" />
+                    </div>
+                  </div>
+
+                  {/* Elapsed and Remaining Details */}
+                  <div className="flex justify-between items-center text-[10px] text-stone-400 mt-1.5 px-0.5">
+                    <span className="text-emerald-300/90 flex items-center gap-1">
+                      <Clock className="w-2.5 h-2.5 text-emerald-400" />
+                      <span>
+                        {formatDurationHM(prayerProgress.elapsedSeconds, isUrdu)}{' '}
+                        {isUrdu ? 'گزر چکے' : 'elapsed'}
+                      </span>
+                    </span>
+                    <span className="text-amber-300/90 flex items-center gap-1">
+                      <Timer className="w-2.5 h-2.5 text-amber-400" />
+                      <span>
+                        {formatDurationHM(prayerProgress.secondsRemaining, isUrdu)}{' '}
+                        {isUrdu ? 'باقی' : 'left'}
+                      </span>
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -789,6 +972,151 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                 >
                   <Radio className="w-4 h-4" />
                 </button>
+              </div>
+            </div>
+          </div>
+
+          {/* PRAYER TIME INTERVAL ELAPSED & PROGRESS TRACK */}
+          <div
+            id="hero-prayer-progress-track"
+            className="mt-6 p-4 rounded-xl bg-stone-950/80 border border-emerald-600/40 shadow-xl backdrop-blur-sm relative overflow-hidden"
+          >
+            {/* Top Row: Title, active interval badge & percentage */}
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
+                </span>
+                <span className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+                  <Timer className="w-4 h-4 text-amber-400" />
+                  <span>
+                    {isUrdu
+                      ? 'اوقاتِ نماز کا عبوری ٹائم کاؤنٹر (گزشتہ وقت اور پیشرفت)'
+                      : 'Prayer Time Interval Progress'}
+                  </span>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Interval indicator pill */}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/90 border border-emerald-500/50 text-[11px] font-semibold text-emerald-300 shadow-sm">
+                  <span className="flex items-center gap-1">
+                    {React.createElement(getPrayerIcon(prayerProgress.currentPrayerId), {
+                      className: 'w-3 h-3 text-emerald-400',
+                    })}
+                    <span>{isUrdu ? prayerProgress.currentNameUr : prayerProgress.currentNameEn}</span>
+                  </span>
+                  <ArrowRight className="w-3 h-3 text-amber-400 rtl:rotate-180" />
+                  <span className="flex items-center gap-1 text-amber-300">
+                    {React.createElement(getPrayerIcon(prayerProgress.nextPrayerId), {
+                      className: 'w-3 h-3 text-amber-400',
+                    })}
+                    <span>{isUrdu ? prayerProgress.nextNameUr : prayerProgress.nextNameEn}</span>
+                  </span>
+                </div>
+
+                {/* Percentage Badge */}
+                <span className="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/60 text-amber-300 text-xs font-bold font-mono">
+                  {prayerProgress.progressPercent}% {isUrdu ? 'مکمل' : 'elapsed'}
+                </span>
+              </div>
+            </div>
+
+            {/* The Main Wide Progress Track */}
+            <div className="relative my-3">
+              <div
+                role="progressbar"
+                aria-valuenow={prayerProgress.progressPercent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={
+                  isUrdu
+                    ? `نماز کا گزرا ہوا وقت: ${prayerProgress.progressPercent}%`
+                    : `Prayer interval elapsed: ${prayerProgress.progressPercent}%`
+                }
+                className="w-full bg-stone-900 h-3 sm:h-3.5 rounded-full overflow-hidden border border-emerald-700/60 p-0.5 relative shadow-inner"
+              >
+                {/* 25%, 50%, 75% subtle milestone dividers */}
+                <div className="absolute top-0 bottom-0 left-1/4 w-px bg-stone-700/50 pointer-events-none" />
+                <div className="absolute top-0 bottom-0 left-2/4 w-px bg-stone-700/50 pointer-events-none" />
+                <div className="absolute top-0 bottom-0 left-3/4 w-px bg-stone-700/50 pointer-events-none" />
+
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400 rounded-full transition-all duration-1000 ease-out relative shadow-sm"
+                  style={{ width: `${prayerProgress.progressPercent}%` }}
+                >
+                  {/* Glowing end indicator bead */}
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border border-amber-300 shadow-md shadow-amber-400/80 animate-pulse" />
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Metrics Cards: 4 Info Pills */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+              {/* 1. Current Prayer Started */}
+              <div className="p-2 sm:p-2.5 rounded-lg bg-stone-900/70 border border-stone-800/80 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-700/60 flex items-center justify-center shrink-0 text-emerald-400">
+                  {React.createElement(getPrayerIcon(prayerProgress.currentPrayerId), {
+                    className: 'w-4 h-4',
+                  })}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] text-stone-400 truncate">
+                    {isUrdu ? 'موجودہ وقت کا آغاز' : 'Current Prayer Started'}
+                  </div>
+                  <div className="font-bold text-emerald-300 text-xs sm:text-sm font-mono truncate">
+                    {isUrdu ? prayerProgress.currentNameUr : prayerProgress.currentNameEn}
+                    {prayerProgress.currentTime12h ? ` (${prayerProgress.currentTime12h})` : ''}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Time Elapsed */}
+              <div className="p-2 sm:p-2.5 rounded-lg bg-stone-900/70 border border-emerald-800/40 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-teal-950/80 border border-teal-700/60 flex items-center justify-center shrink-0 text-teal-400">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] text-teal-300/80 truncate">
+                    {isUrdu ? 'گزشتہ وقت (Elapsed)' : 'Time Elapsed'}
+                  </div>
+                  <div className="font-bold text-white text-xs sm:text-sm font-mono truncate">
+                    {formatDurationHM(prayerProgress.elapsedSeconds, isUrdu)}
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Time Remaining */}
+              <div className="p-2 sm:p-2.5 rounded-lg bg-stone-900/70 border border-amber-800/40 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-950/80 border border-amber-700/60 flex items-center justify-center shrink-0 text-amber-400">
+                  <Hourglass className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] text-amber-300/80 truncate">
+                    {isUrdu ? 'باقی ماندہ وقت (Remaining)' : 'Time Remaining'}
+                  </div>
+                  <div className="font-bold text-amber-300 text-xs sm:text-sm font-mono truncate">
+                    {formatDurationHM(prayerProgress.secondsRemaining, isUrdu)}
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Next Prayer Begins */}
+              <div className="p-2 sm:p-2.5 rounded-lg bg-stone-900/70 border border-stone-800/80 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-950/80 border border-amber-700/60 flex items-center justify-center shrink-0 text-amber-400">
+                  {React.createElement(getPrayerIcon(prayerProgress.nextPrayerId), {
+                    className: 'w-4 h-4',
+                  })}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] text-stone-400 truncate">
+                    {isUrdu ? 'اگلی نماز کا آغاز' : 'Next Prayer Begins'}
+                  </div>
+                  <div className="font-bold text-amber-300 text-xs sm:text-sm font-mono truncate">
+                    {isUrdu ? prayerProgress.nextNameUr : prayerProgress.nextNameEn} ({prayerProgress.nextTime12h})
+                  </div>
+                </div>
               </div>
             </div>
           </div>
