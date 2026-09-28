@@ -59,7 +59,7 @@ export const QurbaniSlipModal: React.FC<QurbaniSlipModalProps> = ({
         </div>
 
         {/* Printable Slip Content */}
-        <div className="p-6 sm:p-8 space-y-6 bg-amber-50/30">
+        <div className="p-6 sm:p-8 space-y-5 bg-amber-50/20">
           
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-center justify-between border-b-2 border-emerald-700 pb-5 gap-4">
@@ -72,10 +72,10 @@ export const QurbaniSlipModal: React.FC<QurbaniSlipModalProps> = ({
                 <h1 className="text-xl sm:text-2xl font-black text-emerald-900 tracking-tight">
                   الخدمت فاؤنڈیشن پاکستان
                 </h1>
-                <p className="text-xs sm:text-sm font-semibold text-stone-600">
-                  ALKHIDMAT IJTEMAI QURBANI 2026 / 1447 AH
+                <p className="text-xs sm:text-sm font-bold text-stone-700">
+                  اجتماعی قربانی ۱۴۴۷ھ - صرف پہلا دن (10 ذوالحجہ) • 30 گائے کوٹہ
                 </p>
-                <p className="text-xs text-emerald-700 font-medium">
+                <p className="text-xs text-emerald-800 font-medium">
                   {ALKHIDMAT_QURBANI_INFO.shariahBoardUr}
                 </p>
               </div>
@@ -89,15 +89,20 @@ export const QurbaniSlipModal: React.FC<QurbaniSlipModalProps> = ({
               <div className="text-xl font-black text-emerald-800 font-mono tracking-wider">
                 {booking.receiptNo}
               </div>
-              <div className="text-xs font-bold text-amber-700 bg-amber-100 rounded px-2 py-0.5 mt-1 inline-block">
+              <div className="text-xs font-bold text-amber-800 bg-amber-200/80 rounded px-2 py-0.5 mt-1 inline-block">
                 ٹوکن: {booking.tokenCode}
               </div>
             </div>
           </div>
 
+          {/* Important Badge: Cow Share / Day 1 / Self Collect */}
+          <div className="bg-amber-100 border border-amber-300 rounded-lg p-2 text-center text-xs font-bold text-amber-900">
+            صرف گائے کا حصہ • عید کا پہلا دن (10 ذوالحجہ) • گوشت کی خود وصولی صرف جامع مسجد عثمانِ غنی (نارتھ کراچی)
+          </div>
+
           {/* Booker & Animal Info Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-200 space-y-2">
+            <div className="bg-white p-3.5 rounded-xl border border-stone-200 space-y-2 shadow-sm">
               <div className="font-bold text-emerald-900 border-b border-stone-200 pb-1 flex items-center justify-between">
                 <span>{isUrdu ? 'صاحبِ قربانی کی تفصیل' : 'Booker Information'}</span>
                 <span className="text-stone-400 font-normal">#{booking.tokenCode}</span>
@@ -120,7 +125,7 @@ export const QurbaniSlipModal: React.FC<QurbaniSlipModalProps> = ({
               </div>
             </div>
 
-            <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-200 space-y-2">
+            <div className="bg-white p-3.5 rounded-xl border border-stone-200 space-y-2 shadow-sm">
               <div className="font-bold text-emerald-900 border-b border-stone-200 pb-1 flex items-center justify-between">
                 <span>{isUrdu ? 'قربانی و جانور کی تفصیل' : 'Sacrifice Specifications'}</span>
                 <span className="text-emerald-700 font-bold">1447 AH</span>
@@ -128,13 +133,7 @@ export const QurbaniSlipModal: React.FC<QurbaniSlipModalProps> = ({
               <div className="flex justify-between">
                 <span className="text-stone-500">{isUrdu ? 'نوعیت:' : 'Type:'}</span>
                 <span className="font-bold text-stone-900">
-                  {booking.qurbaniType === 'cow_share'
-                    ? `گائے کا حصہ (${booking.sharesCount})`
-                    : booking.qurbaniType === 'full_cow'
-                    ? 'مکمل گائے (7 حصے)'
-                    : booking.qurbaniType === 'goat'
-                    ? 'بکرا / دنبہ'
-                    : 'وقف برائے خیرات'}
+                  گائے کا حصہ ({booking.sharesCount}) - روپے {booking.payment.amountPaid.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -143,7 +142,9 @@ export const QurbaniSlipModal: React.FC<QurbaniSlipModalProps> = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-500">{isUrdu ? 'مقررہ دن:' : 'Slaughter Day:'}</span>
-                <span className="font-bold text-stone-900">{booking.dayUr}</span>
+                <span className="font-bold text-amber-900 bg-amber-100 px-1.5 py-0.2 rounded">
+                  صرف پہلا دن (10 ذوالحجہ)
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-stone-500">{isUrdu ? 'سلاٹ وقت:' : 'Time Slot:'}</span>
@@ -152,18 +153,18 @@ export const QurbaniSlipModal: React.FC<QurbaniSlipModalProps> = ({
             </div>
           </div>
 
-          {/* Collection / Pickup Details Callout */}
+          {/* Collection / Pickup Details Callout (Strictly Masjid Usman-e-Ghani) */}
           <div className="p-4 rounded-xl bg-emerald-50 border-2 border-dashed border-emerald-600 space-y-2">
             <div className="flex items-center justify-between">
               <span className="font-black text-sm text-emerald-950 flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-emerald-700" />
-                {isUrdu ? 'گوشت وصولی مرکز و کاؤنٹر' : 'Collection Center & Counter'}
+                {isUrdu ? 'گوشت وصولی مرکز (صرف خود وصولی)' : 'Self-Collection Center (No Home Delivery)'}
               </span>
               <span className="px-2.5 py-0.5 rounded bg-emerald-700 text-white font-bold text-xs">
                 {booking.pickupLocation.counterNo}
               </span>
             </div>
-            <p className="font-bold text-stone-900 text-xs sm:text-sm">
+            <p className="font-black text-emerald-950 text-xs sm:text-sm">
               {booking.pickupLocation.ur}
             </p>
             <p className="text-xs text-stone-600">
@@ -176,24 +177,24 @@ export const QurbaniSlipModal: React.FC<QurbaniSlipModalProps> = ({
           </div>
 
           {/* Meat Package Specification */}
-          <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-200 text-xs">
+          <div className="bg-white p-3.5 rounded-xl border border-stone-200 text-xs shadow-sm">
             <div className="font-bold text-stone-800 mb-2 border-b border-stone-200 pb-1">
               {isUrdu ? 'موصول ہونے والے گوشت کی مقدار و تقسیم (تخمینہ)' : 'Estimated Meat Package Breakdown'}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-              <div className="bg-white p-2 rounded border border-stone-200">
-                <div className="text-stone-500 text-[10px]">{isUrdu ? 'کل وزن' : 'Net Weight'}</div>
+              <div className="bg-stone-50 p-2 rounded border border-stone-200">
+                <div className="text-stone-500 text-[10px]">{isUrdu ? 'کل خالص وزن' : 'Net Weight'}</div>
                 <div className="text-sm font-black text-emerald-800 font-mono">~{booking.meatDetails.netWeightKg} KG</div>
               </div>
-              <div className="bg-white p-2 rounded border border-stone-200">
+              <div className="bg-stone-50 p-2 rounded border border-stone-200">
                 <div className="text-stone-500 text-[10px]">{isUrdu ? 'بون لیس گوشت' : 'Boneless'}</div>
                 <div className="text-sm font-black text-stone-800 font-mono">~{booking.meatDetails.bonelessKg} KG</div>
               </div>
-              <div className="bg-white p-2 rounded border border-stone-200">
+              <div className="bg-stone-50 p-2 rounded border border-stone-200">
                 <div className="text-stone-500 text-[10px]">{isUrdu ? 'ہڈی مکس گوشت' : 'Mixed Meat'}</div>
                 <div className="text-sm font-black text-stone-800 font-mono">~{booking.meatDetails.boneKg} KG</div>
               </div>
-              <div className="bg-white p-2 rounded border border-stone-200">
+              <div className="bg-stone-50 p-2 rounded border border-stone-200">
                 <div className="text-stone-500 text-[10px]">{isUrdu ? 'کلیجی' : 'Liver'}</div>
                 <div className="text-sm font-black text-stone-800 font-mono">~{booking.meatDetails.liverKg} KG</div>
               </div>
@@ -201,14 +202,14 @@ export const QurbaniSlipModal: React.FC<QurbaniSlipModalProps> = ({
           </div>
 
           {/* Shariah & Operational Stamp */}
-          <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-stone-300 text-xs text-stone-600 gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between pt-3 border-t border-stone-300 text-xs text-stone-600 gap-4">
             <div className="flex items-center gap-2">
               <div className="w-12 h-12 rounded-lg border border-dashed border-stone-400 flex items-center justify-center text-stone-400">
                 <QrCode className="w-8 h-8 text-emerald-800" />
               </div>
               <div>
                 <p className="font-semibold text-stone-800">الخدمت ویریفائیڈ کیو آر کوڈ</p>
-                <p className="text-[11px] text-stone-500">موبائل اسکرین یا پرنٹ پر یہ ٹوکن کاؤنٹر پر دکھائیں</p>
+                <p className="text-[11px] text-stone-500">جامع مسجد عثمان غنی کے کاؤنٹر پر یہ ٹوکن دکھا کر گوشت وصول فرمائیں</p>
               </div>
             </div>
 
@@ -216,15 +217,15 @@ export const QurbaniSlipModal: React.FC<QurbaniSlipModalProps> = ({
               <div className="inline-block border-2 border-emerald-700 rounded-lg px-3 py-1 bg-emerald-50 text-emerald-900 font-bold text-xs">
                 ✓ شریعہ و ویٹرنری تصدیق شدہ
               </div>
-              <p className="text-[10px] text-stone-500 mt-1">
-                ہیلپ لائن: 1023 | 021-111-503-504
+              <p className="text-[10px] text-stone-500 mt-1 font-mono">
+                ہیلپ لائن: 0323-3469424 | 1023
               </p>
             </div>
           </div>
 
           {/* Note footer */}
-          <p className="text-[10px] text-stone-400 text-center border-t border-stone-200 pt-2">
-            یہ رسید الخدمت فاؤنڈیشن کی جانب سے خودکار کمپیوٹرائزڈ سسٹم کے تحت جاری کی گئی ہے۔ برائے مہربانی مقررہ وقت پر تشریف لا کر تعاون فرمائیں۔
+          <p className="text-[10px] text-stone-500 text-center border-t border-stone-200 pt-2 font-medium">
+            یہ رسید الخدمت فاؤنڈیشن کی جانب سے خودکار کمپیوٹرائزڈ سسٹم کے تحت جاری کی گئی ہے۔ گوشت صرف جامع مسجد عثمان غنی سے خود وصول کیا جائے گا۔
           </p>
 
         </div>

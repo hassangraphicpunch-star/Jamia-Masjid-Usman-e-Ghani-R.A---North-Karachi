@@ -26,6 +26,7 @@ import {
   QrCode,
   Check,
   Home,
+  AlertTriangle,
 } from 'lucide-react';
 import { Language, QurbaniBookingRecord, QurbaniStatusStage } from '../types';
 import {
@@ -66,15 +67,10 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
   const [newBookerName, setNewBookerName] = useState('');
   const [newBookerPhone, setNewBookerPhone] = useState('');
   const [newBookerCnic, setNewBookerCnic] = useState('');
-  const [newQurbaniType, setNewQurbaniType] = useState<
-    'cow_share' | 'full_cow' | 'goat' | 'waqf_deserving' | 'waqf_gaza'
-  >('cow_share');
   const [newSharesCount, setNewSharesCount] = useState(1);
-  const [newDay, setNewDay] = useState<'day1' | 'day2' | 'day3'>('day1');
   const [formSuccessMessage, setFormSuccessMessage] = useState('');
 
-  // Share Calculator State
-  const [calcType, setCalcType] = useState<'cow_share' | 'full_cow' | 'goat' | 'waqf_gaza'>('cow_share');
+  // Share Calculator State (Cow Share Only: Rs. 24,000 per share)
   const [calcQuantity, setCalcQuantity] = useState(1);
 
   // FAQs Accordion
@@ -106,7 +102,6 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
     if (res) {
       setActiveBooking(res);
       setSearchError('');
-      // Scroll to tracker result if needed
       setTimeout(() => {
         const el = document.getElementById('qurbani-status-result');
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -131,7 +126,6 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
 
   const handleCopyLink = () => {
     if (!activeBooking) return;
-    const text = `Alkhidmat Ijtemai Qurbani Status: Token ${activeBooking.receiptNo} - Status: ${activeBooking.currentStage}`;
     navigator.clipboard.writeText(window.location.href);
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2500);
@@ -149,9 +143,7 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
       bookerNameUr: newBookerName,
       phone: newBookerPhone,
       cnic: newBookerCnic,
-      qurbaniType: newQurbaniType,
       sharesCount: Number(newSharesCount),
-      day: newDay,
     });
 
     setActiveBooking(created);
@@ -159,11 +151,10 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
     setHasSearched(true);
     setFormSuccessMessage(
       isUrdu
-        ? `مبارک ہو! آپ کی بکنگ کامیابی سے درج ہو گئی ہے۔ آپ کا رسید نمبر ${created.receiptNo} ہے۔`
-        : `Booking submitted successfully! Your receipt number is ${created.receiptNo}.`
+        ? `مبارک ہو! آپ کی بکنگ عید کے پہلے دن (30 گائے کوٹہ) میں کامیابی سے درج ہو گئی ہے۔ رسید نمبر ${created.receiptNo} ہے۔ خود وصولی: جامع مسجد عثمان غنی۔`
+        : `Booking submitted for Day 1! Your receipt number is ${created.receiptNo}. Self-collection at Jamia Masjid Usman-e-Ghani.`
     );
     setShowBookingForm(false);
-    // Reset form
     setNewBookerName('');
     setNewBookerPhone('');
     setNewBookerCnic('');
@@ -174,7 +165,6 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
     }, 200);
   };
 
-  // Helper for status progress percentage
   const getStagePercent = (stage: QurbaniStatusStage): number => {
     switch (stage) {
       case 'booked':
@@ -213,31 +203,31 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
   const getStageTitleUr = (stage: QurbaniStatusStage) => {
     switch (stage) {
       case 'booked':
-        return 'بکنگ تصدیق شدہ';
+        return 'بکنگ تصدیق شدہ (عید کا پہلا دن - 30 گائے کوٹہ)';
       case 'animal_allocated':
-        return 'جانور مختص و ٹیگ نمبر جاری';
+        return 'گائے مختص و ٹیگ نمبر جاری';
       case 'scheduled':
-        return 'قربانی شیڈول طے شدہ';
+        return 'قربانی شیڈول طے شدہ (عید کا پہلا دن)';
       case 'slaughtered':
         return 'شرعی ذبح مکمل';
       case 'butchering_packing':
-        return 'کٹائی، ڈی بوننگ و پیکنگ جاری';
+        return 'کٹائی، ڈی بوننگ و چلر پیکنگ جاری';
       case 'ready_pickup':
-        return 'گوشت وصولی کے لیے کاؤنٹر پر تیار!';
+        return 'جامع مسجد عثمانِ غنی کے کاؤنٹر پر خود وصولی کیلئے تیار!';
       case 'completed':
-        return 'گوشت وصولی / تقسیم مکمل الحمد للہ';
+        return 'جامع مسجد عثمان غنی سے خود وصولی مکمل الحمد للہ';
       default:
         return stage;
     }
   };
 
   const sampleTokens = [
-    { code: 'AK-10291', labelUr: '10291 (وصولی کیلئے تیار - ST-11 مرکز)', labelEn: '10291 (Ready for Pickup - ST-11)' },
-    { code: 'AK-10482', labelUr: '10482 (ذبح و کٹائی جاری - گلشن کیمپ)', labelEn: '10482 (Butchering in Progress)' },
-    { code: 'AK-10515', labelUr: '10515 (مکمل گائے - موصول ہو چکا)', labelEn: '10515 (Full Cow - Collected)' },
-    { code: 'AK-10620', labelUr: '10620 (بکرا - سلاٹ 11:30 بجے)', labelEn: '10620 (Goat - Scheduled Slot)' },
-    { code: 'AK-10834', labelUr: '10834 (تیسرا دن - بکنگ کنفرم)', labelEn: '10834 (Day 3 Booking)' },
-    { code: 'AK-10999', labelUr: '10999 (وقف برائے غزہ و فلسطین)', labelEn: '10999 (Waqf for Gaza Relief)' },
+    { code: 'AK-10291', labelUr: '10291 (گائے # 04 - وصولی کیلئے تیار)', labelEn: '10291 (Ready for Pickup)' },
+    { code: 'AK-10340', labelUr: '10340 (گائے # 11 - کٹائی و پیکنگ)', labelEn: '10340 (Dressing & Packing)' },
+    { code: 'AK-10115', labelUr: '10115 (گائے # 01 - خود وصولی مکمل)', labelEn: '10115 (Collected at Mosque)' },
+    { code: 'AK-10488', labelUr: '10488 (گائے # 18 - شرعی ذبح مکمل)', labelEn: '10488 (Slaughter Completed)' },
+    { code: 'AK-10650', labelUr: '10650 (گائے # 24 - سلاٹ 12:00 PM)', labelEn: '10650 (Scheduled Slot)' },
+    { code: 'AK-10720', labelUr: '10720 (گائے # 30 - بکنگ تصدیق)', labelEn: '10720 (Booking Verified)' },
   ];
 
   return (
@@ -257,14 +247,14 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
             )}
             <span className="text-stone-500 hidden sm:inline">/</span>
             <span className="text-stone-300 font-medium">
-              {isUrdu ? 'الخدمت اجتماعی قربانی پورٹل' : 'Alkhidmat Ijtemai Qurbani Portal'}
+              {isUrdu ? 'الخدمت اجتماعی قربانی پورٹل (صرف 30 گائے - عید کا پہلا دن)' : 'Alkhidmat Ijtemai Qurbani Portal'}
             </span>
           </div>
 
           <div className="flex items-center gap-3">
             <span className="text-stone-400 hidden md:inline">
-              {isUrdu ? 'الخدمت ہیلپ لائن:' : 'Helpline:'}{' '}
-              <strong className="text-amber-400 font-mono">1023</strong> / <strong className="text-emerald-400 font-mono">021-111-503-504</strong>
+              {isUrdu ? 'نارتھ کراچی ہیلپ لائن:' : 'Helpline:'}{' '}
+              <strong className="text-amber-400 font-mono">0323-3469424</strong> / <strong className="text-emerald-400 font-mono">1023</strong>
             </span>
             <a
               href={`https://wa.me/92${ALKHIDMAT_QURBANI_INFO.whatsappNumber.replace(/^0/, '')}`}
@@ -279,45 +269,99 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
         </div>
       </div>
 
+      {/* Prominent Mandatory Constraints Notice Bar */}
+      <div className="bg-gradient-to-r from-amber-950 via-amber-900/90 to-amber-950 border-b border-amber-600/50 px-4 py-2.5 text-xs text-amber-200">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 font-medium">
+            <span className="px-2 py-0.5 rounded bg-amber-500 text-stone-950 font-black text-[10px] uppercase tracking-wider">
+              اہم شرائط
+            </span>
+            <span>
+              {isUrdu
+                ? 'صرف گائے کا حصہ (روپے 24,000) • کل کوٹہ: 30 گائے • صرف عید کا پہلا دن (10 ذوالحجہ) • گوشت کی خود وصولی صرف جامع مسجد عثمانِ غنی (نارتھ کراچی)'
+                : 'Cow Share Only (Rs. 24,000) • 30 Cows Quota • Eid Day 1 Only • Meat Self-Collection strictly at Jamia Masjid Usman-e-Ghani'}
+            </span>
+          </div>
+          <span className="font-mono font-bold text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-500/40">
+            {isUrdu ? '3 گائے (21 حصے) باقی' : '3 Cows Remaining'}
+          </span>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-emerald-950 via-stone-950 to-stone-950 pt-8 pb-12 px-4 sm:px-6 lg:px-8 border-b border-stone-800/80">
-        {/* Decorative background glows */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-64 bg-emerald-600/10 blur-3xl pointer-events-none rounded-full" />
 
         <div className="relative max-w-5xl mx-auto text-center space-y-4">
           
-          {/* Top Organization Header */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-900/50 border border-emerald-600/40 text-emerald-300 text-xs sm:text-sm font-semibold shadow-inner">
+          {/* Top Badges */}
+          <div className="inline-flex flex-wrap items-center justify-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-900/50 border border-emerald-600/40 text-emerald-300 text-xs sm:text-sm font-semibold shadow-inner">
             <ShieldCheck className="w-4 h-4 text-amber-400" />
-            <span>{isUrdu ? 'الخدمت فاؤنڈیشن کراچی' : 'Alkhidmat Foundation Karachi'}</span>
+            <span>{isUrdu ? 'الخدمت اجتماعی قربانی ۱۴۴۷ھ' : 'Alkhidmat Foundation Karachi'}</span>
             <span className="text-emerald-500">·</span>
-            <span className="text-amber-300 font-normal">
-              {isUrdu ? 'جامع مسجد عثمانِ غنی ST-11 نارتھ کراچی برانچ' : 'Jamia Masjid Usman-e-Ghani Center'}
+            <span className="text-amber-300 font-bold">
+              {isUrdu ? 'صرف 30 گائے (عید کا پہلا دن)' : 'Strictly 30 Cows Day 1'}
+            </span>
+            <span className="text-emerald-500">·</span>
+            <span className="text-emerald-200">
+              {isUrdu ? 'خود وصولی: جامع مسجد عثمانِ غنی ST-11 نارتھ کراچی' : 'Self Collection: Masjid Usman-e-Ghani'}
             </span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
-            {isUrdu ? 'الخدمت اجتماعی قربانی - لائیو اسٹیٹس ٹریکر' : 'Alkhidmat Ijtemai Qurbani - Live Status Tracker'}
+            {isUrdu
+              ? 'الخدمت اجتماعی قربانی - لائیو اسٹیٹس ٹریکر'
+              : 'Alkhidmat Ijtemai Qurbani - Live Status Tracker'}
           </h1>
           
-          <p className="text-sm sm:text-base text-stone-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm md:text-base text-stone-300 max-w-3xl mx-auto leading-relaxed">
             {isUrdu
-              ? 'اپنے گائے کے حصے، مکمل گائے، بکرے یا وقف قربانی کا موجودہ لائیو مرحلہ، سلاٹ کا وقت، اور گوشت وصولی کا کاؤنٹر معلوم کریں۔ دیانت و شرعی اصولوں کے عین مطابق۔'
-              : 'Track the live progress of your cow share, full cow, goat, or waqf sacrifice. View slaughter schedule, hygienic cutting status, and meat pickup counter details.'}
+              ? 'عید کے پہلے دن (10 ذوالحجہ) کل 30 گائے کی اجتماعی قربانی کے تحت اپنے گائے کے حصے کا لائیو اسٹیٹس، شرعی ذبح و کٹائی کا مرحلہ اور جامع مسجد عثمانِ غنی سے خود وصولی کا کاؤنٹر نمبر معلوم کریں۔'
+              : 'Track the live progress of your Cow Share. Sacrifice strictly on Eid Day 1 for 30 cows only, with hygienic vacuum-sealed packing and self-collection exclusively at Jamia Masjid Usman-e-Ghani.'}
           </p>
 
-          {/* Quick Metrics */}
+          {/* Quick Metrics Badge Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 max-w-3xl mx-auto text-left">
-            {ALKHIDMAT_QURBANI_INFO.stats.map((st, i) => (
-              <div key={i} className="bg-stone-900/80 p-3 rounded-xl border border-emerald-900/40 text-center">
-                <div className="text-lg sm:text-xl font-black text-amber-300 font-mono">{st.val}</div>
-                <div className="text-[11px] text-stone-400">{isUrdu ? st.labelUr : st.labelEn}</div>
-              </div>
-            ))}
+            <div className="bg-stone-900/90 p-3 rounded-xl border border-amber-600/40 text-center">
+              <div className="text-lg sm:text-xl font-black text-amber-300 font-mono">30 گائے</div>
+              <div className="text-[11px] text-stone-400">{isUrdu ? 'محدود کوٹہ (210 حصے)' : '30 Cows Quota'}</div>
+            </div>
+            <div className="bg-stone-900/90 p-3 rounded-xl border border-emerald-900/40 text-center">
+              <div className="text-lg sm:text-xl font-black text-emerald-300 font-mono">{isUrdu ? 'صرف پہلا دن' : 'Day 1 Only'}</div>
+              <div className="text-[11px] text-stone-400">{isUrdu ? '10 ذوالحجہ' : '10 Dhul Hijjah'}</div>
+            </div>
+            <div className="bg-stone-900/90 p-3 rounded-xl border border-emerald-900/40 text-center">
+              <div className="text-lg sm:text-xl font-black text-amber-400 font-mono">24,000 روپے</div>
+              <div className="text-[11px] text-stone-400">{isUrdu ? 'گائے کا حصہ (صرف)' : 'Cow Share Only'}</div>
+            </div>
+            <div className="bg-stone-900/90 p-3 rounded-xl border border-amber-600/40 text-center">
+              <div className="text-lg sm:text-xl font-black text-amber-300 font-mono">{isUrdu ? 'صرف خود وصولی' : 'Self Collect'}</div>
+              <div className="text-[11px] text-stone-400">{isUrdu ? 'جامع مسجد عثمان غنی' : 'Masjid Usman-e-Ghani'}</div>
+            </div>
+          </div>
+
+          {/* Live Quota Progress Bar */}
+          <div className="max-w-2xl mx-auto bg-stone-900/90 p-3.5 rounded-xl border border-amber-600/30 text-xs text-left space-y-2">
+            <div className="flex items-center justify-between text-stone-300 font-medium">
+              <span className="flex items-center gap-1.5 text-amber-300">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isUrdu ? '30 گائے کوٹہ کی لائیو بکنگ صورتحال:' : 'Live 30 Cows Quota Status:'}</span>
+              </span>
+              <span className="font-mono text-emerald-400 font-bold">
+                27 / 30 گائے بک (189 / 210 حصے)
+              </span>
+            </div>
+            <div className="w-full h-2.5 rounded-full bg-stone-950 overflow-hidden border border-stone-800">
+              <div className="h-full bg-gradient-to-r from-emerald-600 to-amber-500 rounded-full" style={{ width: '90%' }} />
+            </div>
+            <div className="flex justify-between text-[11px] text-stone-400">
+              <span>{isUrdu ? '90% کوٹہ مکمل' : '90% Filled'}</span>
+              <span className="text-amber-400 font-bold">{isUrdu ? 'صرف 3 گائے (21 حصے) باقی ہیں' : 'Only 3 Cows (21 Shares) Available'}</span>
+            </div>
           </div>
 
           {/* Tracker Search Box */}
-          <div className="pt-6 max-w-2xl mx-auto">
+          <div className="pt-4 max-w-2xl mx-auto">
             <div className="bg-stone-900 p-2 sm:p-2.5 rounded-2xl border-2 border-emerald-600/70 shadow-2xl shadow-emerald-950/60 focus-within:border-emerald-400 transition-all">
               <form
                 onSubmit={(e) => {
@@ -366,11 +410,11 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
               </div>
             )}
 
-            {/* Quick Demo Sample Tokens */}
+            {/* Quick Demo Sample Tokens (30 Cows Day 1) */}
             <div className="pt-4 text-left">
               <div className="text-xs text-stone-400 mb-2 flex items-center justify-between">
-                <span>{isUrdu ? 'فوری ٹیسٹ کے لیے نمونہ ٹوکن پر کلک کریں:' : 'Click sample tokens for quick preview:'}</span>
-                <span className="text-[11px] text-amber-400">Live Simulation</span>
+                <span>{isUrdu ? '30 گائے مہم کے نمونہ ٹوکن چیک کریں:' : 'Click 30-cows sample tokens:'}</span>
+                <span className="text-[11px] text-amber-400 font-mono">Day 1 / Self-Collect ST-11</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {sampleTokens.map((st) => (
@@ -421,9 +465,13 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
                     {isUrdu ? 'ٹوکن کوڈ:' : 'Token Code:'}{' '}
                     <strong className="text-amber-300 font-mono">{activeBooking.tokenCode}</strong>
                   </span>
+                  <span className="text-stone-500">•</span>
+                  <span className="text-xs text-amber-400 font-bold">
+                    {activeBooking.animalTagNo}
+                  </span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-white mt-1">
-                  {isUrdu ? 'قربانی کی موجودہ لائیو صورتحال' : 'Sacrifice Real-Time Progress'}
+                  {isUrdu ? 'قربانی کی موجودہ لائیو صورتحال (صرف عید کا پہلا دن)' : 'Sacrifice Real-Time Progress (Day 1 Only)'}
                 </h2>
               </div>
 
@@ -472,24 +520,24 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
                   </h3>
                   <p className="text-xs sm:text-sm text-stone-300">
                     {activeBooking.timeline.find((t) => t.current)?.noteUr ||
-                      'قربانی کے عمل کی نگرانی الخدمت شریعہ ٹیم کر رہی ہے۔'}
+                      'قربانی کے عمل کی شرعی نگرانی مفتیانِ کرام دارالعلوم کراچی و جامعۃ الرشید کر رہے ہیں۔'}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-4 bg-stone-950/60 p-3 rounded-xl border border-stone-800 shrink-0">
                   <div className="text-center">
-                    <div className="text-[10px] text-stone-400 uppercase">{isUrdu ? 'سلاٹ دن' : 'Day'}</div>
-                    <div className="text-xs font-bold text-white">{activeBooking.dayUr}</div>
+                    <div className="text-[10px] text-stone-400 uppercase">{isUrdu ? 'قربانی دن' : 'Day'}</div>
+                    <div className="text-xs font-bold text-amber-300 font-mono">صرف پہلا دن (10 ذوالحجہ)</div>
                   </div>
                   <div className="h-6 w-px bg-stone-800" />
                   <div className="text-center">
                     <div className="text-[10px] text-stone-400 uppercase">{isUrdu ? 'مقررہ وقت' : 'Time'}</div>
-                    <div className="text-xs font-bold text-amber-300">{activeBooking.timeSlotUr}</div>
+                    <div className="text-xs font-bold text-emerald-300">{activeBooking.timeSlotUr}</div>
                   </div>
                   <div className="h-6 w-px bg-stone-800" />
                   <div className="text-center">
                     <div className="text-[10px] text-stone-400 uppercase">{isUrdu ? 'کاؤنٹر نمبر' : 'Counter'}</div>
-                    <div className="text-xs font-black text-emerald-300">{activeBooking.pickupLocation.counterNo}</div>
+                    <div className="text-xs font-black text-white">{activeBooking.pickupLocation.counterNo}</div>
                   </div>
                 </div>
               </div>
@@ -514,7 +562,7 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
             {/* Visual Stepper / 7-Stage Timeline */}
             <div className="bg-stone-900/80 rounded-2xl p-5 border border-stone-800/80 space-y-4">
               <h4 className="text-sm font-bold text-stone-300 flex items-center justify-between">
-                <span>{isUrdu ? 'قربانی کے مراحل کی تفصیل (ورک فلو)' : 'Detailed Stage Timeline'}</span>
+                <span>{isUrdu ? 'قربانی کے مراحل کی تفصیل (30 گائے کوٹہ)' : 'Detailed Stage Timeline'}</span>
                 <span className="text-xs text-stone-500 font-normal">
                   {isUrdu ? 'شرعی نگرانی: ' + activeBooking.shariahSupervisorUr : activeBooking.shariahSupervisorUr}
                 </span>
@@ -607,13 +655,7 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
                   <div className="bg-stone-950 p-3 rounded-xl border border-stone-800/80">
                     <div className="text-stone-500 text-[10px]">{isUrdu ? 'قربانی کی قسم' : 'Sacrifice Type'}</div>
                     <div className="font-bold text-emerald-300 mt-0.5">
-                      {activeBooking.qurbaniType === 'cow_share'
-                        ? `گائے کا حصہ (${activeBooking.sharesCount})`
-                        : activeBooking.qurbaniType === 'full_cow'
-                        ? 'مکمل گائے (7 حصے)'
-                        : activeBooking.qurbaniType === 'goat'
-                        ? 'بکرا / دنبہ'
-                        : 'وقف برائے خیرات'}
+                      گائے کا حصہ ({activeBooking.sharesCount}) · صرف پہلا دن
                     </div>
                   </div>
 
@@ -658,22 +700,26 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
                 </div>
               </div>
 
-              {/* Right Column: Meat Pickup Location & Counter Directions */}
-              <div className="bg-stone-900/90 rounded-2xl p-5 border border-stone-800 space-y-4 flex flex-col justify-between">
+              {/* Right Column: Meat Pickup Location & Counter Directions (Strictly Masjid Usman-e-Ghani) */}
+              <div className="bg-stone-900/90 rounded-2xl p-5 border border-amber-600/40 space-y-4 flex flex-col justify-between shadow-xl">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-                    <h4 className="font-bold text-white flex items-center gap-2 text-sm sm:text-base">
+                    <h4 className="font-bold text-amber-300 flex items-center gap-2 text-sm sm:text-base">
                       <MapPin className="w-4 h-4 text-emerald-400" />
-                      <span>{isUrdu ? 'گوشت وصولی مرکز و کاؤنٹر' : 'Pickup Center & Counter'}</span>
+                      <span>{isUrdu ? 'گوشت کی خود وصولی کا مرکز (واحد مرکز)' : 'Sole Self-Collection Center'}</span>
                     </h4>
-                    <span className="px-3 py-1 rounded-lg bg-emerald-950 text-emerald-300 font-bold text-xs border border-emerald-700/60">
+                    <span className="px-3 py-1 rounded-lg bg-amber-500 text-stone-950 font-black text-xs">
                       {activeBooking.pickupLocation.counterNo}
                     </span>
                   </div>
 
                   {/* Center Address Box */}
-                  <div className="bg-stone-950 p-4 rounded-xl border border-emerald-900/40 space-y-2">
-                    <h5 className="font-bold text-emerald-300 text-sm">
+                  <div className="bg-stone-950 p-4 rounded-xl border border-emerald-900/60 space-y-2">
+                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold">
+                      <Building2 className="w-4 h-4" />
+                      <span>صرف خود وصولی (Self-Collection Only)</span>
+                    </div>
+                    <h5 className="font-black text-white text-sm sm:text-base">
                       {isUrdu ? activeBooking.pickupLocation.ur : activeBooking.pickupLocation.en}
                     </h5>
                     <p className="text-xs text-stone-300 leading-relaxed">
@@ -681,12 +727,12 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
                     </p>
                     <div className="pt-2 border-t border-stone-800 flex flex-wrap items-center justify-between gap-2 text-xs text-stone-400">
                       <span>
-                        {isUrdu ? 'فوکل پرسن:' : 'Focal Person:'}{' '}
+                        {isUrdu ? 'نگران و فوکل پرسن:' : 'Focal Person:'}{' '}
                         <strong className="text-stone-200">{activeBooking.pickupLocation.contactPerson}</strong>
                       </span>
                       <a
                         href={`tel:${activeBooking.pickupLocation.contactPhone.replace(/[^0-9+]/g, '')}`}
-                        className="font-mono text-emerald-400 hover:underline flex items-center gap-1"
+                        className="font-mono text-emerald-400 hover:underline flex items-center gap-1 font-bold"
                       >
                         <Phone className="w-3 h-3" />
                         <span>{activeBooking.pickupLocation.contactPhone}</span>
@@ -695,15 +741,18 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
                   </div>
 
                   {/* Pickup Instructions Callout */}
-                  <div className="bg-amber-950/30 p-3.5 rounded-xl border border-amber-600/30 text-xs text-amber-200 space-y-1.5">
+                  <div className="bg-amber-950/40 p-3.5 rounded-xl border border-amber-600/40 text-xs text-amber-200 space-y-1.5">
                     <div className="font-bold flex items-center gap-1.5 text-amber-300">
                       <Clock className="w-4 h-4" />
-                      <span>{isUrdu ? 'وصولی کے اہم ہدایات:' : 'Important Pickup Instructions:'}</span>
+                      <span>{isUrdu ? 'خود وصولی کی اہم ہدایات:' : 'Self-Collection Instructions:'}</span>
                     </div>
                     <ul className="list-disc list-inside space-y-1 text-stone-300 text-[11px]">
-                      <li>{isUrdu ? 'وصولی کیلئے اصلی شناختی کارڈ یا بکنگ رسید کا پرنٹ / میسج ہمراہ لائیں۔' : 'Bring original CNIC or digital slip token.'}</li>
-                      <li>{isUrdu ? 'مقررہ سلاٹ کے اندر تشریف لائیں تاکہ ہجوم سے بچا جا سکے۔' : 'Arrive within your allotted slot to avoid queue.'}</li>
-                      <li>{isUrdu ? 'گوشت کو کولڈ چین میں محفوظ رکھا گیا ہے، گھر لے جاتے ہی فوری فریزر میں رکھیں۔' : 'Store in freezer immediately upon arriving home.'}</li>
+                      <li>
+                        <strong className="text-amber-300">{isUrdu ? 'صرف جامع مسجد عثمانِ غنی:' : 'Masjid Usman-e-Ghani Only:'}</strong>{' '}
+                        {isUrdu ? 'گوشت کی وصولی صرف مسجد کے کاؤنٹر سے ہوگی، کوئی ہوم ڈیلیوری نہیں ہے۔' : 'Meat must be self-collected on site; no home delivery.'}
+                      </li>
+                      <li>{isUrdu ? 'وصولی کیلئے اصلی شناختی کارڈ یا رسید کا پرنٹ / ڈیجیٹل ٹوکن موبائل میں ہمراہ لائیں۔' : 'Bring original CNIC or digital slip token on your phone.'}</li>
+                      <li>{isUrdu ? 'عید کے پہلے دن اپنے مقررہ وقت پر تشریف لا کر کاؤنٹر سے پیکٹ وصول فرمائیں۔' : 'Please arrive during your designated slot on Day 1.'}</li>
                     </ul>
                   </div>
                 </div>
@@ -730,6 +779,159 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
         )}
 
         {/* ============================================================== */}
+        {/* OFFICIAL RATE (ONLY COW SHARE) & SHARE CALCULATOR */}
+        {/* ============================================================== */}
+        <section className="space-y-6">
+          <div className="text-center max-w-2xl mx-auto space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700/60 text-xs font-bold mb-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>{isUrdu ? 'صرف گائے کا حصہ • عید کا پہلا دن • خود وصولی' : 'Cow Share Only · Day 1 · Self Collect'}</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-white">
+              {isUrdu ? 'الخدمت اجتماعی قربانی - مقررہ نرخ (صرف گائے کا حصہ)' : 'Alkhidmat Cow Share Rate 2026'}
+            </h3>
+            <p className="text-xs sm:text-sm text-stone-400">
+              {isUrdu
+                ? 'کل گنجائش صرف 30 گائے (210 حصے) رکھی گئی ہے۔ قربانی صرف عید کے پہلے دن (10 ذوالحجہ) ہوگی اور گوشت کی خود وصولی صرف جامع مسجد عثمان غنی سے ہوگی۔'
+                : 'Limited to 30 Cows (210 shares). Day 1 slaughter only, with self-collection exclusively at Jamia Masjid Usman-e-Ghani.'}
+            </p>
+          </div>
+
+          {/* Single Cow Share Card */}
+          <div className="max-w-xl mx-auto">
+            {QURBANI_RATES.map((rate) => (
+              <div
+                key={rate.id}
+                className="bg-stone-900 rounded-3xl p-6 sm:p-8 border-2 border-amber-500/80 shadow-2xl shadow-amber-950/30 relative overflow-hidden space-y-5"
+              >
+                <div className="absolute top-4 right-4">
+                  <span className="text-xs font-black uppercase tracking-wider text-stone-950 bg-amber-400 rounded-full px-3 py-1">
+                    {isUrdu ? 'صرف گائے کا حصہ' : 'Cow Share Only'}
+                  </span>
+                </div>
+
+                <div>
+                  <h4 className="font-black text-white text-lg sm:text-xl">
+                    {isUrdu ? rate.titleUr : rate.titleEn}
+                  </h4>
+                  <div className="text-2xl sm:text-3xl font-black text-amber-400 font-mono my-2 flex items-baseline gap-2">
+                    <span>{rate.priceFormatted}</span>
+                    <span className="text-xs text-stone-400 font-normal">/ فی حصہ</span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
+                    {isUrdu ? rate.descriptionUr : rate.descriptionEn}
+                  </p>
+                </div>
+
+                {/* Key Inclusions List */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-stone-800 text-xs">
+                  <div className="flex items-center gap-2 text-stone-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{isUrdu ? 'تخمینہ وزن: ~14.8 کلو گرام خالص' : '~14.8 KG Net Packaged Meat'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-stone-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{isUrdu ? 'بون لیس (~6 کلو) + ہڈی مکس + کلیجی' : 'Boneless (~6kg) + Bone cuts + Liver'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-stone-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{isUrdu ? 'صرف عید کا پہلا دن (10 ذوالحجہ)' : 'Eid Day 1 Slaughter Only'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-stone-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{isUrdu ? 'صرف خود وصولی: جامع مسجد عثمانِ غنی' : 'Self-Collection at Masjid Usman-e-Ghani'}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      setShowBookingForm(true);
+                      window.scrollTo({ top: 750, behavior: 'smooth' });
+                    }}
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-black text-sm shadow-lg shadow-emerald-950/60 transition-all flex items-center justify-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>{isUrdu ? 'آن لائن بکنگ درج کریں (صرف گائے کا حصہ)' : 'Book Cow Share Online'}</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Interactive Share & Meat Calculator (Dedicated for Cow Shares) */}
+          <div className="bg-stone-900/80 rounded-2xl p-5 border border-stone-800 max-w-2xl mx-auto space-y-4">
+            <h4 className="font-bold text-white text-sm flex items-center justify-between border-b border-stone-800 pb-2">
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>{isUrdu ? 'گائے کے حصوں کا فوری رقم و وزن کیلکولیٹر' : 'Cow Share Cost & Meat Calculator'}</span>
+              </span>
+              <span className="text-xs text-amber-400 font-mono font-bold">
+                روپے 24,000 فی حصہ
+              </span>
+            </h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+              <div>
+                <label className="block text-xs font-semibold text-stone-300 mb-1.5">
+                  {isUrdu ? 'گائے کے حصوں کی تعداد:' : 'Number of Cow Shares:'}
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCalcQuantity(Math.max(1, calcQuantity - 1))}
+                    className="w-9 h-9 rounded-xl bg-stone-800 hover:bg-stone-700 text-white font-bold text-base transition-colors"
+                  >
+                    -
+                  </button>
+                  <span className="font-mono font-black text-white text-base w-12 text-center bg-stone-950 py-1.5 rounded-lg border border-stone-800">
+                    {calcQuantity}
+                  </span>
+                  <button
+                    onClick={() => setCalcQuantity(Math.min(7, calcQuantity + 1))}
+                    className="w-9 h-9 rounded-xl bg-stone-800 hover:bg-stone-700 text-white font-bold text-base transition-colors"
+                  >
+                    +
+                  </button>
+                  <span className="text-xs text-stone-400">
+                    {calcQuantity === 7 ? (isUrdu ? '(مکمل گائے کے تمام 7 حصے)' : '(Full Cow - 7 Shares)') : (isUrdu ? 'حصے' : 'shares')}
+                  </span>
+                </div>
+
+                {/* Quick preset buttons */}
+                <div className="flex flex-wrap gap-1.5 mt-2.5">
+                  {[1, 2, 3, 7].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setCalcQuantity(num)}
+                      className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold border transition-colors ${
+                        calcQuantity === num
+                          ? 'bg-amber-500 text-stone-950 border-amber-400'
+                          : 'bg-stone-950 text-stone-300 border-stone-800 hover:bg-stone-800'
+                      }`}
+                    >
+                      {num === 7 ? (isUrdu ? '7 (مکمل گائے)' : '7 (Full Cow)') : `${num} ${isUrdu ? 'حصہ' : 'Share'}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-stone-950 p-4 rounded-xl border border-emerald-900/40 text-center space-y-1">
+                <div className="text-[11px] text-stone-400">{isUrdu ? 'کل واجب الادا رقم' : 'Total Amount'}</div>
+                <div className="text-xl sm:text-2xl font-black text-amber-400 font-mono">
+                  روپے {(24000 * calcQuantity).toLocaleString()}
+                </div>
+                <div className="text-xs text-emerald-400 font-medium">
+                  تخمینہ گوشت: ~{Math.round(14.8 * calcQuantity * 10) / 10} KG خالص
+                </div>
+                <div className="text-[10px] text-stone-500 pt-0.5">
+                  صرف عید کا پہلا دن • خود وصولی جامع مسجد عثمان غنی
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================== */}
         {/* NEW BOOKING INQUIRY & RESERVATION SECTION */}
         {/* ============================================================== */}
         <section className="bg-gradient-to-r from-emerald-950/60 to-stone-900 rounded-3xl p-6 sm:p-8 border border-emerald-800/40 space-y-6">
@@ -737,15 +939,15 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold mb-2">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>{isUrdu ? 'آن لائن بکنگ و استفسار' : 'Online Booking & Reservation'}</span>
+                <span>{isUrdu ? 'آن لائن بکنگ و استفسار (30 گائے کوٹہ)' : 'Online Booking (30 Cows Quota)'}</span>
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-white">
-                {isUrdu ? 'کیا آپ نئی قربانی یا حصہ بک کروانا چاہتے ہیں؟' : 'Book a New Qurbani Share or Animal'}
+                {isUrdu ? 'کیا آپ گائے کا حصہ بک کروانا چاہتے ہیں؟' : 'Book Your Cow Share Online'}
               </h3>
               <p className="text-xs sm:text-sm text-stone-300 max-w-2xl mt-1">
                 {isUrdu
-                  ? 'الخدمت کراچی کے تحت گائے کے حصے، مکمل گائے، بکرے یا غزہ ریلیف کے لیے آن لائن بکنگ فارم پر کریں۔ فوری ڈیجیٹل ٹوکن جاری کیا جائے گا۔'
-                  : 'Reserve your cow share, full cow, goat, or Gaza relief share. Instant computerized token issued.'}
+                  ? 'عید کے پہلے دن (10 ذوالحجہ) کے لیے کل 30 گائے کا محدود کوٹہ دستیاب ہے۔ فوری آن لائن بکنگ فارم پر کریں اور کمپیوٹرائزڈ ٹوکن حاصل کریں۔'
+                  : 'Limited quota of 30 Cows for Eid Day 1. Instant computerized receipt issued upon booking.'}
               </p>
             </div>
 
@@ -764,9 +966,14 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
               onSubmit={handleNewBookingSubmit}
               className="bg-stone-950 p-6 rounded-2xl border border-stone-800 space-y-4 animate-in fade-in duration-200"
             >
-              <h4 className="font-bold text-white text-sm border-b border-stone-800 pb-2">
-                {isUrdu ? 'صاحبِ قربانی کی معلومات درج فرمائیں:' : 'Enter Booker Details:'}
-              </h4>
+              <div className="flex items-center justify-between border-b border-stone-800 pb-2">
+                <h4 className="font-bold text-white text-sm">
+                  {isUrdu ? 'صاحبِ قربانی کی معلومات درج فرمائیں:' : 'Enter Booker Details:'}
+                </h4>
+                <span className="text-xs text-amber-400 font-bold">
+                  {isUrdu ? 'کوٹہ: صرف پہلا دن • 30 گائے' : 'Quota: Day 1 • 30 Cows'}
+                </span>
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
@@ -814,24 +1021,17 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-stone-400 mb-1">
-                    {isUrdu ? 'قربانی کی نوعیت *' : 'Sacrifice Type *'}
+                    {isUrdu ? 'قربانی کی نوعیت (مقررہ)' : 'Sacrifice Type (Fixed)'}
                   </label>
-                  <select
-                    value={newQurbaniType}
-                    onChange={(e: any) => setNewQurbaniType(e.target.value)}
-                    className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-emerald-500"
-                  >
-                    <option value="cow_share">{isUrdu ? 'گائے کا حصہ (روپے 24,000)' : 'Cow Share (Rs. 24,000)'}</option>
-                    <option value="full_cow">{isUrdu ? 'مکمل گائے 7 حصے (روپے 1,68,000)' : 'Full Cow 7 Shares (Rs. 168,000)'}</option>
-                    <option value="goat">{isUrdu ? 'بکرا / دنبہ (روپے 38,000)' : 'Goat (Rs. 38,000)'}</option>
-                    <option value="waqf_gaza">{isUrdu ? 'وقف برائے غزہ و فلسطین (روپے 24,000)' : 'Waqf for Gaza Relief (Rs. 24,000)'}</option>
-                    <option value="waqf_deserving">{isUrdu ? 'وقف برائے مستحقین تھر و بلوچستان (روپے 22,000)' : 'Waqf for Destitute (Rs. 22,000)'}</option>
-                  </select>
+                  <div className="w-full bg-stone-900/80 border border-emerald-700/60 rounded-xl px-3.5 py-2.5 text-xs text-amber-300 font-bold flex items-center justify-between">
+                    <span>{isUrdu ? 'گائے کا حصہ (روپے 24,000)' : 'Cow Share (Rs. 24,000)'}</span>
+                    <span className="text-[10px] text-emerald-400 uppercase">صرف یہ آپشن</span>
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-stone-400 mb-1">
-                    {isUrdu ? 'تعدادِ حصے' : 'Number of Shares'}
+                    {isUrdu ? 'تعدادِ حصے (1 تا 7)' : 'Number of Shares (1 to 7)'}
                   </label>
                   <input
                     type="number"
@@ -845,29 +1045,40 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-stone-400 mb-1">
-                    {isUrdu ? 'ترجیحی دن' : 'Preferred Day'}
+                    {isUrdu ? 'قربانی کا دن (مقررہ)' : 'Sacrifice Day (Fixed)'}
                   </label>
-                  <select
-                    value={newDay}
-                    onChange={(e: any) => setNewDay(e.target.value)}
-                    className="w-full bg-stone-900 border border-stone-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-emerald-500"
-                  >
-                    <option value="day1">{isUrdu ? 'پہلا دن (10 ذوالحجہ)' : 'Day 1 (10 Dhul Hijjah)'}</option>
-                    <option value="day2">{isUrdu ? 'دوسرا دن (11 ذوالحجہ)' : 'Day 2 (11 Dhul Hijjah)'}</option>
-                    <option value="day3">{isUrdu ? 'تیسرا دن (12 ذوالحجہ)' : 'Day 3 (12 Dhul Hijjah)'}</option>
-                  </select>
+                  <div className="w-full bg-stone-900/80 border border-emerald-700/60 rounded-xl px-3.5 py-2.5 text-xs text-emerald-300 font-bold flex items-center justify-between">
+                    <span>{isUrdu ? 'صرف پہلا دن (10 ذوالحجہ)' : 'Eid Day 1 Only'}</span>
+                    <span className="text-[10px] text-amber-400">30 گائے کوٹہ</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="pt-2 flex items-center justify-between">
-                <span className="text-xs text-stone-400">
+              {/* Total Calculation Display */}
+              <div className="p-3 bg-stone-900/80 rounded-xl border border-stone-800 flex flex-wrap items-center justify-between text-xs">
+                <div className="space-y-0.5">
+                  <span className="text-stone-400">{isUrdu ? 'گوشت وصولی کا طریقہ:' : 'Collection Method:'} </span>
+                  <strong className="text-amber-300">
+                    {isUrdu ? 'صرف خود وصولی - مرکز جامع مسجد عثمانِ غنی رضی اللہ عنہ (ST-11 نارتھ کراچی)' : 'Self-Collection Only at Jamia Masjid Usman-e-Ghani'}
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-stone-400">{isUrdu ? 'کل رقم:' : 'Total Amount:'} </span>
+                  <strong className="text-emerald-400 font-mono text-sm">
+                    روپے {(24000 * newSharesCount).toLocaleString()}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span className="text-[11px] text-stone-400">
                   {isUrdu
-                    ? 'وصولی مرکز: جامع مسجد عثمانِ غنی ST-11 نارتھ کراچی برانچ'
-                    : 'Collection Center: Jamia Masjid Usman-e-Ghani ST-11 Center'}
+                    ? 'نوٹ: فارم جمع کروانے کے بعد آپ کو فوری ڈیجیٹل ٹوکن الاٹ کر دیا جائے گا۔'
+                    : 'Note: Instant computerized digital token will be issued upon submission.'}
                 </span>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors"
+                  className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors w-full sm:w-auto"
                 >
                   {isUrdu ? 'بکنگ درج کریں اور ٹوکن حاصل کریں' : 'Submit & Generate Token'}
                 </button>
@@ -877,211 +1088,114 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
         </section>
 
         {/* ============================================================== */}
-        {/* OFFICIAL RATE LIST & SHARE CALCULATOR */}
-        {/* ============================================================== */}
-        <section className="space-y-6">
-          <div className="text-center max-w-2xl mx-auto space-y-1">
-            <h3 className="text-xl sm:text-2xl font-black text-white">
-              {isUrdu ? 'الخدمت اجتماعی قربانی - باضابطہ ریٹ لسٹ' : 'Alkhidmat Official Qurbani Rates 2026'}
-            </h3>
-            <p className="text-xs sm:text-sm text-stone-400">
-              {isUrdu
-                ? 'تمام اخراجات بشمول چارہ، طبی جانچ، ذبح، کٹائی، صفائی اور حفظانِ صحت کولڈ چین پیکنگ شامل ہیں۔'
-                : 'All inclusive: Vetted healthy animals, slaughter, deboning, hygienic vacuum packaging & cold chain storage.'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {QURBANI_RATES.map((rate) => (
-              <div
-                key={rate.id}
-                className={`bg-stone-900 rounded-2xl p-4 border transition-all flex flex-col justify-between ${
-                  rate.popular
-                    ? 'border-amber-500/70 bg-stone-900/90 shadow-lg shadow-amber-950/20'
-                    : 'border-stone-800'
-                }`}
-              >
-                <div>
-                  {rate.popular && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-950/80 border border-amber-600/40 rounded px-2 py-0.5 inline-block mb-2">
-                      {isUrdu ? 'زیادہ ترجیح' : 'Popular Choice'}
-                    </span>
-                  )}
-                  <h4 className="font-bold text-white text-sm leading-snug">
-                    {isUrdu ? rate.titleUr : rate.titleEn}
-                  </h4>
-                  <div className="text-lg font-black text-amber-400 font-mono my-2">
-                    {rate.priceFormatted}
-                  </div>
-                  <p className="text-[11px] text-stone-400 leading-relaxed">
-                    {isUrdu ? rate.descriptionUr : rate.descriptionEn}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-stone-800 mt-4">
-                  <button
-                    onClick={() => {
-                      setShowBookingForm(true);
-                      setNewQurbaniType(rate.type as any);
-                      window.scrollTo({ top: 600, behavior: 'smooth' });
-                    }}
-                    className="w-full py-2 rounded-xl bg-stone-800 hover:bg-emerald-900 text-stone-200 hover:text-white font-bold text-xs border border-stone-700 transition-colors"
-                  >
-                    {isUrdu ? 'بکنگ کا انتخاب' : 'Select'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Interactive Share Calculator */}
-          <div className="bg-stone-900/70 rounded-2xl p-5 border border-stone-800 max-w-3xl mx-auto">
-            <h4 className="font-bold text-white text-sm flex items-center justify-between border-b border-stone-800 pb-2">
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>{isUrdu ? 'فوری حصہ و رقم کیلکولیٹر' : 'Interactive Share & Meat Calculator'}</span>
-              </span>
-              <span className="text-xs text-stone-400 font-normal">
-                {isUrdu ? 'تخمینہ رقم و وزن' : 'Estimated Cost & Yield'}
-              </span>
-            </h4>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 items-center">
-              <div>
-                <label className="block text-[11px] text-stone-400 mb-1">{isUrdu ? 'نوعیت منتخب کریں' : 'Select Type'}</label>
-                <select
-                  value={calcType}
-                  onChange={(e: any) => setCalcType(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-xs text-white"
-                >
-                  <option value="cow_share">{isUrdu ? 'گائے کا حصہ (Rs. 24,000)' : 'Cow Share (Rs. 24,000)'}</option>
-                  <option value="full_cow">{isUrdu ? 'مکمل گائے (Rs. 1,68,000)' : 'Full Cow (Rs. 1,68,000)'}</option>
-                  <option value="goat">{isUrdu ? 'بکرا (Rs. 38,000)' : 'Goat (Rs. 38,000)'}</option>
-                  <option value="waqf_gaza">{isUrdu ? 'غزہ ریلیف وقف (Rs. 24,000)' : 'Gaza Relief Waqf (Rs. 24,000)'}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] text-stone-400 mb-1">
-                  {calcType === 'full_cow'
-                    ? (isUrdu ? 'تعدادِ جانور' : 'Animals')
-                    : (isUrdu ? 'تعدادِ حصے' : 'Shares')}
-                </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCalcQuantity(Math.max(1, calcQuantity - 1))}
-                    className="w-8 h-8 rounded-lg bg-stone-800 hover:bg-stone-700 text-white font-bold"
-                  >
-                    -
-                  </button>
-                  <span className="font-mono font-bold text-white text-sm w-8 text-center">{calcQuantity}</span>
-                  <button
-                    onClick={() => setCalcQuantity(Math.min(14, calcQuantity + 1))}
-                    className="w-8 h-8 rounded-lg bg-stone-800 hover:bg-stone-700 text-white font-bold"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-stone-950 p-3 rounded-xl border border-emerald-900/40 text-center">
-                <div className="text-[10px] text-stone-400">{isUrdu ? 'کل رقم' : 'Total Amount'}</div>
-                <div className="text-lg font-black text-amber-400 font-mono">
-                  روپے{' '}
-                  {(
-                    (calcType === 'cow_share'
-                      ? 24000
-                      : calcType === 'full_cow'
-                      ? 168000
-                      : calcType === 'goat'
-                      ? 38000
-                      : 24000) * calcQuantity
-                  ).toLocaleString()}
-                </div>
-                <div className="text-[10px] text-emerald-400">
-                  ~
-                  {calcType === 'cow_share'
-                    ? 14.5 * calcQuantity
-                    : calcType === 'full_cow'
-                    ? 105 * calcQuantity
-                    : calcType === 'goat'
-                    ? 18 * calcQuantity
-                    : 15 * calcQuantity}{' '}
-                  KG گوشت
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ============================================================== */}
-        {/* ALKHIDMAT KARACHI COLLECTION CENTERS DIRECTORY */}
+        {/* SOLE SELF-COLLECTION CENTER: JAMIA MASJID USMAN-E-GHANI */}
         {/* ============================================================== */}
         <section className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800 pb-3">
             <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-xs font-bold mb-1 border border-amber-500/40">
+                <MapPin className="w-3.5 h-3.5" />
+                <span>{isUrdu ? 'صرف خود وصولی (Self-Collection Only)' : 'Self-Collection Only'}</span>
+              </div>
               <h3 className="text-xl sm:text-2xl font-black text-white">
-                {isUrdu ? 'الخدمت کراچی گوشت وصولی مراکز' : 'Alkhidmat Karachi Distribution Centers'}
+                {isUrdu ? 'گوشت وصولی مرکز: جامع مسجد عثمانِ غنی رضی اللہ عنہ' : 'Sole Collection Point: Jamia Masjid Usman-e-Ghani'}
               </h3>
               <p className="text-xs text-stone-400 mt-0.5">
                 {isUrdu
-                  ? 'اپنے قریبی مرکز کا پتہ اور فوکل پرسن کی تفصیلات معلوم کریں'
-                  : 'Locate your nearest collection center, contact focal person and directions.'}
+                  ? 'برائے مہربانی نوٹ فرمائیں کہ اس مہم کا تمام گوشت صرف جامع مسجد عثمان غنی سے خود وصول کیا جائے گا۔ کوئی ہوم ڈیلیوری یا دیگر مراکز نہیں ہیں۔'
+                  : 'All meat must be self-collected on site at Jamia Masjid Usman-e-Ghani North Karachi.'}
               </p>
             </div>
             <div className="text-xs text-emerald-400 font-semibold flex items-center gap-1.5">
               <Building2 className="w-4 h-4" />
-              <span>{isUrdu ? '45+ شہری کیمپس فعال' : '45+ Centers Active'}</span>
+              <span>{isUrdu ? '4 کاؤنٹرز فعال' : '4 Dedicated Counters Active'}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ALKHIDMAT_COLLECTION_CENTERS.map((c) => (
-              <div
-                key={c.id}
-                className="bg-stone-900 rounded-2xl p-5 border border-stone-800 hover:border-emerald-700/60 transition-all space-y-3"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <h4 className="font-bold text-white text-sm leading-snug">
+          {/* Detailed Center Card */}
+          {ALKHIDMAT_COLLECTION_CENTERS.map((c) => (
+            <div
+              key={c.id}
+              className="bg-stone-900 rounded-3xl p-6 sm:p-8 border-2 border-emerald-700/60 shadow-xl space-y-6"
+            >
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-stone-950">
+                      {isUrdu ? 'واحد مجاز وصولی مرکز' : 'Sole Authorized Collection Point'}
+                    </span>
+                    <span className="text-xs text-emerald-400 font-mono font-bold">
+                      {c.zoneUr}
+                    </span>
+                  </div>
+                  <h4 className="text-lg sm:text-xl font-black text-white">
                     {isUrdu ? c.nameUr : c.nameEn}
                   </h4>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 shrink-0">
-                    {c.zoneUr}
-                  </span>
+                  <p className="text-xs sm:text-sm text-stone-300 flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{isUrdu ? c.addressUr : c.addressEn}</span>
+                  </p>
                 </div>
 
-                <p className="text-xs text-stone-400 flex items-start gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>{isUrdu ? c.addressUr : c.addressEn}</span>
-                </p>
-
-                <div className="pt-2 border-t border-stone-800/80 space-y-1.5 text-xs">
+                <div className="bg-stone-950 p-4 rounded-2xl border border-stone-800 space-y-1.5 text-xs shrink-0 min-w-[240px]">
                   <div className="flex justify-between text-stone-300">
                     <span className="text-stone-500">{isUrdu ? 'فوکل پرسن:' : 'Focal Person:'}</span>
-                    <span className="font-medium">{c.focalPersonUr}</span>
+                    <span className="font-bold text-white">{c.focalPersonUr}</span>
+                  </div>
+                  <div className="flex justify-between text-stone-300">
+                    <span className="text-stone-500">{isUrdu ? 'وصولی کا دن:' : 'Day:'}</span>
+                    <span className="font-bold text-amber-300">صرف پہلا دن (10 ذوالحجہ)</span>
                   </div>
                   <div className="flex justify-between text-stone-300">
                     <span className="text-stone-500">{isUrdu ? 'اوقاتِ کار:' : 'Timings:'}</span>
-                    <span className="font-medium text-amber-300">{c.timingsUr}</span>
+                    <span className="font-bold text-emerald-400">{c.timingsUr}</span>
                   </div>
-                  <div className="flex justify-between text-stone-300">
-                    <span className="text-stone-500">{isUrdu ? 'رابطہ:' : 'Contact:'}</span>
-                    <a href={`tel:${c.phone.split('/')[0].trim()}`} className="font-mono text-emerald-400 hover:underline">
-                      {c.phone}
+                  <div className="flex justify-between text-stone-300 pt-1 border-t border-stone-800">
+                    <span className="text-stone-500">{isUrdu ? 'ہیلپ لائن رابطہ:' : 'Helpline:'}</span>
+                    <a href="tel:03233469424" className="font-mono text-emerald-400 font-bold hover:underline">
+                      0323-3469424
                     </a>
                   </div>
                 </div>
+              </div>
 
-                <div className="flex flex-wrap gap-1 pt-1">
-                  {c.facilitiesUr.map((fac, idx) => (
-                    <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-stone-950 text-stone-400 border border-stone-800">
-                      {fac}
-                    </span>
+              {/* 4 Dedicated Mosque Counters Breakdown */}
+              <div className="space-y-3">
+                <h5 className="font-bold text-white text-sm flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-amber-400" />
+                  <span>{isUrdu ? 'جامع مسجد عثمان غنی کے صحن میں قائم 4 خصوصی کاؤنٹرز:' : '4 Dedicated Mosque Courtyard Counters:'}</span>
+                </h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {c.countersBreakdown?.map((ctr, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-stone-950 p-3.5 rounded-xl border border-stone-800 space-y-1 hover:border-emerald-600/60 transition-colors"
+                    >
+                      <div className="text-xs font-black text-amber-400 font-mono">
+                        {ctr.no}
+                      </div>
+                      <div className="text-xs font-semibold text-stone-200">
+                        {ctr.titleUr}
+                      </div>
+                      <div className="text-[10px] text-stone-400">
+                        {ctr.titleEn}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Facilities tags */}
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-stone-800">
+                {c.facilitiesUr.map((fac, idx) => (
+                  <span key={idx} className="text-xs px-3 py-1 rounded-lg bg-stone-950 text-stone-300 border border-stone-800 flex items-center gap-1.5">
+                    <Check className="w-3 h-3 text-emerald-400" />
+                    <span>{fac}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
         </section>
 
         {/* ============================================================== */}
@@ -1107,8 +1221,8 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
               <h5 className="font-bold text-emerald-300 text-sm">{isUrdu ? '۱. شرعی عمر و تندرستی' : '1. Shariah Vetted Age'}</h5>
               <p className="leading-relaxed text-stone-400">
                 {isUrdu
-                  ? 'گائے کی عمر کم از کم 2 سال اور بکرے کی 1 سال ہونا لازمی ہے۔ تمام جانور دانت اور عیب سے پاک ہونے کے سرٹیفکیٹ کے بعد ذبح کیے جاتے ہیں۔'
-                  : 'Cattle aged at least 2 full years, goats 1 year. Vetted by qualified veterinarians and religious scholars.'}
+                  ? 'تمام 30 گائے کی عمر کم از کم 2 سال، دو دانت اور ہر عیب سے پاک ہونے کی تصدیق دارالعلوم کراچی کے مفتیانِ کرام اور ویٹرنری ڈاکٹرز کی ٹیم کرتی ہے۔'
+                  : 'Cattle aged at least 2 full years, physically vetted by scholars and veterinarians for zero defects.'}
               </p>
             </div>
 
@@ -1116,8 +1230,8 @@ export const AlkhidmatQurbaniPage: React.FC<AlkhidmatQurbaniPageProps> = ({
               <h5 className="font-bold text-emerald-300 text-sm">{isUrdu ? '۲. حفظانِ صحت اور کولڈ چین' : '2. Food Safety & Cold Chain'}</h5>
               <p className="leading-relaxed text-stone-400">
                 {isUrdu
-                  ? 'گوشت کو گرد و غبار اور مکھیوں سے پاک جدید چِلر گاڑیوں میں منتقل کیا جاتا ہے تاکہ گوشت کی غذائیت اور تازگی برقرار رہے۔'
-                  : 'Hygienic processing in temperature-controlled transport preventing bacteria and preserving freshness.'}
+                  ? 'گوشت کو گرد و غبار اور مکھیوں سے پاک جدید چِلر گاڑیوں میں منتقل کیا جاتا ہے تاکہ گوشت کی غذائیت اور تازگی مسجد عثمان غنی تک برقرار رہے۔'
+                  : 'Processed hygienically with cold-chain transport to ensure maximum freshness at Masjid Usman-e-Ghani.'}
               </p>
             </div>
 

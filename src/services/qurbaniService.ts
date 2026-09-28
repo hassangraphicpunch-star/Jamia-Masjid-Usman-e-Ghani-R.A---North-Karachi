@@ -1,7 +1,7 @@
 import { QurbaniBookingRecord, QurbaniStatusStage } from '../types';
 import { INITIAL_QURBANI_BOOKINGS } from '../data/qurbaniData';
 
-const STORAGE_KEY = 'alkhidmat_qurbani_bookings_v1';
+const STORAGE_KEY = 'alkhidmat_qurbani_bookings_v2';
 
 export function getStoredQurbaniBookings(): QurbaniBookingRecord[] {
   try {
@@ -146,37 +146,20 @@ export function createNewBookingInquiry(data: {
   bookerNameUr: string;
   phone: string;
   cnic: string;
-  qurbaniType: 'cow_share' | 'full_cow' | 'goat' | 'waqf_deserving' | 'waqf_gaza';
   sharesCount: number;
-  day: 'day1' | 'day2' | 'day3';
-  preferredCenterId?: string;
 }): QurbaniBookingRecord {
   const all = getStoredQurbaniBookings();
-  const randomNum = Math.floor(11000 + Math.random() * 88000);
+  const randomNum = Math.floor(10800 + Math.random() * 89000);
   const receiptNo = `AK-${randomNum}`;
   const tokenCode = `TK-${Math.floor(10 + Math.random() * 89)}`;
+  const cowNumber = Math.min(30, Math.floor(1 + Math.random() * 30));
 
-  const dayMapUr: Record<string, string> = {
-    day1: 'پہلا دن (10 ذوالحجہ)',
-    day2: 'دوسرا دن (11 ذوالحجہ)',
-    day3: 'تیسرا دن (12 ذوالحجہ)',
-  };
-
-  const amountMap: Record<string, number> = {
-    cow_share: 24000,
-    full_cow: 168000,
-    goat: 38000,
-    waqf_deserving: 22000,
-    waqf_gaza: 24000,
-  };
-
-  const netWeightMap: Record<string, number> = {
-    cow_share: 14.5 * data.sharesCount,
-    full_cow: 105,
-    goat: 18,
-    waqf_deserving: 14.5 * data.sharesCount,
-    waqf_gaza: 15 * data.sharesCount,
-  };
+  const shares = Math.max(1, Math.min(7, data.sharesCount || 1));
+  const amountPaid = 24000 * shares;
+  const netWeightKg = Math.round(14.8 * shares * 10) / 10;
+  const bonelessKg = Math.round(6.0 * shares * 10) / 10;
+  const boneKg = Math.round(7.3 * shares * 10) / 10;
+  const liverKg = Math.round(1.5 * shares * 10) / 10;
 
   const newRecord: QurbaniBookingRecord = {
     receiptNo,
@@ -186,70 +169,70 @@ export function createNewBookingInquiry(data: {
     phone: data.phone,
     cnic: data.cnic || '42101-*******-*',
     bookingDate: new Date().toISOString().split('T')[0],
-    qurbaniType: data.qurbaniType,
-    sharesCount: data.sharesCount,
+    qurbaniType: 'cow_share',
+    sharesCount: shares,
     shareHolderNames: [data.bookerNameUr || data.bookerNameEn || 'صاحبِ قربانی'],
-    day: data.day,
-    dayUr: dayMapUr[data.day] || 'پہلا دن',
-    timeSlot: '10:00 AM - 11:30 AM',
-    timeSlotUr: 'صبح 10:00 بجے تا 11:30 بجے',
+    day: 'day1',
+    dayUr: 'پہلا دن (10 ذوالحجہ)',
+    timeSlot: '11:00 AM - 12:30 PM',
+    timeSlotUr: 'صبح 11:00 بجے تا 12:30 بجے',
     currentStage: 'booked',
-    animalTagNo: `TAG-KHI-${Math.floor(3000 + Math.random() * 6000)} (مختص کیا جا رہا ہے)`,
+    animalTagNo: `گائے # ${cowNumber} / حصہ (کل 30 گائے کوٹہ - پہلا دن)`,
     slaughterLocation: {
       en: 'Alkhidmat Mega Slaughtering Hub, Super Highway, Karachi',
       ur: 'الخدمت میگا سلاٹر ہب، سپر ہائی وے، کراچی',
     },
     pickupLocation: {
-      en: 'ST-11 Jamia Masjid Usman-e-Ghani Center, Sector 5-A/1 North Karachi',
-      ur: 'مرکز جامع مسجد عثمانِ غنی رضی اللہ عنہ، ST-11 سیکٹر 5-A/1 نارتھ کراچی',
-      addressUr: 'نزد 4-کے چورنگی و پاور ہاؤس، نارتھ کراچی، کراچی',
-      addressEn: 'Near 4-K Chowrangi & Power House, Sector 5-A/1, North Karachi',
-      counterNo: 'Counter # 02',
+      en: 'ST-11 Jamia Masjid Usman-e-Ghani Center, Sector 5-A/1 North Karachi (Self Collection Only)',
+      ur: 'مرکز جامع مسجد عثمانِ غنی رضی اللہ عنہ، ST-11 سیکٹر 5-A/1 نارتھ کراچی (صرف خود وصولی)',
+      addressUr: 'نزد 4-کے چورنگی و پاور ہاؤس، نارتھ کراچی، کراچی (صحن مسجد، کاؤنٹر نمبر 02)',
+      addressEn: 'Near 4-K Chowrangi & Power House, Sector 5-A/1, North Karachi (Courtyard Counter # 02)',
+      counterNo: 'Counter # 02 (Masjid Usman-e-Ghani Courtyard)',
       contactPerson: 'مولانا یونس منصوری / برادر ارسلان',
       contactPhone: '0323-3469424',
     },
     meatDetails: {
-      netWeightKg: netWeightMap[data.qurbaniType] || 14.5,
-      bonelessKg: Math.round((netWeightMap[data.qurbaniType] || 14.5) * 0.45 * 10) / 10,
-      boneKg: Math.round((netWeightMap[data.qurbaniType] || 14.5) * 0.45 * 10) / 10,
-      liverKg: Math.round((netWeightMap[data.qurbaniType] || 14.5) * 0.1 * 10) / 10,
-      siriPayaIncluded: data.qurbaniType === 'full_cow' || data.qurbaniType === 'goat',
-      packagingTypeUr: 'ہائیجینک فوڈ گریڈ تھیلوں و باکس میں پیکنگ',
+      netWeightKg,
+      bonelessKg,
+      boneKg,
+      liverKg,
+      siriPayaIncluded: false,
+      packagingTypeUr: 'ہائیجینک فوڈ گریڈ تھیلوں و باکس میں کولڈ پیکنگ',
     },
     payment: {
-      amountPaid: (amountMap[data.qurbaniType] || 24000) * (data.qurbaniType === 'cow_share' || data.qurbaniType === 'waqf_deserving' || data.qurbaniType === 'waqf_gaza' ? data.sharesCount : 1),
+      amountPaid,
       paymentMethod: 'Online Booking Reservation (Verification in Progress)',
       paymentStatus: 'paid',
     },
     timeline: [
       {
         stage: 'booked',
-        labelEn: 'Booking Confirmed',
-        labelUr: 'بکنگ تصدیق شدہ',
+        labelEn: 'Booking Confirmed (Day 1)',
+        labelUr: 'بکنگ تصدیق شدہ (عید کا پہلا دن)',
         completed: true,
         current: true,
         time: 'آج بذریعہ آن لائن پورٹل',
-        noteUr: 'آپ کی بکنگ کامیابی سے درج ہو گئی ہے۔ رسید نمبر محفوظ رکھیں۔',
-        noteEn: 'Online reservation confirmed. Please save receipt number.',
+        noteUr: `گائے نمبر ${cowNumber} میں ${shares} حصہ کامیابی سے بک ہو گیا۔ عید کے پہلے دن جامع مسجد عثمان غنی سے خود وصولی کریں۔`,
+        noteEn: `Booking of ${shares} cow share(s) confirmed for Day 1. Self collection at Jamia Masjid Usman-e-Ghani.`,
       },
       {
         stage: 'animal_allocated',
-        labelEn: 'Animal Allocation',
-        labelUr: 'جانور مختص',
+        labelEn: 'Cow Tag Allocated',
+        labelUr: 'گائے مختص',
         completed: false,
         current: false,
       },
       {
         stage: 'scheduled',
-        labelEn: 'Slot Schedule',
-        labelUr: 'سلاٹ مقرر',
+        labelEn: 'Slaughter Slot',
+        labelUr: 'سلاٹ مقرر (پہلا دن)',
         completed: false,
         current: false,
       },
       {
         stage: 'slaughtered',
         labelEn: 'Slaughter',
-        labelUr: 'ذبح شرعی',
+        labelUr: 'شرعی ذبح',
         completed: false,
         current: false,
       },
@@ -262,14 +245,14 @@ export function createNewBookingInquiry(data: {
       },
       {
         stage: 'ready_pickup',
-        labelEn: 'Pickup',
-        labelUr: 'وصولی کیلئے تیار',
+        labelEn: 'Ready for Self-Collection',
+        labelUr: 'جامع مسجد عثمان غنی خود وصولی',
         completed: false,
         current: false,
       },
       {
         stage: 'completed',
-        labelEn: 'Handover',
+        labelEn: 'Handover Completed',
         labelUr: 'حوالگی مکمل',
         completed: false,
         current: false,
