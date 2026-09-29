@@ -14,10 +14,12 @@ import {
   ShieldCheck,
   Moon,
   BookOpen,
+  CloudSun,
 } from 'lucide-react';
 import { Language } from '../types';
 import { MOSQUE_INFO } from '../data/mockData';
 import { getStoredNotifications, getReadNotificationIds } from '../services/notificationService';
+import { KarachiWeatherData } from '../services/weatherService';
 
 interface NavbarProps {
   language: Language;
@@ -37,7 +39,8 @@ interface NavbarProps {
   onOpenRamadanModal?: () => void;
   onOpenQuranModal?: () => void;
   onOpenDuasModal?: () => void;
-  onOpenQurbaniPage?: () => void;
+  onOpenWeatherModal?: () => void;
+  weatherData?: KarachiWeatherData | null;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -54,7 +57,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenRamadanModal,
   onOpenQuranModal,
   onOpenDuasModal,
-  onOpenQurbaniPage,
+  onOpenWeatherModal,
+  weatherData,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -92,7 +96,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems = [
     { id: 'prayer-times', labelEn: 'Prayer Timings', labelUr: 'اوقات نماز' },
-    { id: 'ijtemai-qurbani', labelEn: 'Alkhidmat Qurbani', labelUr: 'الخدمت اجتماعی قربانی' },
     { id: 'video-gallery', labelEn: 'Videos & Live', labelUr: 'ویڈیوز و بیانات' },
     { id: 'announcements', labelEn: 'Announcements', labelUr: 'تازہ اعلانات' },
     { id: 'facilities', labelEn: 'Facilities', labelUr: 'خدمات و شعبہ جات' },
@@ -102,11 +105,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   const handleItemClick = (id: string) => {
-    if (id === 'ijtemai-qurbani' && onOpenQurbaniPage) {
-      onOpenQurbaniPage();
-      setMobileMenuOpen(false);
-      return;
-    }
     onNavigate(id);
     setMobileMenuOpen(false);
   };
@@ -124,15 +122,15 @@ export const Navbar: React.FC<NavbarProps> = ({
     >
       {/* Top micro banner with address and quick status */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Mosque Logo & Title */}
           <div
             onClick={() => handleItemClick('hero')}
-            className="flex items-center gap-3 cursor-pointer group"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0 flex-1"
           >
             {/* Mosque Logo & Emblem */}
-            <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden shadow-md shadow-emerald-950/60 border border-amber-500/50 group-hover:scale-105 transition-transform bg-stone-950 flex items-center justify-center">
+            <div className="relative w-8 h-8 sm:w-11 sm:h-11 rounded-xl overflow-hidden shadow-md shadow-emerald-950/60 border border-amber-500/50 group-hover:scale-105 transition-transform bg-stone-950 flex items-center justify-center shrink-0">
               <img
                 src="/images/masjid_logo.jpg"
                 alt="Jamia Masjid Usman-e-Ghani Logo"
@@ -141,20 +139,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               />
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-base sm:text-lg font-bold tracking-tight text-white group-hover:text-emerald-300 transition-colors">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-xs sm:text-base md:text-lg font-bold tracking-tight text-white group-hover:text-emerald-300 transition-colors truncate">
                   {isUrdu ? MOSQUE_INFO.nameUr : MOSQUE_INFO.nameEn}
                 </span>
-                <span className="hidden md:inline-flex text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800/60">
+                <span className="hidden md:inline-flex text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800/60 shrink-0">
                   ST-11 Sector 5-A/1
                 </span>
               </div>
-              <p className="text-xs text-stone-400 flex items-center gap-1.5">
-                <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                <span>{isUrdu ? 'نارتھ کراچی، کراچی' : 'North Karachi, Karachi'}</span>
-                <span className="text-stone-600">•</span>
-                <span className="text-amber-400/90 font-medium">Hanafi (حنفی)</span>
+              <p className="text-[10px] sm:text-xs text-stone-400 flex items-center gap-1 sm:gap-1.5 truncate">
+                <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-400 shrink-0" />
+                <span className="truncate">{isUrdu ? 'نارتھ کراچی، کراچی' : 'North Karachi, Karachi'}</span>
+                <span className="text-stone-600 hidden xs:inline">•</span>
+                <span className="text-amber-400/90 font-medium hidden xs:inline">Hanafi</span>
               </p>
             </div>
           </div>
@@ -182,16 +180,34 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           {/* Right Action Controls: Lang Toggle, Audio Mute, Admin Portal, Donate & Mobile Menu */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
             
+            {/* Karachi Weather Quick Pill */}
+            {onOpenWeatherModal && (
+              <button
+                id="btn-nav-weather"
+                onClick={onOpenWeatherModal}
+                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-stone-900/90 hover:bg-stone-800 text-stone-200 border border-emerald-800/60 hover:border-amber-400 text-xs font-semibold transition-all shadow-sm group"
+                title={isUrdu ? 'کراچی کا موسم و پیش گوئی دیکھیں' : 'View Karachi Weather & Forecast'}
+              >
+                <CloudSun className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                <span className="font-mono font-bold text-white text-[11px] sm:text-xs">
+                  {weatherData ? `${weatherData.current.temperature}°C` : '28°C'}
+                </span>
+                <span className="text-emerald-400 hidden sm:inline text-[11px]">
+                  {isUrdu ? 'کراچی' : 'Khi'}
+                </span>
+              </button>
+            )}
+
             {/* Language Switcher */}
             <button
               id="btn-language-toggle"
               onClick={() => setLanguage(isUrdu ? 'en' : 'ur')}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700/80 text-xs font-semibold transition-colors"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700/80 text-[11px] sm:text-xs font-semibold transition-colors"
               title={isUrdu ? 'Switch to English' : 'اردو میں تبدیل کریں'}
             >
-              <Globe className="w-3.5 h-3.5 text-emerald-400" />
+              <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" />
               <span>{isUrdu ? 'English' : 'اردو'}</span>
             </button>
 
@@ -212,7 +228,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="btn-azan-sound-toggle"
               onClick={() => setAudioMuted(!audioMuted)}
-              className={`p-2 rounded-lg text-xs font-medium transition-colors border ${
+              className={`p-1.5 sm:p-2 rounded-lg text-xs font-medium transition-colors border ${
                 audioMuted
                   ? 'bg-stone-900 text-stone-400 border-stone-800 hover:text-stone-200'
                   : 'bg-emerald-950 text-emerald-300 border-emerald-700/80 hover:bg-emerald-900'
@@ -220,9 +236,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               title={audioMuted ? 'Adhan notifications muted' : 'Adhan audio active'}
             >
               {audioMuted ? (
-                <VolumeX className="w-4 h-4 text-stone-400" />
+                <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-stone-400" />
               ) : (
-                <Volume2 className="w-4 h-4 text-emerald-400" />
+                <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
               )}
             </button>
 
@@ -292,19 +308,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
                 <span className="hidden xl:inline">{isUrdu ? 'انتظامیہ پورٹل' : 'Admin Portal'}</span>
-              </button>
-            )}
-
-            {/* Alkhidmat Ijtemai Qurbani Status Tracker Button */}
-            {onOpenQurbaniPage && (
-              <button
-                id="btn-nav-qurbani"
-                onClick={onOpenQurbaniPage}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-900/90 hover:bg-emerald-800 text-amber-300 border border-amber-500/50 text-xs font-bold transition-all shadow-md hover:scale-105 ring-1 ring-amber-400/20"
-                title="Alkhidmat Ijtemai Qurbani Live Status Tracker"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span>{isUrdu ? 'الخدمت قربانی' : 'Alkhidmat Qurbani'}</span>
               </button>
             )}
 
@@ -391,22 +394,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               );
             })}
 
-            {onOpenQurbaniPage && (
-              <button
-                onClick={() => {
-                  onOpenQurbaniPage();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-bold text-amber-300 bg-gradient-to-r from-emerald-950 via-emerald-900/80 to-emerald-950 border border-amber-500/50 flex items-center justify-between mt-2 shadow-md ring-1 ring-amber-400/20"
-              >
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-amber-400 animate-pulse" />
-                  <span>{isUrdu ? 'الخدمت اجتماعی قربانی (لائیو اسٹیٹس پورٹل)' : 'Alkhidmat Ijtemai Qurbani (Live Status)'}</span>
-                </div>
-                <span className="text-amber-300 text-xs font-bold uppercase">Live ›</span>
-              </button>
-            )}
-
             {onOpenQuranModal && (
               <button
                 onClick={() => {
@@ -420,6 +407,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span>{isUrdu ? 'القرآن الکریم (تلاوت، 13 قراء و تراجم)' : 'The Holy Quran (Recitations & Translations)'}</span>
                 </div>
                 <span className="text-emerald-400 text-xs">Open ›</span>
+              </button>
+            )}
+
+            {onOpenWeatherModal && (
+              <button
+                onClick={() => {
+                  onOpenWeatherModal();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-semibold text-emerald-300 bg-emerald-950/40 border border-emerald-700/50 flex items-center justify-between mt-1"
+              >
+                <div className="flex items-center gap-2">
+                  <CloudSun className="w-4 h-4 text-amber-400" />
+                  <span>{isUrdu ? 'کراچی کا موسم (Karachi Weather)' : 'Karachi Weather & Forecast'}</span>
+                </div>
+                <span className="text-amber-400 font-mono text-xs font-bold">
+                  {weatherData ? `${weatherData.current.temperature}°C` : '28°C'} ›
+                </span>
               </button>
             )}
 

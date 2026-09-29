@@ -263,7 +263,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
         dhuhrJamaat: '01:30 PM',
         asrJamaat: '05:15 PM',
         maghribJamaat: '+5 mins after Azan',
-        ishaJamaat: '08:15 PM',
+        ishaJamaat: '08:00 PM',
         jummaAzan: '12:50 PM',
         jummaAzan2: '01:40 PM',
         jummaBayan: '01:10 PM',
@@ -1029,7 +1029,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         type="text"
                         value={settings.ishaJamaat}
                         onChange={(e) => setSettings({ ...settings, ishaJamaat: e.target.value })}
-                        placeholder="08:15 PM"
+                        placeholder="08:00 PM"
                         className="w-full px-3 py-2 bg-stone-900 border border-indigo-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-indigo-400"
                       />
                     </div>
@@ -2398,7 +2398,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-stone-400">
-                          Fajr 05:50 AM • Dhuhr 01:30 PM • Asr 05:15 PM • Isha 08:15 PM • Jumma 01:50 PM
+                          Fajr 05:50 AM • Dhuhr 01:30 PM • Asr 05:15 PM • Isha 08:00 PM • Jumma 01:50 PM
                         </p>
                       </div>
                       <button

@@ -89,7 +89,7 @@ export const ANNOUNCEMENTS: AnnouncementItem[] = [
     contentEn:
       'Free general health examination, diabetes glucose screening, BP monitoring, and basic medicine distribution for the residents of Sector 5-A/1 North Karachi in the mosque basement hall. Qualified doctors in attendance.',
     contentUr:
-      'مسجد کمیٹی اور الخدمت میڈیکل کے اشتراک سے اتوار کے روز مسجد کے نچلے ہال میں مفت میڈیکل چیک اپ، شوگر ٹیسٹ اور مفت ادویات کی فراہمی کا انتظام کیا گیا ہے۔ تمام اہل علاقہ اس سہولت سے مستفید ہوں۔',
+      'مسجد کمیٹی اور فلاحی میڈیکل ٹیم کے اشتراک سے اتوار کے روز مسجد کے نچلے ہال میں مفت میڈیکل چیک اپ، شوگر ٹیسٹ اور مفت ادویات کی فراہمی کا انتظام کیا گیا ہے۔ تمام اہل علاقہ اس سہولت سے مستفید ہوں۔',
   },
   {
     id: 'ann-5',

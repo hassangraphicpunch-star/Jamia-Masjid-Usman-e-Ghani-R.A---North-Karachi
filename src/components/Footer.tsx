@@ -15,14 +15,12 @@ interface FooterProps {
   language: Language;
   onNavigate: (sectionId: string) => void;
   onOpenAdminModal?: () => void;
-  onOpenQurbaniPage?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   language,
   onNavigate,
   onOpenAdminModal,
-  onOpenQurbaniPage,
 }) => {
   const isUrdu = language === 'ur';
 
@@ -124,21 +122,6 @@ export const Footer: React.FC<FooterProps> = ({
                   className="hover:text-emerald-400 transition-colors"
                 >
                   {isUrdu ? 'مسجد دفتر فنڈ و عطیات' : 'Masjid Office Donation'}
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    if (onOpenQurbaniPage) {
-                      onOpenQurbaniPage();
-                    } else {
-                      onNavigate('ijtemai-qurbani');
-                    }
-                  }}
-                  className="text-amber-400 hover:text-amber-300 font-semibold transition-colors flex items-center gap-1.5"
-                >
-                  <span>✨</span>
-                  <span>{isUrdu ? 'الخدمت اجتماعی قربانی - اسٹیٹس ٹریکر' : 'Alkhidmat Ijtemai Qurbani Status'}</span>
                 </button>
               </li>
               {onOpenAdminModal && (

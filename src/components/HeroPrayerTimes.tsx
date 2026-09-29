@@ -33,6 +33,7 @@ import {
   Timer,
   Hourglass,
   ArrowRight,
+  CloudSun,
 } from 'lucide-react';
 import {
   Language,
@@ -41,6 +42,7 @@ import {
   IqamahCountdownState,
   NextPrayerState,
 } from '../types';
+import { KarachiWeatherData } from '../services/weatherService';
 import {
   PRAYER_CALCULATION_METHODS,
 } from '../data/prayerMethodsData';
@@ -98,6 +100,8 @@ interface HeroPrayerTimesProps {
   onSetSimulatedIqamah?: (sim: IqamahCountdownState | null) => void;
   currentMethod?: string;
   onOpenMethodsModal?: () => void;
+  weatherData?: KarachiWeatherData | null;
+  onOpenWeatherModal?: () => void;
 }
 
 export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
@@ -118,6 +122,8 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
   onSetSimulatedIqamah,
   currentMethod = 'Karachi',
   onOpenMethodsModal,
+  weatherData,
+  onOpenWeatherModal,
 }) => {
   const [copiedNotification, setCopiedNotification] = useState(false);
   const [playbackState, setPlaybackState] = useState<AzanPlaybackState>(() =>
@@ -596,6 +602,41 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               </span>
             )}
           </p>
+
+          {/* Karachi Live Weather Badge */}
+          {weatherData && (
+            <div className="mt-3 flex items-center justify-center">
+              <button
+                id="btn-hero-weather-badge"
+                onClick={onOpenWeatherModal}
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-900/90 hover:bg-stone-800 border border-emerald-700/60 hover:border-amber-400/80 text-stone-200 text-xs shadow-md shadow-emerald-950/40 transition-all hover:scale-105 group"
+                title={isUrdu ? 'کراچی کا موسم اور تفصیلی پیش گوئی' : 'View Karachi Weather & Forecast'}
+              >
+                <CloudSun className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                <span className="font-bold text-amber-300">
+                  {isUrdu ? 'کراچی موسم:' : 'Karachi Weather:'}
+                </span>
+                <span className="font-mono font-black text-white text-sm">
+                  {weatherData.current.temperature}°C
+                </span>
+                <span className="text-stone-500 hidden sm:inline">•</span>
+                <span className="text-emerald-300 hidden sm:inline">
+                  {isUrdu ? weatherData.current.conditionUr : weatherData.current.conditionEn}
+                </span>
+                <span className="text-stone-500 hidden md:inline">•</span>
+                <span className="text-stone-300 hidden md:inline text-[11px]">
+                  {isUrdu ? `نمی: ${weatherData.current.relativeHumidity}%` : `Humidity: ${weatherData.current.relativeHumidity}%`}
+                </span>
+                <span className="text-stone-500 hidden lg:inline">•</span>
+                <span className="text-teal-300 hidden lg:inline text-[11px]">
+                  {isUrdu ? `ہوا: ${weatherData.current.windSpeed} km/h` : `Wind: ${weatherData.current.windSpeed} km/h`}
+                </span>
+                <span className="text-amber-400 text-[10px] underline ml-1 font-semibold group-hover:text-amber-300">
+                  {isUrdu ? 'تفصیل و پیش گوئی ›' : 'Forecast ›'}
+                </span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* HERO LIVE COUNTDOWN & NEXT PRAYER SPOTLIGHT CARD */}
@@ -1503,13 +1544,13 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
             </div>
 
             {/* Timings Cards: Nisf-un-Nahar Shar'i + Zawal Window + Dhuhr Entry */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 bg-stone-900/90 p-2.5 sm:p-3 rounded-xl border border-stone-700/80 shrink-0">
+            <div className="grid grid-cols-1 min-[500px]:grid-cols-3 gap-2 sm:gap-3 bg-stone-900/90 p-2.5 sm:p-3 rounded-xl border border-stone-700/80 w-full lg:w-auto">
               {/* Nisf-un-Nahar Shar'i */}
-              <div className="text-center px-2 py-1 bg-stone-950/80 rounded-lg border border-stone-800">
+              <div className="text-center px-2 py-1.5 bg-stone-950/80 rounded-lg border border-stone-800">
                 <span className="block text-[10px] text-stone-400 font-semibold truncate">
                   {isUrdu ? 'نصف النہار شرعی' : 'Shar\'i Midday'}
                 </span>
-                <span className="text-sm sm:text-base font-black text-sky-300 font-mono tracking-tight block">
+                <span className="text-xs sm:text-sm md:text-base font-black text-sky-300 font-mono tracking-tight block">
                   {jamaatTimes.nisfUnNaharShari || '11:47 AM'}
                 </span>
                 <span className="block text-[9px] text-stone-400 truncate">
@@ -1518,7 +1559,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               </div>
 
               {/* Zawal Prohibited Window */}
-              <div className={`text-center px-2 py-1 rounded-lg border ${
+              <div className={`text-center px-2 py-1.5 rounded-lg border ${
                 zawalInfo.isInsideZawal
                   ? 'bg-rose-950 border-rose-700 text-rose-200 ring-1 ring-rose-500'
                   : 'bg-stone-950/80 border-rose-900/60'
@@ -1526,7 +1567,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                 <span className="block text-[10px] text-rose-400 font-semibold truncate">
                   {isUrdu ? 'مکروہ وقتِ زوال' : 'Zawal Window'}
                 </span>
-                <span className="text-sm sm:text-base font-black text-amber-300 font-mono tracking-tight block">
+                <span className="text-xs sm:text-sm md:text-base font-black text-amber-300 font-mono tracking-tight block">
                   {zawalWindow}
                 </span>
                 <span className="block text-[9px] text-rose-400 truncate">
@@ -1535,11 +1576,11 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               </div>
 
               {/* Dhuhr Begins */}
-              <div className="text-center px-2 py-1 bg-stone-950/80 rounded-lg border border-stone-800">
+              <div className="text-center px-2 py-1.5 bg-stone-950/80 rounded-lg border border-stone-800">
                 <span className="block text-[10px] text-stone-400 font-semibold truncate">
                   {isUrdu ? 'ظہر کا وقت شروع' : 'Dhuhr Begins'}
                 </span>
-                <span className="text-sm sm:text-base font-black text-emerald-400 font-mono tracking-tight block">
+                <span className="text-xs sm:text-sm md:text-base font-black text-emerald-400 font-mono tracking-tight block">
                   {formatTo12Hour(prayerData.dhuhr)}
                 </span>
                 <span className="block text-[9px] text-emerald-400 truncate">

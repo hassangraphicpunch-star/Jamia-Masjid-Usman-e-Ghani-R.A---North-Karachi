@@ -34,17 +34,11 @@ import { RamadanCalendarModal } from './components/RamadanCalendarModal';
 import { QuranModal } from './components/QuranModal';
 import { MasnoonDuasModal } from './components/MasnoonDuasModal';
 import { PrayerMethodsModal } from './components/PrayerMethodsModal';
-import { AlkhidmatQurbaniPage } from './components/AlkhidmatQurbaniPage';
-import { AlkhidmatQurbaniSection } from './components/AlkhidmatQurbaniSection';
+import { KarachiWeatherModal } from './components/KarachiWeatherModal';
+import { fetchKarachiWeather, KarachiWeatherData, getFallbackKarachiWeather } from './services/weatherService';
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('ur');
-  const [currentView, setCurrentView] = useState<'home' | 'qurbani'>(() => {
-    if (typeof window !== 'undefined' && window.location.hash.toLowerCase().includes('qurbani')) {
-      return 'qurbani';
-    }
-    return 'home';
-  });
   const [prayerData, setPrayerData] = useState<PrayerTimesApiResponse>(() =>
     getLocalKarachiPrayerTimes(new Date())
   );
@@ -63,6 +57,9 @@ export default function App() {
   const [duasModalOpen, setDuasModalOpen] = useState<boolean>(false);
   const [adminModalOpen, setAdminModalOpen] = useState<boolean>(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState<boolean>(false);
+  const [weatherModalOpen, setWeatherModalOpen] = useState<boolean>(false);
+  const [weatherData, setWeatherData] = useState<KarachiWeatherData | null>(() => getFallbackKarachiWeather());
+  const [isWeatherRefreshing, setIsWeatherRefreshing] = useState<boolean>(false);
   const [azanModalOpen, setAzanModalOpen] = useState<boolean>(false);
   const [prayerMethodsModalOpen, setPrayerMethodsModalOpen] = useState<boolean>(false);
   const [selectedAzanPrayer, setSelectedAzanPrayer] = useState<
@@ -97,6 +94,25 @@ export default function App() {
     setCalculationMethod(methodId);
     loadTimings(methodId);
   };
+
+  const loadWeather = useCallback(async () => {
+    setIsWeatherRefreshing(true);
+    try {
+      const data = await fetchKarachiWeather();
+      setWeatherData(data);
+    } catch (e) {
+      console.warn('Weather fetch error in App:', e);
+    } finally {
+      setIsWeatherRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadWeather();
+    // Refresh weather every 10 minutes
+    const weatherInterval = setInterval(loadWeather, 10 * 60 * 1000);
+    return () => clearInterval(weatherInterval);
+  }, [loadWeather]);
 
   useEffect(() => {
     loadTimings();
@@ -216,40 +232,7 @@ export default function App() {
         ur: nextPrayer.nextPrayerNameUr,
       };
 
-  useEffect(() => {
-    const handleHashChange = () => {
-      if (window.location.hash.toLowerCase().includes('qurbani')) {
-        setCurrentView('qurbani');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        setCurrentView('home');
-      }
-    };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  const navigateToQurbani = () => {
-    setCurrentView('qurbani');
-    window.location.hash = 'qurbani';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const navigateToHome = () => {
-    setCurrentView('home');
-    window.location.hash = '';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const handleNavigate = (sectionId: string) => {
-    if (sectionId === 'ijtemai-qurbani') {
-      navigateToQurbani();
-      return;
-    }
-    if (currentView !== 'home') {
-      setCurrentView('home');
-      window.location.hash = '';
-    }
     setActiveSection(sectionId);
     if (sectionId === 'hero') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -315,89 +298,76 @@ export default function App() {
         onOpenRamadanModal={() => setRamadanModalOpen(true)}
         onOpenQuranModal={() => setQuranModalOpen(true)}
         onOpenDuasModal={() => setDuasModalOpen(true)}
-        onOpenQurbaniPage={navigateToQurbani}
+        onOpenWeatherModal={() => setWeatherModalOpen(true)}
+        weatherData={weatherData}
       />
 
-      {/* Main Content Sections or Dedicated Alkhidmat Qurbani Page */}
-      {currentView === 'qurbani' ? (
-        <main className="flex-1">
-          <AlkhidmatQurbaniPage
-            language={language}
-            onBackToHome={navigateToHome}
-          />
-        </main>
-      ) : (
-        <main className="flex-1">
-          {/* 1. Hero & Prominent Prayer Schedule (Requested API integration for Karachi) */}
-          <HeroPrayerTimes
-            language={language}
-            prayerData={prayerData}
-            apiSource={apiSource}
-            isLoading={isLoading}
-            onRefresh={loadTimings}
-            onOpenMonthlyModal={() => setMonthlyModalOpen(true)}
-            onOpenAdminModal={() => setAdminModalOpen(true)}
-            onOpenAzanModal={handleOpenAzanModal}
-            onOpenRamadanModal={() => setRamadanModalOpen(true)}
-            adminSettings={adminSettings}
-            nextPrayer={nextPrayer}
-            audioMuted={audioMuted}
-            setAudioMuted={setAudioMuted}
-            simulatedIqamah={simulatedIqamah}
-            onSetSimulatedIqamah={setSimulatedIqamah}
-            currentMethod={calculationMethod}
-            onOpenMethodsModal={() => setPrayerMethodsModalOpen(true)}
-          />
+      {/* Main Content Sections */}
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">
+        {/* 1. Hero & Prominent Prayer Schedule (Requested API integration for Karachi) */}
+        <HeroPrayerTimes
+          language={language}
+          prayerData={prayerData}
+          apiSource={apiSource}
+          isLoading={isLoading}
+          onRefresh={loadTimings}
+          onOpenMonthlyModal={() => setMonthlyModalOpen(true)}
+          onOpenAdminModal={() => setAdminModalOpen(true)}
+          onOpenAzanModal={handleOpenAzanModal}
+          onOpenRamadanModal={() => setRamadanModalOpen(true)}
+          adminSettings={adminSettings}
+          nextPrayer={nextPrayer}
+          audioMuted={audioMuted}
+          setAudioMuted={setAudioMuted}
+          simulatedIqamah={simulatedIqamah}
+          onSetSimulatedIqamah={setSimulatedIqamah}
+          currentMethod={calculationMethod}
+          onOpenMethodsModal={() => setPrayerMethodsModalOpen(true)}
+          weatherData={weatherData}
+          onOpenWeatherModal={() => setWeatherModalOpen(true)}
+        />
 
-          {/* Featured Alkhidmat Ijtemai Qurbani Live Status Checker Section */}
-          <AlkhidmatQurbaniSection
-            language={language}
-            onOpenFullPage={navigateToQurbani}
-          />
+        {/* 2. Announcements & Notice Board (Requested feature) */}
+        <AnnouncementsSection
+          language={language}
+          adminSettings={adminSettings}
+        />
 
-          {/* 2. Announcements & Notice Board (Requested feature) */}
-          <AnnouncementsSection
-            language={language}
-            adminSettings={adminSettings}
-          />
+        {/* 3. Mosque Video Portal & Friday Sermon Stream (Requested video option) */}
+        <MosqueVideoSection
+          language={language}
+          adminSettings={adminSettings}
+          onOpenAdminModal={() => setAdminModalOpen(true)}
+        />
 
-          {/* 3. Mosque Video Portal & Friday Sermon Stream (Requested video option) */}
-          <MosqueVideoSection
-            language={language}
-            adminSettings={adminSettings}
-            onOpenAdminModal={() => setAdminModalOpen(true)}
-          />
+        {/* 4. Mosque Facilities & Dar-ul-Quran Maktab */}
+        <ServicesFacilities
+          language={language}
+        />
 
-          {/* 4. Mosque Facilities & Dar-ul-Quran Maktab */}
-          <ServicesFacilities
-            language={language}
-          />
+        {/* 5. Daily Quran/Hadith Wisdom & Interactive Digital Tasbih */}
+        <DailyWisdomAndTasbih
+          language={language}
+          onOpenQuranModal={() => setQuranModalOpen(true)}
+          onOpenDuasModal={() => setDuasModalOpen(true)}
+        />
 
-          {/* 5. Daily Quran/Hadith Wisdom & Interactive Digital Tasbih */}
-          <DailyWisdomAndTasbih
-            language={language}
-            onOpenQuranModal={() => setQuranModalOpen(true)}
-            onOpenDuasModal={() => setDuasModalOpen(true)}
-          />
+        {/* 6. Location ST-11 Sector 5-A/1 North Karachi, Directions & Qibla Bearing */}
+        <QiblaAndLocation
+          language={language}
+        />
 
-          {/* 6. Location ST-11 Sector 5-A/1 North Karachi, Directions & Qibla Bearing */}
-          <QiblaAndLocation
-            language={language}
-          />
-
-          {/* 7. Transparent Donation & Mosque Leadership Committee */}
-          <DonationAndBank
-            language={language}
-          />
-        </main>
-      )}
+        {/* 7. Transparent Donation & Mosque Leadership Committee */}
+        <DonationAndBank
+          language={language}
+        />
+      </main>
 
       {/* Footer */}
       <Footer
         language={language}
         onNavigate={handleNavigate}
         onOpenAdminModal={() => setAdminModalOpen(true)}
-        onOpenQurbaniPage={navigateToQurbani}
       />
 
       {/* Monthly Printable Timetable Modal */}
@@ -466,6 +436,16 @@ export default function App() {
         language={language}
         currentMethod={calculationMethod}
         onSelectMethod={handleSelectMethod}
+      />
+
+      {/* Live Karachi Weather & 5-Day Forecast Modal */}
+      <KarachiWeatherModal
+        isOpen={weatherModalOpen}
+        onClose={() => setWeatherModalOpen(false)}
+        language={language}
+        weatherData={weatherData}
+        onRefreshWeather={loadWeather}
+        isRefreshing={isWeatherRefreshing}
       />
 
     </div>

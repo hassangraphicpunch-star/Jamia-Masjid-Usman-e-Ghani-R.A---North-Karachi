@@ -12,7 +12,7 @@ const DEFAULT_INITIAL_SETTINGS = {
   dhuhrJamaat: '01:30 PM',
   asrJamaat: '05:15 PM',
   maghribJamaat: '+5 mins after Azan',
-  ishaJamaat: '08:15 PM',
+  ishaJamaat: '08:00 PM',
   jummaAzan: '12:50 PM',
   jummaAzan2: '01:40 PM',
   jummaBayan: '01:10 PM',
@@ -59,6 +59,9 @@ function readPublishedSettings() {
       }
       if (parsed && (parsed.fajrJamaat === '05:45 AM' || parsed.fajrJamaat === '05:40 AM')) {
         parsed.fajrJamaat = '05:50 AM';
+      }
+      if (parsed && (parsed.ishaJamaat === '08:15 PM' || parsed.ishaJamaat === '08:30 PM' || parsed.ishaJamaat === '08:45 PM')) {
+        parsed.ishaJamaat = '08:00 PM';
       }
       return parsed;
     }
@@ -712,6 +715,167 @@ async function startServer() {
     } catch (err: any) {
       return res.status(500).json({ success: false, error: err.message });
     }
+  });
+
+  // API 8: Real-time Karachi Weather Service (Open-Meteo cache proxy)
+  let weatherCache: { timestamp: number; data: any } | null = null;
+  const WEATHER_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+  app.get('/api/weather', async (req, res) => {
+    const now = Date.now();
+    if (weatherCache && now - weatherCache.timestamp < WEATHER_CACHE_TTL) {
+      return res.json({
+        success: true,
+        source: 'cache',
+        weather: weatherCache.data,
+      });
+    }
+
+    try {
+      const lat = parseFloat(req.query.lat as string) || 24.9961;
+      const lng = parseFloat(req.query.lng as string) || 67.0673;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=Asia%2FKarachi`;
+
+      const response = await fetch(url);
+      if (response.ok) {
+        const raw: any = await response.json();
+        const cur = raw.current;
+        const isDay = cur.is_day === 1;
+
+        const getWeatherInfo = (code: number, day: boolean) => {
+          switch (code) {
+            case 0:
+              return {
+                ur: day ? 'صاف و روشن آسمان' : 'صاف و پرسکون رات',
+                en: day ? 'Clear Sky / Sunny' : 'Clear Sky / Night',
+                icon: day ? 'sun' : 'moon',
+              };
+            case 1:
+              return {
+                ur: day ? 'زیادہ تر صاف دھوپ' : 'زیادہ تر صاف رات',
+                en: day ? 'Mainly Sunny' : 'Mainly Clear Night',
+                icon: day ? 'cloud-sun' : 'cloud-moon',
+              };
+            case 2:
+              return {
+                ur: 'جزوی ابر آلود',
+                en: 'Partly Cloudy',
+                icon: day ? 'cloud-sun' : 'cloud-moon',
+              };
+            case 3:
+              return { ur: 'مکمل ابر آلود', en: 'Overcast', icon: 'cloud' };
+            case 45:
+            case 48:
+              return { ur: 'دھند / کہر', en: 'Fog / Haze', icon: 'cloud-fog' };
+            case 51:
+            case 53:
+            case 55:
+              return { ur: 'ہلکی بوندا باندی', en: 'Light Drizzle', icon: 'cloud-rain' };
+            case 61:
+            case 63:
+            case 65:
+              return { ur: 'بارش / بارانِ رحمت', en: 'Rain Showers', icon: 'cloud-rain' };
+            case 95:
+            case 96:
+            case 99:
+              return { ur: 'گرج چمک و بارش', en: 'Thunderstorm', icon: 'cloud-lightning' };
+            default:
+              return {
+                ur: day ? 'معتدل موسم' : 'پرسکون رات',
+                en: day ? 'Moderate Weather' : 'Pleasant Night',
+                icon: day ? 'sun' : 'moon',
+              };
+          }
+        };
+
+        const currentCond = getWeatherInfo(cur.weather_code, isDay);
+        const daysUr = ['اتوار', 'پیر', 'منگل', 'بدھ', 'جمعرات', 'جمعہ', 'ہفتہ'];
+        const daysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        const dailyList = [];
+        if (raw.daily && Array.isArray(raw.daily.time)) {
+          for (let i = 0; i < Math.min(raw.daily.time.length, 6); i++) {
+            const dateStr = raw.daily.time[i];
+            const dObj = new Date(dateStr);
+            const dayIdx = dObj.getDay();
+            const wCode = raw.daily.weather_code?.[i] ?? 0;
+            const cond = getWeatherInfo(wCode, true);
+
+            dailyList.push({
+              date: i === 0 ? 'آج' : i === 1 ? 'کل' : daysUr[dayIdx],
+              dayNameEn: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : daysEn[dayIdx],
+              dayNameUr: i === 0 ? 'آج' : i === 1 ? 'کل' : daysUr[dayIdx],
+              tempMax: Math.round(raw.daily.temperature_2m_max?.[i] ?? 32),
+              tempMin: Math.round(raw.daily.temperature_2m_min?.[i] ?? 24),
+              weatherCode: wCode,
+              conditionUr: cond.ur,
+              conditionEn: cond.en,
+              sunrise: raw.daily.sunrise?.[i]?.split('T')[1] || '06:23',
+              sunset: raw.daily.sunset?.[i]?.split('T')[1] || '18:18',
+              iconName: cond.icon,
+            });
+          }
+        }
+
+        const weatherResult = {
+          locationEn: 'Karachi, Pakistan',
+          locationUr: 'کراچی، پاکستان',
+          areaEn: 'North Karachi (Sector 5-A/1)',
+          areaUr: 'نارتھ کراچی (سیکٹر 5-A/1)',
+          coordinates: { lat, lng },
+          current: {
+            temperature: Math.round(cur.temperature_2m),
+            apparentTemperature: Math.round(cur.apparent_temperature),
+            relativeHumidity: Math.round(cur.relative_humidity_2m),
+            isDay,
+            precipitation: cur.precipitation || 0,
+            weatherCode: cur.weather_code,
+            windSpeed: Math.round(cur.wind_speed_10m),
+            time: cur.time,
+            conditionUr: currentCond.ur,
+            conditionEn: currentCond.en,
+            iconName: currentCond.icon,
+          },
+          daily: dailyList,
+          lastUpdated: new Date().toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Asia/Karachi',
+          }),
+          islamicWeatherNotes: {
+            titleUr: 'موسمی تغیرات اور سنتِ نبوی ﷺ',
+            titleEn: 'Weather & Prophetic Traditions (Sunnah)',
+            duaArabic: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَهَا وَخَيْرَ مَا فِيهَا وَأَعُوذُ بِكَ مِنْ شَرِّهَا',
+            duaTranslationUr: 'اے اللہ! میں تجھ سے اس ہوا کی خیر اور بھلائی کا سوال کرتا ہوں اور اس کے شر سے تیری پناہ چاہتا ہوں۔',
+            duaTranslationEn: 'O Allah, I ask You for its goodness and the good within it, and I seek refuge in You from its evil.',
+            hadithNoteUr: 'رسول اللہ ﷺ نے فرمایا: "جب شدید گرمی ہو تو نمازِ ظہر کو ٹھنڈا کر کے پڑھو، کیونکہ شدید گرمی جہنم کی بھپک سے ہے۔" (صحیح بخاری)',
+            hadithNoteEn: 'The Prophet (ﷺ) said: "When it is very hot, delay the Dhuhr prayer until it cools down, for extreme heat is from the breath of Hell." (Sahih Bukhari)',
+          },
+        };
+
+        weatherCache = { timestamp: now, data: weatherResult };
+
+        return res.json({
+          success: true,
+          source: 'open_meteo_live',
+          weather: weatherResult,
+        });
+      }
+    } catch (err: any) {
+      console.warn('[Server] Weather fetch error:', err.message);
+    }
+
+    // If cache available even if older than TTL, return it
+    if (weatherCache) {
+      return res.json({
+        success: true,
+        source: 'stale_cache',
+        weather: weatherCache.data,
+      });
+    }
+
+    res.status(502).json({ success: false, error: 'Weather service temporarily unavailable' });
   });
 
   // Vite middleware for development vs Static serving for production
