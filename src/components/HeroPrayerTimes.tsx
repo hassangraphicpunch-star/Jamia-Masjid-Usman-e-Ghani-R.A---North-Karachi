@@ -815,37 +815,37 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                   {isUrdu ? 'باقی ماندہ وقت برائے اذان' : 'Countdown to Athan'}
                 </span>
 
-                <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-1.5 sm:gap-3">
                   {/* Hours */}
                   <div className="flex flex-col items-center">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-stone-950/90 border border-emerald-500/40 flex items-center justify-center text-xl sm:text-2xl font-black text-amber-300 font-mono shadow-inner">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-stone-950/90 border border-emerald-500/40 flex items-center justify-center text-lg sm:text-2xl font-black text-amber-300 font-mono shadow-inner">
                       {countdown.hours}
                     </div>
-                    <span className="text-[10px] text-stone-400 mt-1 uppercase font-semibold">
+                    <span className="text-[9px] sm:text-[10px] text-stone-400 mt-1 uppercase font-semibold">
                       {isUrdu ? 'گھنٹے' : 'Hours'}
                     </span>
                   </div>
 
-                  <span className="text-2xl font-bold text-emerald-500 mb-4 animate-pulse">:</span>
+                  <span className="text-xl sm:text-2xl font-bold text-emerald-500 mb-3 sm:mb-4 animate-pulse">:</span>
 
                   {/* Minutes */}
                   <div className="flex flex-col items-center">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-stone-950/90 border border-emerald-500/40 flex items-center justify-center text-xl sm:text-2xl font-black text-amber-300 font-mono shadow-inner">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-stone-950/90 border border-emerald-500/40 flex items-center justify-center text-lg sm:text-2xl font-black text-amber-300 font-mono shadow-inner">
                       {countdown.minutes}
                     </div>
-                    <span className="text-[10px] text-stone-400 mt-1 uppercase font-semibold">
+                    <span className="text-[9px] sm:text-[10px] text-stone-400 mt-1 uppercase font-semibold">
                       {isUrdu ? 'منٹ' : 'Minutes'}
                     </span>
                   </div>
 
-                  <span className="text-2xl font-bold text-emerald-500 mb-4 animate-pulse">:</span>
+                  <span className="text-xl sm:text-2xl font-bold text-emerald-500 mb-3 sm:mb-4 animate-pulse">:</span>
 
                   {/* Seconds */}
                   <div className="flex flex-col items-center">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-stone-950/90 border border-emerald-500/40 flex items-center justify-center text-xl sm:text-2xl font-black text-emerald-400 font-mono shadow-inner">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-stone-950/90 border border-emerald-500/40 flex items-center justify-center text-lg sm:text-2xl font-black text-emerald-400 font-mono shadow-inner">
                       {countdown.seconds}
                     </div>
-                    <span className="text-[10px] text-stone-400 mt-1 uppercase font-semibold">
+                    <span className="text-[9px] sm:text-[10px] text-stone-400 mt-1 uppercase font-semibold">
                       {isUrdu ? 'سیکنڈ' : 'Seconds'}
                     </span>
                   </div>
@@ -1691,8 +1691,8 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
             </div>
           </div>
 
-          {/* Cards Grid - 2 columns on mobile, 7 columns on xl */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2.5 sm:gap-3">
+          {/* Cards Grid - 1 column on <360px, 2 columns on mobile, 7 columns on xl */}
+          <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2.5 sm:gap-3">
             {prayerCards.map((p, pIdx) => {
               const isIqamahThis = isIqamahActive && effectiveIqamah?.prayerId === p.id;
               const isNext = nextPrayer.nextPrayerId === p.id && !isIqamahThis;
@@ -1707,7 +1707,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                   key={p.id}
                   id={`prayer-card-${p.id}`}
                   className={`relative rounded-2xl p-3 sm:p-4 transition-all duration-300 bg-gradient-to-b ${p.color} border ${
-                    isLastOddCard ? 'col-span-2 sm:col-span-1' : ''
+                    isLastOddCard ? 'col-span-1 min-[360px]:col-span-2 sm:col-span-1' : ''
                   } ${
                     isIqamahThis
                       ? 'border-amber-400 ring-2 ring-amber-400/60 scale-[1.03] shadow-2xl shadow-amber-950/50'

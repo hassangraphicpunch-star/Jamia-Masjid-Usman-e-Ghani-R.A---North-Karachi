@@ -10,7 +10,7 @@ const SETTINGS_FILE = path.join(DATA_DIR, 'mosque_admin_settings.json');
 const DEFAULT_INITIAL_SETTINGS = {
   fajrJamaat: '05:50 AM',
   dhuhrJamaat: '01:30 PM',
-  asrJamaat: '05:15 PM',
+  asrJamaat: '05:00 PM',
   maghribJamaat: '+5 mins after Azan',
   ishaJamaat: '08:00 PM',
   jummaAzan: '12:50 PM',

@@ -35,6 +35,7 @@ import { QuranModal } from './components/QuranModal';
 import { MasnoonDuasModal } from './components/MasnoonDuasModal';
 import { PrayerMethodsModal } from './components/PrayerMethodsModal';
 import { KarachiWeatherModal } from './components/KarachiWeatherModal';
+import { MosqueChatbot } from './components/MosqueChatbot';
 import { fetchKarachiWeather, KarachiWeatherData, getFallbackKarachiWeather } from './services/weatherService';
 
 export default function App() {
@@ -446,6 +447,17 @@ export default function App() {
         weatherData={weatherData}
         onRefreshWeather={loadWeather}
         isRefreshing={isWeatherRefreshing}
+      />
+
+      {/* Floating & Mobile Bottom-Sheet Mosque Chatbot */}
+      <MosqueChatbot
+        language={language}
+        adminSettings={adminSettings}
+        prayerData={prayerData}
+        weatherData={weatherData}
+        onOpenMonthlyModal={() => setMonthlyModalOpen(true)}
+        onOpenWeatherModal={() => setWeatherModalOpen(true)}
+        onOpenRamadanModal={() => setRamadanModalOpen(true)}
       />
 
     </div>

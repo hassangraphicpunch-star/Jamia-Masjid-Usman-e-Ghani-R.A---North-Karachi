@@ -104,7 +104,7 @@ export const MonthlyTimetableModal: React.FC<MonthlyTimetableModalProps> = ({
         dhuhr: formatMin(dhuhrM),
         dhuhrJamaat: adminSettings?.dhuhrJamaat || '01:30 PM',
         asr: formatMin(asrM),
-        asrJamaat: adminSettings?.asrJamaat || '05:15 PM',
+        asrJamaat: adminSettings?.asrJamaat || '05:00 PM',
         maghrib: formatMin(maghribM),
         maghribJamaat: maghribJamaatStr,
         isha: formatMin(ishaM),

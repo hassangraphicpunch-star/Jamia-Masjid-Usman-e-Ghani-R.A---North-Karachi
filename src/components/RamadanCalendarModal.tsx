@@ -829,7 +829,7 @@ export const RamadanCalendarModal: React.FC<RamadanCalendarModalProps> = ({
                 {isUrdu ? 'عصر جماعت (حنفی)' : 'Asr Jamaat'}
               </span>
               <span className="font-bold text-amber-300 font-mono text-sm">
-                {adminSettings?.asrJamaat || '05:15 PM'}
+                {adminSettings?.asrJamaat || '05:00 PM'}
               </span>
             </div>
 

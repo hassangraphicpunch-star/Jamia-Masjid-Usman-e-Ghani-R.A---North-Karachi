@@ -1,7 +1,7 @@
 {
   "fajrJamaat": "05:50 AM",
   "dhuhrJamaat": "01:30 PM",
-  "asrJamaat": "05:15 PM",
+  "asrJamaat": "05:00 PM",
   "maghribJamaat": "+5 mins after Azan",
   "ishaJamaat": "08:00 PM",
   "jummaAzan": "12:50 PM",
@@ -27,6 +27,6 @@
   "autoPlayAzan": true,
   "azanVolume": 0.85,
   "iqamahAlertSound": true,
-  "lastSavedTimestamp": "2026-09-22T19:42:00.000Z",
+  "lastSavedTimestamp": "2026-09-30T18:26:00.000Z",
   "lastPublishedBy": "Masjid Administration Portal"
 }
