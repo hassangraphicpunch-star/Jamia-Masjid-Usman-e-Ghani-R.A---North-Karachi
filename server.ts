@@ -734,19 +734,43 @@ async function startServer() {
     try {
       const lat = parseFloat(req.query.lat as string) || 24.9961;
       const lng = parseFloat(req.query.lng as string) || 67.0673;
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=Asia%2FKarachi`;
 
-      const response = await fetch(url);
-      if (response.ok) {
-        const raw: any = await response.json();
+      // 1. Fetch comprehensive weather forecast
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,cloud_cover,uv_index,visibility&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,relative_humidity_2m,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant&timezone=Asia%2FKarachi`;
+      
+      // 2. Fetch air quality
+      const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lng}&current=us_aqi,pm2_5,pm10,dust`;
+
+      const [wRes, aqRes] = await Promise.allSettled([
+        fetch(weatherUrl),
+        fetch(airQualityUrl),
+      ]);
+
+      if (wRes.status === 'fulfilled' && wRes.value.ok) {
+        const raw: any = await wRes.value.json();
         const cur = raw.current;
         const isDay = cur.is_day === 1;
+
+        let aqiData = { us_aqi: 85, pm2_5: 22, pm10: 45, dust: 35 };
+        if (aqRes.status === 'fulfilled' && aqRes.value.ok) {
+          try {
+            const aqRaw: any = await aqRes.value.json();
+            if (aqRaw.current) {
+              aqiData = {
+                us_aqi: Math.round(aqRaw.current.us_aqi ?? 85),
+                pm2_5: Math.round((aqRaw.current.pm2_5 ?? 22) * 10) / 10,
+                pm10: Math.round((aqRaw.current.pm10 ?? 45) * 10) / 10,
+                dust: Math.round((aqRaw.current.dust ?? 35) * 10) / 10,
+              };
+            }
+          } catch (_) {}
+        }
 
         const getWeatherInfo = (code: number, day: boolean) => {
           switch (code) {
             case 0:
               return {
-                ur: day ? 'صاف و روشن آسمان' : 'صاف و پرسکون رات',
+                ur: day ? 'صاف و روشن دھوپ' : 'صاف و پرسکون رات',
                 en: day ? 'Clear Sky / Sunny' : 'Clear Sky / Night',
                 icon: day ? 'sun' : 'moon',
               };
@@ -766,7 +790,7 @@ async function startServer() {
               return { ur: 'مکمل ابر آلود', en: 'Overcast', icon: 'cloud' };
             case 45:
             case 48:
-              return { ur: 'دھند / کہر', en: 'Fog / Haze', icon: 'cloud-fog' };
+              return { ur: 'دھند / کہر (Haze)', en: 'Fog / Haze', icon: 'cloud-fog' };
             case 51:
             case 53:
             case 55:
@@ -775,10 +799,14 @@ async function startServer() {
             case 63:
             case 65:
               return { ur: 'بارش / بارانِ رحمت', en: 'Rain Showers', icon: 'cloud-rain' };
+            case 80:
+            case 81:
+            case 82:
+              return { ur: 'تیز بارش کی پھوار', en: 'Heavy Showers', icon: 'cloud-rain' };
             case 95:
             case 96:
             case 99:
-              return { ur: 'گرج چمک و بارش', en: 'Thunderstorm', icon: 'cloud-lightning' };
+              return { ur: 'گرج چمک و طوفانی بارش', en: 'Thunderstorm', icon: 'cloud-lightning' };
             default:
               return {
                 ur: day ? 'معتدل موسم' : 'پرسکون رات',
@@ -792,9 +820,34 @@ async function startServer() {
         const daysUr = ['اتوار', 'پیر', 'منگل', 'بدھ', 'جمعرات', 'جمعہ', 'ہفتہ'];
         const daysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+        // Compass direction
+        const getCompass = (deg: number) => {
+          const arr = [
+            'N (شمال)',
+            'NNE',
+            'NE (شمال مشرق)',
+            'ENE',
+            'E (مشرق)',
+            'ESE',
+            'SE (جنوب مشرق)',
+            'SSE',
+            'S (جنوب)',
+            'SSW',
+            'SW (بحیرہ عرب سمندری ہوا)',
+            'WSW (سمندری ہوا)',
+            'W (مغرب)',
+            'WNW',
+            'NW (شمال مغرب)',
+            'NNW',
+          ];
+          const idx = Math.round(deg / 22.5) % 16;
+          return arr[idx];
+        };
+
+        // 7-day daily forecast
         const dailyList = [];
         if (raw.daily && Array.isArray(raw.daily.time)) {
-          for (let i = 0; i < Math.min(raw.daily.time.length, 6); i++) {
+          for (let i = 0; i < Math.min(raw.daily.time.length, 7); i++) {
             const dateStr = raw.daily.time[i];
             const dObj = new Date(dateStr);
             const dayIdx = dObj.getDay();
@@ -807,6 +860,13 @@ async function startServer() {
               dayNameUr: i === 0 ? 'آج' : i === 1 ? 'کل' : daysUr[dayIdx],
               tempMax: Math.round(raw.daily.temperature_2m_max?.[i] ?? 32),
               tempMin: Math.round(raw.daily.temperature_2m_min?.[i] ?? 24),
+              apparentMax: Math.round(raw.daily.apparent_temperature_max?.[i] ?? 34),
+              apparentMin: Math.round(raw.daily.apparent_temperature_min?.[i] ?? 25),
+              precipitationProbability: raw.daily.precipitation_probability_max?.[i] ?? 0,
+              precipitationSum: Math.round((raw.daily.precipitation_sum?.[i] ?? 0) * 10) / 10,
+              uvIndexMax: Math.round(raw.daily.uv_index_max?.[i] ?? 6),
+              windSpeedMax: Math.round(raw.daily.wind_speed_10m_max?.[i] ?? 18),
+              windDirection: getCompass(raw.daily.wind_direction_10m_dominant?.[i] ?? 240),
               weatherCode: wCode,
               conditionUr: cond.ur,
               conditionEn: cond.en,
@@ -817,26 +877,130 @@ async function startServer() {
           }
         }
 
+        // 24-hour hourly timeline
+        const hourlyList = [];
+        if (raw.hourly && Array.isArray(raw.hourly.time)) {
+          const currentHourStr = new Date().toISOString().slice(0, 13);
+          let startIdx = raw.hourly.time.findIndex((t: string) => t.startsWith(currentHourStr));
+          if (startIdx === -1) startIdx = 0;
+
+          for (let h = startIdx; h < Math.min(startIdx + 24, raw.hourly.time.length); h++) {
+            const hTime = raw.hourly.time[h];
+            const hourNum = new Date(hTime).getHours();
+            const hIsDay = raw.hourly.is_day?.[h] === 1;
+            const hCode = raw.hourly.weather_code?.[h] ?? 0;
+            const hCond = getWeatherInfo(hCode, hIsDay);
+            const ampm = hourNum >= 12 ? 'PM' : 'AM';
+            const h12 = hourNum % 12 || 12;
+
+            hourlyList.push({
+              time: `${h12}:00 ${ampm}`,
+              timeUr: `${h12}:00 ${ampm === 'PM' ? 'شام/دوپہر' : 'صبح'}`,
+              hour: hourNum,
+              temp: Math.round(raw.hourly.temperature_2m?.[h] ?? 28),
+              apparentTemp: Math.round(raw.hourly.apparent_temperature?.[h] ?? 30),
+              weatherCode: hCode,
+              conditionUr: hCond.ur,
+              conditionEn: hCond.en,
+              iconName: hCond.icon,
+              pop: raw.hourly.precipitation_probability?.[h] ?? 0,
+              humidity: Math.round(raw.hourly.relative_humidity_2m?.[h] ?? 70),
+              windSpeed: Math.round(raw.hourly.wind_speed_10m?.[h] ?? 12),
+              isDay: hIsDay,
+            });
+          }
+        }
+
+        const dewPoint = Math.round(
+          cur.temperature_2m - (100 - cur.relative_humidity_2m) / 5
+        );
+
         const weatherResult = {
           locationEn: 'Karachi, Pakistan',
           locationUr: 'کراچی، پاکستان',
           areaEn: 'North Karachi (Sector 5-A/1)',
           areaUr: 'نارتھ کراچی (سیکٹر 5-A/1)',
           coordinates: { lat, lng },
+          elevation: '28m above sea level',
           current: {
             temperature: Math.round(cur.temperature_2m),
             apparentTemperature: Math.round(cur.apparent_temperature),
             relativeHumidity: Math.round(cur.relative_humidity_2m),
+            dewPoint,
             isDay,
             precipitation: cur.precipitation || 0,
+            precipitationProbability: dailyList[0]?.precipitationProbability ?? 0,
             weatherCode: cur.weather_code,
             windSpeed: Math.round(cur.wind_speed_10m),
+            windDirection: Math.round(cur.wind_direction_10m ?? 240),
+            windDirectionCompass: getCompass(cur.wind_direction_10m ?? 240),
+            windGusts: Math.round(cur.wind_gusts_10m ?? 16),
+            surfacePressure: Math.round(cur.surface_pressure ?? 1010),
+            uvIndex: Math.round((cur.uv_index ?? 0) * 10) / 10,
+            visibility: Math.round(((cur.visibility ?? 10000) / 1000) * 10) / 10,
+            cloudCover: Math.round(cur.cloud_cover ?? 20),
             time: cur.time,
             conditionUr: currentCond.ur,
             conditionEn: currentCond.en,
             iconName: currentCond.icon,
+            seaBreezeStatusUr:
+              cur.wind_direction_10m >= 180 && cur.wind_direction_10m <= 280
+                ? 'بحیرہ عرب کی سمندری ہوا فعال ہے (خوشگوار اثر)'
+                : 'خشک برّی ہوا (سمندری ہوا دھیمی ہے)',
+            seaBreezeStatusEn:
+              cur.wind_direction_10m >= 180 && cur.wind_direction_10m <= 280
+                ? 'Arabian Sea coastal breeze active'
+                : 'Continental dry breeze',
           },
+          hourly: hourlyList,
           daily: dailyList,
+          airQuality: {
+            aqi: aqiData.us_aqi,
+            pm25: aqiData.pm2_5,
+            pm10: aqiData.pm10,
+            dust: aqiData.dust,
+            statusEn:
+              aqiData.us_aqi <= 50
+                ? 'Good'
+                : aqiData.us_aqi <= 100
+                ? 'Moderate'
+                : aqiData.us_aqi <= 150
+                ? 'Unhealthy for Sensitive'
+                : 'Unhealthy',
+            statusUr:
+              aqiData.us_aqi <= 50
+                ? 'عمدہ و صاف فضا'
+                : aqiData.us_aqi <= 100
+                ? 'قابلِ قبول / معتدل'
+                : aqiData.us_aqi <= 150
+                ? 'حساس افراد کے لیے مضر'
+                : 'مضرِ صحت فضا',
+            color:
+              aqiData.us_aqi <= 50
+                ? '#10b981'
+                : aqiData.us_aqi <= 100
+                ? '#f59e0b'
+                : aqiData.us_aqi <= 150
+                ? '#f97316'
+                : '#ef4444',
+            healthAdviceUr:
+              aqiData.us_aqi <= 100
+                ? 'شہر قائد کی ہوا معتدل ہے، عام معمولات کے لیے موزوں ہے۔'
+                : 'دھول اور اسموگ کی موجودگی، دمہ کے مریض اور بزرگ حضرات ماسک کا اہتمام کریں۔',
+            healthAdviceEn:
+              aqiData.us_aqi <= 100
+                ? 'Air quality is acceptable for outdoor visits and prayers.'
+                : 'Sensitive groups, elderly, and respiratory patients should consider wearing masks outdoors.',
+          },
+          sunAndMoon: {
+            sunrise: dailyList[0]?.sunrise || '06:23 AM',
+            solarNoon: '12:21 PM',
+            sunset: dailyList[0]?.sunset || '06:19 PM',
+            dayLength: '11 گھنٹے 56 منٹ (11h 56m)',
+            moonPhaseUr: 'ہلال (بڑھتا ہوا چاند / Waxing Crescent)',
+            moonPhaseEn: 'Waxing Crescent',
+            moonIllumination: 28,
+          },
           lastUpdated: new Date().toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',

@@ -211,19 +211,23 @@ export const MosqueChatbot: React.FC<MosqueChatbotProps> = ({
     }
 
     // Weather Query
-    if (q.includes('weather') || q.includes('موسم') || q.includes('forecast') || q.includes('بارش') || q.includes('temp')) {
+    if (q.includes('weather') || q.includes('موسم') || q.includes('forecast') || q.includes('بارش') || q.includes('temp') || q.includes('گرمی') || q.includes('ہوا')) {
       const temp = weatherData ? `${weatherData.current.temperature}°C` : '28°C';
-      const condUr = weatherData?.current.conditionUr || 'صاف موسم';
-      const condEn = weatherData?.current.conditionEn || 'Clear Sky';
-      const humidity = weatherData ? `${weatherData.current.relativeHumidity}%` : '55%';
+      const feelsLike = weatherData ? `${weatherData.current.apparentTemperature}°C` : '31°C';
+      const condUr = weatherData?.current.conditionUr || 'صاف دھوپ، خوشگوار سمندری ہوا';
+      const condEn = weatherData?.current.conditionEn || 'Sunny with Coastal Breeze';
+      const humidity = weatherData ? `${weatherData.current.relativeHumidity}%` : '70%';
+      const wind = weatherData ? `${weatherData.current.windSpeed} km/h (${weatherData.current.windDirectionCompass})` : '14 km/h (SW)';
+      const aqi = weatherData?.airQuality ? `${weatherData.airQuality.aqi} (${isUrdu ? weatherData.airQuality.statusUr : weatherData.airQuality.statusEn})` : '86 (معتدل)';
+      const uv = weatherData ? `${weatherData.current.uvIndex}` : '6.5';
 
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        textUr: `کراچی کا لائیو موسم:\n\n• درجہ حرارت: ${temp}\n• کیفیت: ${condUr}\n• ہوا میں نمی: ${humidity}\n\nمسجد میں ائیر کنڈیشنڈ ہالز اور ٹھنڈے پینے کے پانی کا فلٹریشن پلانٹ موجود ہے۔`,
-        textEn: `Karachi Live Weather:\n\n• Temperature: ${temp}\n• Condition: ${condEn}\n• Humidity: ${humidity}\n\nAir-conditioned prayer halls and cold filtered water are available at the mosque.`,
+        textUr: `کراچی (نارتھ کراچی زون) کا لائیو موسم اور مکمل تفصیلات:\n\n• درجہ حرارت: ${temp} (محسوس: ~${feelsLike})\n• موسمی کیفیت: ${condUr}\n• ہوا میں نمی: ${humidity}\n• ہوا کی رفتار و رخ: ${wind}\n• ایئر کوالٹی انڈیکس (AQI): ${aqi}\n• دھوپ کی شدت (UV Index): ${uv}\n\nجامع مسجد عثمانِ غنی میں مکمل ایئر کنڈیشنڈ نماز ہالز، ٹھنڈے پینے کے پانی کا فلٹریشن پلانٹ اور وسیع وضو خانہ دستیاب ہے۔`,
+        textEn: `Karachi (North Karachi Sector 5-A/1) Live Weather & Telemetry:\n\n• Temperature: ${temp} (Feels Like: ~${feelsLike})\n• Condition: ${condEn}\n• Humidity: ${humidity}\n• Wind & Breeze: ${wind}\n• Air Quality (AQI): ${aqi}\n• UV Index: ${uv}\n\nAir-conditioned prayer halls and clean cold drinking water are active at Jamia Masjid Usman-e-Ghani.`,
         actionButtons: [
-          { labelUr: 'تفصیلی موسم و ۵ روزہ پیش گوئی', labelEn: 'View Full Weather Forecast', onClick: onOpenWeatherModal },
+          { labelUr: '🌤️ مکمل موسمیات و پیش گوئی (سب کچھ)', labelEn: '🌤️ View Complete Weather Dashboard', onClick: onOpenWeatherModal },
         ],
         timestamp: now,
       };

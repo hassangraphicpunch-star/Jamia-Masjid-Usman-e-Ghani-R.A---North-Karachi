@@ -609,30 +609,37 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               <button
                 id="btn-hero-weather-badge"
                 onClick={onOpenWeatherModal}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-900/90 hover:bg-stone-800 border border-emerald-700/60 hover:border-amber-400/80 text-stone-200 text-xs shadow-md shadow-emerald-950/40 transition-all hover:scale-105 group"
-                title={isUrdu ? 'کراچی کا موسم اور تفصیلی پیش گوئی' : 'View Karachi Weather & Forecast'}
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-900/90 hover:bg-stone-800 border border-emerald-600/70 hover:border-amber-400 text-stone-200 text-xs shadow-md shadow-emerald-950/40 transition-all hover:scale-105 group flex-wrap justify-center"
+                title={isUrdu ? 'کراچی کا موسم، ہوا کا معیار اور مکمل تفصیلات' : 'View Complete Karachi Weather, AQI & Forecast'}
               >
-                <CloudSun className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                <CloudSun className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
                 <span className="font-bold text-amber-300">
                   {isUrdu ? 'کراچی موسم:' : 'Karachi Weather:'}
                 </span>
                 <span className="font-mono font-black text-white text-sm">
                   {weatherData.current.temperature}°C
                 </span>
+                <span className="text-stone-400 text-[11px] font-mono">
+                  ({isUrdu ? 'محسوس' : 'Feels'} ~{weatherData.current.apparentTemperature}°C)
+                </span>
                 <span className="text-stone-500 hidden sm:inline">•</span>
-                <span className="text-emerald-300 hidden sm:inline">
+                <span className="text-emerald-300 hidden sm:inline font-medium">
                   {isUrdu ? weatherData.current.conditionUr : weatherData.current.conditionEn}
                 </span>
                 <span className="text-stone-500 hidden md:inline">•</span>
                 <span className="text-stone-300 hidden md:inline text-[11px]">
                   {isUrdu ? `نمی: ${weatherData.current.relativeHumidity}%` : `Humidity: ${weatherData.current.relativeHumidity}%`}
                 </span>
-                <span className="text-stone-500 hidden lg:inline">•</span>
-                <span className="text-teal-300 hidden lg:inline text-[11px]">
+                <span className="text-stone-500 hidden md:inline">•</span>
+                <span className="text-teal-300 hidden md:inline text-[11px]">
                   {isUrdu ? `ہوا: ${weatherData.current.windSpeed} km/h` : `Wind: ${weatherData.current.windSpeed} km/h`}
                 </span>
-                <span className="text-amber-400 text-[10px] underline ml-1 font-semibold group-hover:text-amber-300">
-                  {isUrdu ? 'تفصیل و پیش گوئی ›' : 'Forecast ›'}
+                <span className="text-stone-500 hidden lg:inline">•</span>
+                <span className="text-amber-400 hidden lg:inline text-[11px] font-mono">
+                  AQI: {weatherData.airQuality?.aqi ?? 86}
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-600 text-emerald-300 text-[10px] font-bold group-hover:bg-emerald-900 transition-colors ml-1">
+                  {isUrdu ? 'مکمل تفصیلات (سب کچھ) ›' : 'View All Weather ›'}
                 </span>
               </button>
             </div>
