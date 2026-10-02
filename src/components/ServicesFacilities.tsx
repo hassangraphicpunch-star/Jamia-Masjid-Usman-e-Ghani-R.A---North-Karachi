@@ -80,8 +80,8 @@ export const ServicesFacilities: React.FC<ServicesFacilitiesProps> = ({
 
           <p className="text-xs sm:text-sm text-stone-400 mt-2">
             {isUrdu
-              ? 'اہل علاقہ اور نمازیوں کے لیے کشادہ ہالز، وضو خانہ، اسلامی کتب خانہ، فلٹریشن واٹر پلانٹ، نمازِ جنازہ کا اہتمام اور 10 KV سولر پاور'
-              : 'Serving the Sector 5-A/1 North Karachi community with spacious prayer halls, clean wudu facilities, Islamic research library, RO water plant, and 10 KV solar energy setup.'}
+              ? 'اہل علاقہ اور نمازیوں کے لیے کشادہ ہالز، وضو خانہ، اسلامی کتب خانہ، نمازِ جنازہ کا اہتمام اور 10 KV سولر پاور'
+              : 'Serving the Sector 5-A/1 North Karachi community with spacious prayer halls, clean wudu facilities, Islamic research library, Janazah arrangements, and 10 KV solar energy setup.'}
           </p>
         </div>
 
@@ -203,9 +203,9 @@ export const ServicesFacilities: React.FC<ServicesFacilitiesProps> = ({
 
               <a
                 id="btn-call-phone-masjid"
-                href={`tel:${MOSQUE_INFO.phone}`}
+                href={`tel:${MOSQUE_INFO.phone.replace(/[^0-9+]/g, '')}`}
                 className="p-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700 text-xs transition-colors"
-                title="Call Mosque Landline"
+                title="Call Mosque Office"
               >
                 <Phone className="w-4 h-4 text-emerald-400" />
               </a>

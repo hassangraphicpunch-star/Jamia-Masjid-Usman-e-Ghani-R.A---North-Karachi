@@ -1919,7 +1919,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
           <div className="p-2.5 rounded-xl bg-stone-950/60 border border-stone-800 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400" />
             <span className="text-stone-300">
-              {isUrdu ? 'دارالقرآن حفظ و ناظرہ' : 'Madrasah Hifz & Nazra'}
+              {isUrdu ? 'اسلامی دارالمطالعہ و کتب خانہ' : 'Islamic Library & Study'}
             </span>
           </div>
         </div>

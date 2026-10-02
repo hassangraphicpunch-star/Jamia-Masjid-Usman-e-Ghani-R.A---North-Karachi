@@ -2161,8 +2161,8 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                     </h4>
                     <p className="text-xs text-stone-400 mt-0.5">
                       {isUrdu
-                        ? 'جمعہ کے بیانات، تعلیمی داخلے، فلاحی کیمپ یا نمازِ جنازہ کے اعلانات شامل و ایڈٹ کریں'
-                        : 'Add or edit Friday topics, madrasah admissions, and community welfare notices'}
+                        ? 'جمعہ کے بیانات، دینی تعلیم، مسجد کے منصوبے یا نمازِ جنازہ کے اعلانات شامل و ایڈٹ کریں'
+                        : 'Add or edit Friday topics, Quran learning, and community notices'}
                     </p>
                   </div>
 
@@ -2253,9 +2253,9 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                           className="w-full px-3 py-2 bg-stone-900 border border-stone-700 rounded-lg text-white text-xs focus:border-emerald-400 focus:outline-none"
                         >
                           <option value="juma">Juma Khutbah (خطبات جمعہ)</option>
-                          <option value="education">Education & Quran (تعلیم و حفظ)</option>
+                          <option value="education">Education & Quran (تعلیم و ناظرہ)</option>
                           <option value="construction">Solar & Masjid (مسجد منصوبے)</option>
-                          <option value="welfare">Welfare Camp (فلاحی کیمپ)</option>
+                          <option value="welfare">Community Support (مسجد معاونت)</option>
                           <option value="janazah">Janazah Services (نمازِ جنازہ)</option>
                           <option value="general">General (عام اعلان)</option>
                         </select>

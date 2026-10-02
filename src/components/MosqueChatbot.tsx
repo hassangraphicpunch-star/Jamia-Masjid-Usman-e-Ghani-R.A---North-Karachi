@@ -70,7 +70,7 @@ export const MosqueChatbot: React.FC<MosqueChatbotProps> = ({
         { labelUr: '👥 جمعہ کا شیڈول', labelEn: '👥 Friday Schedule', query: 'jumma' },
         { labelUr: '💰 مسجد عطیات', labelEn: '💰 Donations Policy', query: 'donations' },
         { labelUr: '📍 پتہ و لوکیشن', labelEn: '📍 Location & Map', query: 'location' },
-        { labelUr: '📖 دارالقرآن حفظ', labelEn: '📖 Madrasah Hifz', query: 'madrasah' },
+        { labelUr: '📚 اسلامی کتب خانہ', labelEn: '📚 Islamic Library', query: 'library' },
         { labelUr: '🌤️ کراچی موسم', labelEn: '🌤️ Karachi Weather', query: 'weather' },
       ],
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -199,13 +199,105 @@ export const MosqueChatbot: React.FC<MosqueChatbotProps> = ({
       };
     }
 
-    // Madrasah Query
-    if (q.includes('madrasah') || q.includes('madrasa') || q.includes('حفظ') || q.includes('ناظرہ') || q.includes('مدرسہ') || q.includes('quran')) {
+    // Hifz Query - Mosque has no Hifz classes
+    if (q.includes('hifz') || q.includes('حفظ')) {
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        textUr: `دارالقرآن و مدرسہ حفظ و ناظرہ:\n\n• صبح کا وقت: 08:00 AM تا 11:30 AM (قاعدہ و ناظرہ قرآن کریم)\n• بعد ظہر تا مغرب: 02:30 PM تا 06:00 PM (حفظِ قرآن مجید مع تجوید)\n• بعد مغرب: روزانہ تجوید القرآن کلاس برائے نوخیز نوجوان و بالغان\n\nداخلہ معلومات کے لیے مسجد دفتر تشریف لائیں۔`,
-        textEn: `Dar-ul-Quran Madrasah (Hifz & Nazra):\n\n• Morning Shift: 08:00 AM – 11:30 AM (Qaida & Nazra Quran)\n• Afternoon Shift: 02:30 PM – 06:00 PM (Full Hifz-ul-Quran with Tajweed)\n• Post-Maghrib: Adult Tajweed & Quran reading classes\n\nVisit the Masjid Office for admissions.`,
+        textUr: `جامع مسجد عثمانِ غنی میں حفظ کی کوئی کلاس نہیں ہے۔\n\nمسجد میں ناظرہ قرآن کریم، بعد نمازِ فجر روزانہ درسِ قرآن و تفسیر اور اسلامی دارالمطالعہ/کتب خانہ کی سہولت موجود ہے، تاہم باقاعدہ شعبہ حفظ موجود نہیں ہے۔`,
+        textEn: `Please note that Jamia Masjid Usman-e-Ghani does NOT have any Hifz (Quran memorization) classes.\n\nThe mosque offers daily post-Fajr Quranic Tafseer sessions and an authentic Islamic Research Library, but there is no Hifz section.`,
+        actionButtons: [
+          { labelUr: '📚 اسلامی کتب خانہ', labelEn: '📚 Islamic Library', query: 'library' },
+          { labelUr: '🕌 اوقاتِ نماز', labelEn: '🕌 Prayer Times', query: 'prayer_times' },
+        ],
+        timestamp: now,
+      };
+    }
+
+    // AC (Air Conditioning) Query - Mosque has no AC
+    if (
+      q.includes(' ac') ||
+      q === 'ac' ||
+      q.includes('air condition') ||
+      q.includes('air conditioner') ||
+      q.includes('ایئر کنڈیشن') ||
+      q.includes('اے سی') ||
+      q.includes('کولنگ')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        textUr: `جامع مسجد عثمانِ غنی میں ایئر کنڈیشنر (AC) نصب نہیں ہے۔\n\nمسجد کے نماز ہالز کشادہ، ہوادار اور روشن ہیں، اور 10 KV خودکار سولر سسٹم و ہائبرڈ انورٹر کے ذریعے تمام ہالز کے پنکھے بجلی کی لوڈ شیڈنگ میں بھی بلاتعطل تیز رفتار چلتے ہیں۔`,
+        textEn: `Please note that Jamia Masjid Usman-e-Ghani does NOT have Air Conditioning (AC).\n\nThe prayer halls are designed with spacious cross-ventilation, and high-speed ceiling fans operate continuously with 10 KV solar power backup.`,
+        timestamp: now,
+      };
+    }
+
+    // RO Drinking Water Filtration Plant Query - Mosque has no public RO plant
+    if (
+      q.includes('ro plant') ||
+      q.includes(' ro ') ||
+      q === 'ro' ||
+      q.includes('فلٹریشن') ||
+      q.includes('پینے کا پانی') ||
+      q.includes('پینے کے پانی') ||
+      q.includes('واٹر پلانٹ') ||
+      q.includes('صاف پینے') ||
+      q.includes('drinking water')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        textUr: `جامع مسجد عثمانِ غنی میں اہل علاقہ کے لیے 24 گھنٹے مفت صاف پینے کے پانی کی فراہمی (RO پلانٹ) کی سہولت موجود نہیں ہے۔\n\nوضو خانے میں نمازیوں کی طہارت و وضو کے لیے باقاعدہ وضو کے پانی اور 100+ سنگ مرمر کی نشستوں کا انتظام موجود ہے۔`,
+        textEn: `Please note that Jamia Masjid Usman-e-Ghani does NOT have a 24-hour public RO clean drinking water filtration plant for the neighborhood.\n\nRegular continuous water supply is maintained exclusively for prayer ablution (Wudu) across 100+ marble stations.`,
+        timestamp: now,
+      };
+    }
+
+    // Medical / Sugar / Blood Pressure Camp Query - Mosque has no medical camp
+    if (
+      q.includes('medical') ||
+      q.includes('checkup') ||
+      q.includes('sugar') ||
+      q.includes('blood pressure') ||
+      q.includes('clinic') ||
+      q.includes('doctor') ||
+      q.includes('میڈیکل') ||
+      q.includes('شوگر') ||
+      q.includes('بلڈ پریشر') ||
+      q.includes('بلڈپریشر') ||
+      q.includes('کیمپ') ||
+      q.includes('چیک اپ') ||
+      q.includes('چیکپ') ||
+      q.includes('کلینک')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        textUr: `جامع مسجد عثمانِ غنی میں کوئی مفت میڈیکل و شوگر/بلڈ پریشر چیک اپ کیمپ برائے اہل علاقہ موجود نہیں ہے۔\n\nمسجد خالصتاً اقامتِ صلوٰۃ، پنجگانہ باجماعت نماز، جمعۃ المبارک، دروسِ قرآن و سنت اور دینی دارالمطالعہ کے لیے وقف ہے۔`,
+        textEn: `Please note that Jamia Masjid Usman-e-Ghani does NOT operate any free medical, sugar, or blood pressure checkup camps.\n\nThe mosque is dedicated exclusively to congregational worship, daily prayers, Juma Khutbah, Quranic Tafseer, and the Islamic Research Library.`,
+        timestamp: now,
+      };
+    }
+
+    // Islamic Library & Study Query
+    if (q.includes('library') || q.includes('کتب خانہ') || q.includes('مطالعہ') || q.includes('کتابیں') || q.includes('books')) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        textUr: `جامع مسجد عثمانِ غنی کا اسلامی دارالمطالعہ و کتب خانہ:\n\n• معتبر تفاسیر (تفسیر عثمانی، معارف القرآن، ابن کثیر)\n• کتبِ احادیث (صحاح ستہ مع اردو شروحات)\n• فقہی مسائل اور سیرت النبی ﷺ کی مستند کتب\n• ظہر تا عشاء مطالعے کے لیے پرسکون ماحول`,
+        textEn: `Jamia Masjid Usman-e-Ghani Islamic Library & Research Section:\n\n• Classical Tafseer (Tafseer-e-Usmani, Maariful Quran, Ibn Kathir)\n• Complete Sihah Sittah Hadith collections with Urdu commentaries\n• Islamic jurisprudence (Fiqh) & Seerah literature\n• Open for peaceful reading between Dhuhr and Isha`,
+        timestamp: now,
+      };
+    }
+
+    // Madrasah & Quran Study Query (Clarifying Nazra Quran & Dars without Hifz)
+    if (q.includes('madrasah') || q.includes('madrasa') || q.includes('ناظرہ') || q.includes('مدرسہ') || q.includes('quran')) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        textUr: `تعلیمِ قرآن و دینی کتب خانہ:\n\n• مسجد میں ناظرہ قرآن کریم اور بنیادی تجوید کی رہنمائی کی جاتی ہے۔\n• روزانہ بعد نمازِ فجر: درسِ قرآن و تفسیر مع خطیبِ مسجد حضرت مولانا یونس منصوری صاحب۔\n• نوٹ: جامع مسجد عثمانِ غنی میں باقاعدہ حفظ کی کلاسز کا شعبہ موجود نہیں ہے۔\n\nمزید تفصیلات کے لیے مسجد دفتر تشریف لائیں۔`,
+        textEn: `Quranic Learning & Study:\n\n• Quran Nazra reading and basic Tajweed guidance.\n• Daily after Fajr: Dars-e-Quran & Tafseer with Khateeb Maulana Younus Mansori.\n• Note: The mosque does NOT have a full-time Hifz memorization class.\n\nVisit the Masjid Office for details.`,
         timestamp: now,
       };
     }
@@ -224,8 +316,8 @@ export const MosqueChatbot: React.FC<MosqueChatbotProps> = ({
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        textUr: `کراچی (نارتھ کراچی زون) کا لائیو موسم اور مکمل تفصیلات:\n\n• درجہ حرارت: ${temp} (محسوس: ~${feelsLike})\n• موسمی کیفیت: ${condUr}\n• ہوا میں نمی: ${humidity}\n• ہوا کی رفتار و رخ: ${wind}\n• ایئر کوالٹی انڈیکس (AQI): ${aqi}\n• دھوپ کی شدت (UV Index): ${uv}\n\nجامع مسجد عثمانِ غنی میں مکمل ایئر کنڈیشنڈ نماز ہالز، ٹھنڈے پینے کے پانی کا فلٹریشن پلانٹ اور وسیع وضو خانہ دستیاب ہے۔`,
-        textEn: `Karachi (North Karachi Sector 5-A/1) Live Weather & Telemetry:\n\n• Temperature: ${temp} (Feels Like: ~${feelsLike})\n• Condition: ${condEn}\n• Humidity: ${humidity}\n• Wind & Breeze: ${wind}\n• Air Quality (AQI): ${aqi}\n• UV Index: ${uv}\n\nAir-conditioned prayer halls and clean cold drinking water are active at Jamia Masjid Usman-e-Ghani.`,
+        textUr: `کراچی (نارتھ کراچی زون) کا لائیو موسم اور مکمل تفصیلات:\n\n• درجہ حرارت: ${temp} (محسوس: ~${feelsLike})\n• موسمی کیفیت: ${condUr}\n• ہوا میں نمی: ${humidity}\n• ہوا کی رفتار و رخ: ${wind}\n• ایئر کوالٹی انڈیکس (AQI): ${aqi}\n• دھوپ کی شدت (UV Index): ${uv}\n\nجامع مسجد عثمانِ غنی میں کشادہ ہوادار نماز ہالز، تیز رفتار پنکھے مع 10 KV سولر پاور بیک اپ اور وسیع وضو خانہ دستیاب ہے۔`,
+        textEn: `Karachi (North Karachi Sector 5-A/1) Live Weather & Telemetry:\n\n• Temperature: ${temp} (Feels Like: ~${feelsLike})\n• Condition: ${condEn}\n• Humidity: ${humidity}\n• Wind & Breeze: ${wind}\n• Air Quality (AQI): ${aqi}\n• UV Index: ${uv}\n\nSpacious ventilated prayer halls with solar-powered ceiling fans and clean ablution facilities are available at Jamia Masjid Usman-e-Ghani.`,
         actionButtons: [
           { labelUr: '🌤️ مکمل موسمیات و پیش گوئی (سب کچھ)', labelEn: '🌤️ View Complete Weather Dashboard', onClick: onOpenWeatherModal },
         ],

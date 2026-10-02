@@ -52,9 +52,9 @@ export const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
   const categories = [
     { id: 'all', labelEn: 'All Notices', labelUr: 'تمام اعلانات' },
     { id: 'juma', labelEn: 'Juma Khutbah', labelUr: 'خطباتِ جمعہ' },
-    { id: 'education', labelEn: 'Madrasah Admissions', labelUr: 'تعلیم و حفظ' },
+    { id: 'education', labelEn: 'Quran & Nazra', labelUr: 'تعلیم و ناظرہ' },
     { id: 'construction', labelEn: 'Solar & Projects', labelUr: 'مسجد منصوبے' },
-    { id: 'welfare', labelEn: 'Community Welfare', labelUr: 'فلاحی کیمپ' },
+    { id: 'welfare', labelEn: 'Community Support', labelUr: 'مسجد معاونت' },
     { id: 'janazah', labelEn: 'Janazah Services', labelUr: 'جنازہ سروس' },
   ];
 
@@ -240,8 +240,8 @@ export const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
             </h2>
             <p className="text-xs sm:text-sm text-stone-400 mt-1 max-w-2xl">
               {isUrdu
-                ? 'سیکٹر 5-اے/1 نارتھ کراچی کے باسیوں کے لیے خطباتِ جمعہ، تعلیمی داخلوں اور فلاحی سرگرمیوں کی تازہ معلومات'
-                : 'Stay informed on upcoming Friday topics, Quran academy admissions, community welfare camps, and development projects.'}
+                ? 'سیکٹر 5-اے/1 نارتھ کراچی کے باسیوں کے لیے خطباتِ جمعہ، فہمِ دین اور مسجد کے ترقیاتی منصوبوں کی باخبر تفصیلات'
+                : 'Stay informed on upcoming Friday topics, Quran learning, mosque maintenance, and development projects.'}
             </p>
           </div>
 

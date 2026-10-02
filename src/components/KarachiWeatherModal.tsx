@@ -913,8 +913,8 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
                   </p>
                   <p className="text-[11px] text-stone-400">
                     {isUrdu
-                      ? 'بزرگ نمازی، دمہ کے مریض اور بچے مسجد کے راستے میں مٹی سے بچاؤ کے لیے ماسک پہنیں۔ جامع مسجد عثمانِ غنی کے اندرونی ہالز میں ایئر فلٹریشن کا عمدہ انتظام موجود ہے۔'
-                      : 'Elderly worshippers and sensitive groups are advised to use protective masks during high dust conditions. Mosque indoor halls are fully protected.'}
+                      ? 'بزرگ نمازی، دمہ کے مریض اور بچے مسجد کے راستے میں مٹی اور گرد و غبار سے بچاؤ کے لیے ماسک کا استعمال فرمائیں۔'
+                      : 'Elderly worshippers and sensitive individuals are advised to use protective masks during high dust conditions.'}
                   </p>
                 </div>
 
@@ -1020,25 +1020,25 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
                   <div className="p-3.5 rounded-xl bg-stone-950/80 border border-stone-800 space-y-1">
                     <strong className="text-emerald-300 block flex items-center gap-1.5">
-                      <span>❄️</span>
-                      <span>{isUrdu ? 'ایئر کنڈیشنڈ و ٹھنڈے ہالز' : 'Air Conditioned Prayer Halls'}</span>
+                      <span>🌬️</span>
+                      <span>{isUrdu ? 'کشادہ ہوادار ہالز اور پنکھے' : 'Spacious Ventilated Halls & Fans'}</span>
                     </strong>
                     <p className="text-stone-400 text-[11px] leading-relaxed">
                       {isUrdu
-                        ? 'گرمیوں کے دوران مرکزی ہال میں اے سی اور ہائی پاور انورٹر سسٹم مکمل فعال رہتے ہیں تاکہ نمازی یکسوئی سے نماز ادا کر سکیں۔'
-                        : 'Heavy-duty air conditioning keeps the main halls cool during Karachi’s peak summer heat.'}
+                        ? 'مرکزی ہالز کشادہ، ہوادار اور روشن ہیں، اور سولر پاور بیک اپ پر تیز رفتار چھت کے پنکھے بلاتعطل چلتے ہیں۔'
+                        : 'Spacious airy prayer halls with high-speed ceiling fans backed by the solar power system.'}
                     </p>
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-stone-950/80 border border-stone-800 space-y-1">
                     <strong className="text-emerald-300 block flex items-center gap-1.5">
                       <span>💧</span>
-                      <span>{isUrdu ? 'صاف ٹھنڈے پانی کا فلٹریشن پلانٹ' : 'Cold RO Water Filtration'}</span>
+                      <span>{isUrdu ? 'صاف و کشادہ وضو خانہ' : 'Spacious Clean Wudu Khana'}</span>
                     </strong>
                     <p className="text-stone-400 text-[11px] leading-relaxed">
                       {isUrdu
-                        ? 'مسجد کے داخلی دروازے پر نمازیوں اور راہگیروں کے لیے 24 گھنٹے ٹھنڈا، فلٹر شدہ منرل واٹر دستیاب ہے۔'
-                        : '24/7 chilled and hygienic RO filtered water dispenser available at the mosque main gate.'}
+                        ? '100 سے زائد سنگ مرمر کی نشستوں پر مشتمل کشادہ وضو خانہ اور نمازیوں کے لیے وضو کے پانی کا باقاعدہ اہتمام۔'
+                        : '100+ marble seating wudu points with uninterrupted water supply for prayer attendees.'}
                     </p>
                   </div>
 

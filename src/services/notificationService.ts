@@ -57,12 +57,12 @@ export const DEFAULT_NOTIFICATIONS: AppNotification[] = [
   },
   {
     id: 'notif-4',
-    titleEn: 'Community RO Water Filtration Plant 24/7',
-    titleUr: 'اہل محلہ و نمازیوں کے لیے 24 گھنٹے مفت میٹھا پانی',
+    titleEn: '10 KV Solar Power Backup (16 Plates)',
+    titleUr: '10 کے وی خودکار سولر سسٹم اور پنکھوں کی بلاتعطل فراہمی',
     messageEn:
-      'Modern RO sweet water plant with 10 KV solar backup is fully operational for the Sector 5-A/1 North Karachi community.',
+      '16 high-efficiency solar plates and hybrid inverter keep all prayer hall fans and lights running smoothly during power cuts.',
     messageUr:
-      'سیکٹر 5-اے/1 نارتھ کراچی کے باسیوں اور نمازیوں کے لیے 24 گھنٹے میٹھے فلٹر شدہ پانی کا پلانٹ فعال ہے۔',
+      'مسجد کی چھت پر نصب 16 سولر پلیٹس اور ہائبرڈ انورٹر سے تمام ہالز کے پنکھے اور لائٹس لوڈ شیڈنگ میں بلاتعطل فعال رہتے ہیں۔',
     type: 'general',
     category: 'event',
     priority: 'low',
@@ -97,7 +97,20 @@ export function getStoredNotifications(): AppNotification[] {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        const sanitized = parsed
+          .map((n) => {
+            if (n.id === 'notif-4' && (n.titleUr?.includes('پانی') || n.titleEn?.includes('RO Water'))) {
+              return DEFAULT_NOTIFICATIONS.find((d) => d.id === 'notif-4') || n;
+            }
+            return n;
+          })
+          .filter(
+            (n) =>
+              !n.titleUr?.includes('میڈیکل') &&
+              !n.titleUr?.includes('شوگر') &&
+              !n.titleUr?.includes('بلڈ پریشر')
+          );
+        return sanitized;
       }
     }
   } catch (e) {

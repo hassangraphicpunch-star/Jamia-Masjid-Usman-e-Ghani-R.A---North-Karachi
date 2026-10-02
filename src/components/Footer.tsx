@@ -150,7 +150,7 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <a href={`tel:${MOSQUE_INFO.phone}`} className="hover:text-white font-mono">
+                <a href={`tel:${MOSQUE_INFO.phone.replace(/[^0-9+]/g, '')}`} className="hover:text-white font-mono">
                   {MOSQUE_INFO.phone}
                 </a>
               </li>

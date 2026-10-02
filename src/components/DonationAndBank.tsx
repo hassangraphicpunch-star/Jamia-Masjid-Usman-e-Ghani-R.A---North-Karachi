@@ -19,11 +19,6 @@ import {
   Info,
   XCircle,
   ExternalLink,
-  Printer,
-  FileText,
-  QrCode,
-  Copy,
-  Check,
 } from 'lucide-react';
 import { Language } from '../types';
 import { MOSQUE_INFO } from '../data/mockData';
@@ -164,9 +159,9 @@ const DONATION_CATEGORIES: DonationCategoryInfo[] = [
     subtitleEn: 'Hygiene, Deep Carpet Wash & Wudhu Sanitation',
     subtitleUr: 'قالینوں کی دھلائی، وضو خانے کی صفائی و طہارت',
     descriptionEn:
-      'Sustaining impeccable cleanliness and sanctity across every square foot of the House of Allah. Covers deep industrial shampooing of prayer carpets, motorized vacuum machines, daily fragrance and sanitization of Wudhu areas, cleaning chemicals, air conditioner servicing and filter cleanups, and trash disposal logistics.',
+      'Sustaining impeccable cleanliness and sanctity across every square foot of the House of Allah. Covers deep industrial shampooing of prayer carpets, motorized vacuum machines, daily fragrance and sanitization of Wudhu areas, cleaning supplies, high-speed ceiling fan servicing and electrical upkeep, and trash disposal logistics.',
     descriptionUr:
-      'اللہ کے گھر کی مکمل طہارت، صفائی اور پاکیزگی کا مستقل نظام۔ اس شعبہ میں نماز کی صفوں اور قالینوں کی مشین سے دھلائی، پاور ویکیوم کلینرز، وضو خانے اور واش رومز کی روزانہ جراثیم کش اسپرے و صفائی، ایئر کنڈیشنرز کی سروسنگ، اور خوشبو و عطر کے انتظامات شامل ہیں۔',
+      'اللہ کے گھر کی مکمل طہارت، صفائی اور پاکیزگی کا مستقل نظام۔ اس شعبہ میں نماز کی صفوں اور قالینوں کی مشین سے دھلائی، پاور ویکیوم کلینرز، وضو خانے اور واش رومز کی روزانہ جراثیم کش اسپرے و صفائی، چھت اور دیوار کے پنکھوں کی سروسنگ و برقی نگہداشت، اور خوشبو و عطر کے انتظامات شامل ہیں۔',
     icon: Sparkles,
     accentColor: 'from-teal-500/20 to-teal-950/40 border-teal-500/40 text-teal-400',
     badgeEn: 'Daily Sanctity',
@@ -175,13 +170,13 @@ const DONATION_CATEGORIES: DonationCategoryInfo[] = [
       'Periodic deep extraction shampooing of 2,000+ yards of prayer carpets',
       'High-grade germicidal cleaners and fragrant sprays for prayer halls',
       '24/7 continuous sanitation supplies for the Wudhu and ablution areas',
-      'Regular cleaning and filter maintenance of all AC units and ceiling fans',
+      'Regular cleaning, dusting, and electrical maintenance of all ceiling and bracket fans',
     ],
     scopeItemsUr: [
       'دو ہزار گز سے زائد قالینوں کی وقتاً فوقتاً کیمیکل واش اور ویکیوم کلیننگ',
       'نماز ہالز کے لیے اعلیٰ معیار کے جراثیم کش کلینرز اور عطر و خوشبو',
       'وضو خانے اور طہارت خانوں کے لیے 24 گھنٹے معیاری صفائی کی اشیاء',
-      'تمام ایئر کنڈیشنرز اور پنکھوں کی باقاعدہ دھلائی و سروسنگ',
+      'تمام چھت کے پنکھوں اور برقی آلات کی باقاعدہ صفائی و دیکھ بھال',
     ],
   },
 ];
@@ -190,60 +185,8 @@ export const DonationAndBank: React.FC<DonationAndBankProps> = ({ language }) =>
   const isUrdu = language === 'ur';
   const [selectedCategory, setSelectedCategory] = useState<string>('new-sound-system');
 
-  // Donation Submission & Receipt Pre-Request Form State
-  const [donorName, setDonorName] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [donorPhone, setDonorPhone] = useState('');
-  const [targetCategory, setTargetCategory] = useState('new-sound-system');
-  const [amount, setAmount] = useState('');
-  const [paymentMode, setPaymentMode] = useState<'cash' | 'cheque'>('cash');
-  const [visitDate, setVisitDate] = useState('');
-  const [donorNotes, setDonorNotes] = useState('');
-  const [submittedSlip, setSubmittedSlip] = useState<{
-    token: string;
-    donorName: string;
-    phone: string;
-    categoryNameEn: string;
-    categoryNameUr: string;
-    amount: string;
-    paymentMode: string;
-    visitDate: string;
-    notes: string;
-    timestamp: string;
-  } | null>(null);
-  const [copiedToken, setCopiedToken] = useState(false);
-
   const activeCategory =
     DONATION_CATEGORIES.find((c) => c.id === selectedCategory) || DONATION_CATEGORIES[0];
-
-  const handleDonationSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const token = `JUG-DON-${Math.floor(10000 + Math.random() * 90000)}`;
-    const catObj = DONATION_CATEGORIES.find((c) => c.id === targetCategory) || activeCategory;
-    const slip = {
-      token,
-      donorName: isAnonymous ? (isUrdu ? 'فاعلِ خیر (خفیہ عطیہ)' : 'Anonymous Well-wisher') : donorName.trim() || (isUrdu ? 'محترم عطیہ دہندہ' : 'Respected Donor'),
-      phone: donorPhone.trim() || 'N/A',
-      categoryNameEn: catObj.nameEn,
-      categoryNameUr: catObj.nameUr,
-      amount: amount.trim() ? `Rs. ${Number(amount.replace(/[^0-9]/g, '')).toLocaleString()}` : (isUrdu ? 'حسبِ استطاعت' : 'As feasible'),
-      paymentMode: paymentMode === 'cash' ? (isUrdu ? 'نقد (کاؤنٹر پر)' : 'Cash (At Counter)') : (isUrdu ? 'بینک چیک (کاؤنٹر پر)' : 'Cheque (At Counter)'),
-      visitDate: visitDate || (isUrdu ? 'آج / عنقریب' : 'Soon / Today'),
-      notes: donorNotes.trim() || (isUrdu ? 'برائے ثوابِ جاریہ' : 'For continuous reward (Sadaqah Jariah)'),
-      timestamp: new Date().toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }),
-    };
-    setSubmittedSlip(slip);
-  };
-
-  const handlePrintSlip = () => {
-    window.print();
-  };
-
-  const handleCopySlipToken = (tok: string) => {
-    navigator.clipboard.writeText(tok);
-    setCopiedToken(true);
-    setTimeout(() => setCopiedToken(false), 2500);
-  };
 
   return (
     <section
@@ -715,287 +658,6 @@ export const DonationAndBank: React.FC<DonationAndBankProps> = ({ language }) =>
           </div>
         </div>
 
-        {/* DONATION DETAILS SUBMISSION & RECEIPT REQUEST SECTION */}
-        <div id="donation-receipt-form" className="mb-14 rounded-3xl bg-gradient-to-br from-stone-900 via-stone-900/95 to-stone-950 border-2 border-emerald-600/50 p-5 sm:p-8 shadow-2xl relative overflow-hidden">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950 border border-emerald-500/50 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-2">
-                <Receipt className="w-3.5 h-3.5 text-amber-400" />
-                <span>{isUrdu ? 'دفتری رسید کی پیشگی درخواست و اندراج' : 'Donation Details Submission & Receipt Pre-Request'}</span>
-              </div>
-              <h3 className="text-xl sm:text-3xl font-extrabold text-white">
-                {isUrdu ? 'عطیہ کی تفصیلات درج کریں اور دفتری رسید ٹوکن بنائیں' : 'Submit Donation Details & Request Official Receipt'}
-              </h3>
-              <p className="text-xs sm:text-sm text-stone-300 mt-2 max-w-xl mx-auto leading-relaxed">
-                {isUrdu
-                  ? 'جامع مسجد عثمانِ غنی کے دفتر تشریف لانے سے قبل اپنے عطیہ کی تفصیلات پیشگی درج فرما کر ٹوکن حاصل کریں تاکہ کاؤنٹر پر فوری طور پر مہر شدہ رسید جاری کی جا سکے۔'
-                  : 'Pre-submit your donation intent to generate an official verification token. Present this token at the Masjid Office to collect your stamped physical receipt upon payment.'}
-              </p>
-            </div>
-
-            {!submittedSlip ? (
-              <form onSubmit={handleDonationSubmit} className="space-y-5 bg-stone-950/80 p-5 sm:p-7 rounded-2xl border border-stone-800">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Donor Name */}
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                      {isUrdu ? 'عطیہ دہندہ کا نام:' : 'Donor Full Name:'}
-                    </label>
-                    <input
-                      type="text"
-                      disabled={isAnonymous}
-                      value={donorName}
-                      onChange={(e) => setDonorName(e.target.value)}
-                      placeholder={isAnonymous ? (isUrdu ? 'فاعلِ خیر (خفیہ عطیہ)' : 'Anonymous Well-wisher') : (isUrdu ? 'اپنا نام درج فرمائیں' : 'Enter your name')}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-stone-900 border border-stone-700 text-white text-xs sm:text-sm focus:outline-none focus:border-emerald-500 disabled:opacity-60 disabled:bg-stone-900/40"
-                    />
-                    <label className="flex items-center gap-2 mt-2 cursor-pointer text-xs text-amber-300">
-                      <input
-                        type="checkbox"
-                        checked={isAnonymous}
-                        onChange={(e) => {
-                          setIsAnonymous(e.target.checked);
-                          if (e.target.checked) setDonorName('');
-                        }}
-                        className="rounded bg-stone-900 border-stone-700 text-emerald-500 focus:ring-0"
-                      />
-                      <span>{isUrdu ? 'نام ظاہر نہ کریں (خفیہ صدقہ / فاعلِ خیر)' : 'Keep Anonymous (فاعلِ خیر)'}</span>
-                    </label>
-                  </div>
-
-                  {/* Phone / WhatsApp */}
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                      {isUrdu ? 'موبائل / واٹس ایپ نمبر:' : 'Mobile / WhatsApp Number:'}
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={donorPhone}
-                      onChange={(e) => setDonorPhone(e.target.value)}
-                      placeholder="03xx-xxxxxxx"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-stone-900 border border-stone-700 text-white text-xs sm:text-sm font-mono focus:outline-none focus:border-emerald-500"
-                    />
-                    <span className="text-[10px] text-stone-400 mt-1 block">
-                      {isUrdu ? 'رسید کی تصدیق اور اطلاع کے لیے' : 'For receipt confirmation & WhatsApp coordination'}
-                    </span>
-                  </div>
-
-                  {/* Target Category */}
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                      {isUrdu ? 'منتخب شعبہ / فنڈ:' : 'Select Donation Category:'}
-                    </label>
-                    <select
-                      value={targetCategory}
-                      onChange={(e) => setTargetCategory(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-stone-900 border border-stone-700 text-white text-xs sm:text-sm focus:outline-none focus:border-emerald-500 cursor-pointer"
-                    >
-                      {DONATION_CATEGORIES.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {isUrdu ? cat.nameUr : cat.nameEn}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Estimated Amount */}
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                      {isUrdu ? 'متوقع رقم (روپے / PKR):' : 'Estimated Amount (PKR):'}
-                    </label>
-                    <input
-                      type="text"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder={isUrdu ? 'مثلاً: 5000' : 'e.g. 5,000'}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-stone-900 border border-stone-700 text-amber-300 font-mono text-xs sm:text-sm font-bold focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-
-                  {/* Payment Mode at Office */}
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                      {isUrdu ? 'دفتری ادائیگی کا طریقہ:' : 'In-Person Payment Method at Office:'}
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMode('cash')}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-colors ${
-                          paymentMode === 'cash'
-                            ? 'bg-emerald-950 border-emerald-400 text-emerald-300'
-                            : 'bg-stone-900 border-stone-700 text-stone-400'
-                        }`}
-                      >
-                        {isUrdu ? '💵 نقد (کاؤنٹر پر)' : '💵 Cash at Counter'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMode('cheque')}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-colors ${
-                          paymentMode === 'cheque'
-                            ? 'bg-emerald-950 border-emerald-400 text-emerald-300'
-                            : 'bg-stone-900 border-stone-700 text-stone-400'
-                        }`}
-                      >
-                        {isUrdu ? '📑 بینک چیک' : '📑 Cheque at Office'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Expected Visit Date */}
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                      {isUrdu ? 'مسجد تشریف لانے کی متوقع تاریخ:' : 'Expected Date of Visit to Office:'}
-                    </label>
-                    <input
-                      type="date"
-                      value={visitDate}
-                      onChange={(e) => setVisitDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-stone-900 border border-stone-700 text-stone-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 cursor-pointer"
-                    />
-                  </div>
-                </div>
-
-                {/* Notes / Duas */}
-                <div>
-                  <label className="block text-xs font-semibold text-stone-300 mb-1.5">
-                    {isUrdu ? 'خصوصی نیت / ایصالِ ثواب / دعائیہ کلمات (اختیاری):' : 'Intention / Isaal-e-Sawab / Prayer Request (Optional):'}
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={donorNotes}
-                    onChange={(e) => setDonorNotes(e.target.value)}
-                    placeholder={isUrdu ? 'مثلاً: مرحوم والدین کے ایصالِ ثواب کے لیے دعا کی درخواست ہے...' : 'e.g. In loving memory of parents, request for Dua...'}
-                    className="w-full px-3.5 py-2 rounded-xl bg-stone-900 border border-stone-700 text-white text-xs sm:text-sm focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-
-                {/* Notice Reminder */}
-                <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-600/40 text-xs text-amber-200 flex items-start gap-2">
-                  <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                  <span>
-                    {isUrdu
-                      ? 'یاددہانی: یہ فارم صرف پیشگی اندراج اور رسید ٹوکن کے لیے ہے۔ رقم صرف جامع مسجد عثمانِ غنی کے دفتر میں بالمشافہ جمع کروائی جائے گی اور وہیں سے مہر شدہ باضابطہ رسید حاصل ہوگی۔'
-                      : 'Reminder: This form is for pre-registration and receipt token generation only. Contributions are handed over directly in person at the Masjid Office upon which your official stamped receipt is provided.'}
-                  </span>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-950/60 transition-all"
-                >
-                  <Receipt className="w-4 h-4" />
-                  <span>{isUrdu ? 'دفتری رسید ٹوکن جاری کریں (Generate Receipt Token)' : 'Generate Official Receipt Token'}</span>
-                </button>
-              </form>
-            ) : (
-              /* SUBMITTED DIGITAL SLIP TOKEN PREVIEW */
-              <div className="bg-stone-950 p-6 sm:p-8 rounded-2xl border-2 border-emerald-500 shadow-2xl space-y-6">
-                <div className="flex items-center justify-between border-b border-stone-800 pb-4 flex-wrap gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-950 border border-emerald-500 flex items-center justify-center text-emerald-400 font-bold">
-                      <CheckCircle2 className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-emerald-400 uppercase font-mono font-bold tracking-wider block">
-                        PRE-REQUEST REGISTERED
-                      </span>
-                      <h4 className="text-base sm:text-lg font-bold text-white">
-                        {isUrdu ? 'جامع مسجد عثمانِ غنی - دفتری رسید ٹوکن' : 'Masjid Usman-e-Ghani - Office Receipt Token'}
-                      </h4>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCopySlipToken(submittedSlip.token)}
-                      className="px-3 py-1.5 rounded-lg bg-stone-900 border border-stone-700 hover:border-emerald-400 text-stone-200 text-xs font-mono font-bold flex items-center gap-1.5 transition-colors"
-                    >
-                      {copiedToken ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{submittedSlip.token}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Printable Slip Card */}
-                <div className="p-5 rounded-xl bg-stone-900 border border-stone-800 space-y-3 font-mono text-xs">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-stone-300">
-                    <div>
-                      <span className="text-stone-500 block text-[11px]">{isUrdu ? 'عطیہ دہندہ:' : 'Donor:'}</span>
-                      <strong className="text-white text-sm">{submittedSlip.donorName}</strong>
-                    </div>
-                    <div>
-                      <span className="text-stone-500 block text-[11px]">{isUrdu ? 'رابطہ نمبر:' : 'Phone:'}</span>
-                      <strong className="text-white text-sm">{submittedSlip.phone}</strong>
-                    </div>
-                    <div>
-                      <span className="text-stone-500 block text-[11px]">{isUrdu ? 'منتخب شعبہ:' : 'Category:'}</span>
-                      <strong className="text-emerald-300 text-sm">{isUrdu ? submittedSlip.categoryNameUr : submittedSlip.categoryNameEn}</strong>
-                    </div>
-                    <div>
-                      <span className="text-stone-500 block text-[11px]">{isUrdu ? 'رقم:' : 'Amount:'}</span>
-                      <strong className="text-amber-300 text-sm">{submittedSlip.amount}</strong>
-                    </div>
-                    <div>
-                      <span className="text-stone-500 block text-[11px]">{isUrdu ? 'طریقۂ ادائیگی:' : 'Payment Mode:'}</span>
-                      <strong className="text-white">{submittedSlip.paymentMode}</strong>
-                    </div>
-                    <div>
-                      <span className="text-stone-500 block text-[11px]">{isUrdu ? 'متوقع آمد:' : 'Visit Date:'}</span>
-                      <strong className="text-white">{submittedSlip.visitDate}</strong>
-                    </div>
-                  </div>
-
-                  {submittedSlip.notes && (
-                    <div className="pt-2 border-t border-stone-800 text-stone-400 text-[11px]">
-                      <span>{isUrdu ? 'نیت / دعا:' : 'Intention / Note:'} {submittedSlip.notes}</span>
-                    </div>
-                  )}
-
-                  <div className="pt-2 border-t border-stone-800 text-[10px] text-stone-500 flex justify-between">
-                    <span>ST-11 Sector 5-A/1 North Karachi</span>
-                    <span>Date: {submittedSlip.timestamp}</span>
-                  </div>
-                </div>
-
-                {/* Action Buttons for Donor */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <a
-                    href={`https://wa.me/923232456480?text=${encodeURIComponent(
-                      `السلام علیکم! میں نے جامع مسجد عثمان غنی کے دفتر میں عطیہ کے لیے پیشگی ٹوکن بنایا ہے۔\n\n📌 ٹوکن نمبر: ${submittedSlip.token}\n👤 نام: ${submittedSlip.donorName}\n📱 فون: ${submittedSlip.phone}\n🕌 شعبہ: ${submittedSlip.categoryNameUr} (${submittedSlip.categoryNameEn})\n💰 رقم: ${submittedSlip.amount}\n💵 ادائیگی: ${submittedSlip.paymentMode}\n📅 تاریخِ آمد: ${submittedSlip.visitDate}\n📝 نیت / دعا: ${submittedSlip.notes}\n\nبرائے مہربانی دفتری کاؤنٹر پر رسید کی تیاری کے لیے ریکارڈ فرما لیں۔ جزاکم اللہ خیراً۔`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-colors"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>{isUrdu ? 'واٹس ایپ پر بھیجیں (03232456480)' : 'Send to Office WhatsApp'}</span>
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={handlePrintSlip}
-                    className="py-2.5 px-4 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <Printer className="w-4 h-4 text-amber-400" />
-                    <span>{isUrdu ? 'ٹوکن پرنٹ / محفوظ کریں' : 'Print / Save Token'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSubmittedSlip(null)}
-                    className="py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-white border border-stone-800 text-xs font-semibold flex items-center justify-center transition-colors"
-                  >
-                    <span>{isUrdu ? 'نیا فارم بھریں' : 'Submit Another'}</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
           
           {/* Left 6 cols: Official Mosque Office Desk Card */}

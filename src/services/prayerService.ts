@@ -100,7 +100,7 @@ export const CURATED_IMAGE_PRESETS = [
   },
   {
     id: 'img-education-1',
-    title: 'Quranic Learning & Madrasah Study (شعبہ تعلیم و حفظ)',
+    title: 'Quranic Learning & Islamic Study (شعبہ تعلیم و ناظرہ)',
     category: 'education',
     url: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?auto=format&fit=crop&w=1200&q=80',
   },
@@ -186,8 +186,8 @@ export const CURATED_VIDEO_PRESETS: MosqueVideoItem[] = [
     duration: '08:45',
     date: 'Mosque Profile',
     isLive: false,
-    descriptionEn: 'A short documentary showing the red-brick arched entrance, 10 KV solar system, and Darul Quran maktab.',
-    descriptionUr: 'جامع مسجد کے سرخ محرابی بابِ داخلہ، 10 کے وی سولر سسٹم اور شعبہ حفظ و ناظرہ کا تصویری و ویڈیو احوال۔',
+    descriptionEn: 'A short documentary showing the red-brick arched entrance, 10 KV solar system, and Islamic library.',
+    descriptionUr: 'جامع مسجد کے سرخ محرابی بابِ داخلہ، 10 کے وی سولر سسٹم اور اسلامی کتب خانہ کا تصویری احوال۔',
   },
 ];
 
