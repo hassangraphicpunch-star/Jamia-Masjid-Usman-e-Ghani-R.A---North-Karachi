@@ -91,7 +91,7 @@ export const MosqueChatbot: React.FC<MosqueChatbotProps> = ({
 
   const generateResponse = (query: string): ChatMessage => {
     const q = query.toLowerCase().trim();
-    const fajr = adminSettings?.fajrJamaat || '05:50 AM';
+    const fajr = adminSettings?.fajrJamaat || '05:55 AM';
     const dhuhr = adminSettings?.dhuhrJamaat || '01:30 PM';
     const asr = adminSettings?.asrJamaat || '05:00 PM';
     const maghrib = adminSettings?.maghribJamaat || '+5 mins after Azan';
