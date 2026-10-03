@@ -24,7 +24,11 @@ export const MOSQUE_INFO = {
   email: 'info@masjid-usman-e-ghani.pk',
   establishedYear: '1988',
   capacity: '3,500+ Namazis',
-  jurisdiction: 'Hanafi (جامعہ دارالعلوم کراچی نصاب)',
+  supervisionUr: 'زیرِ نگرانی: جماعتِ اسلامی کراچی',
+  supervisionEn: 'Under the Supervision of Jamaat-e-Islami Karachi',
+  organizationUr: 'جماعتِ اسلامی کراچی',
+  organizationEn: 'Jamaat-e-Islami Karachi',
+  jurisdiction: 'Hanafi (زیرِ نگرانی: جماعتِ اسلامی کراچی)',
 };
 
 export const ANNOUNCEMENTS: AnnouncementItem[] = [

@@ -83,6 +83,13 @@ export const ServicesFacilities: React.FC<ServicesFacilitiesProps> = ({
               ? 'اہل علاقہ اور نمازیوں کے لیے کشادہ ہالز، وضو خانہ، اسلامی کتب خانہ، نمازِ جنازہ کا اہتمام اور 10 KV سولر پاور'
               : 'Serving the Sector 5-A/1 North Karachi community with spacious prayer halls, clean wudu facilities, Islamic research library, Janazah arrangements, and 10 KV solar energy setup.'}
           </p>
+
+          <div className="mt-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-900 border border-emerald-600/50 text-emerald-300 text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span>{isUrdu ? 'زیرِ نگرانی: جماعتِ اسلامی کراچی' : 'Under the Supervision of Jamaat-e-Islami Karachi'}</span>
+            </span>
+          </div>
         </div>
 
         {/* Facilities Grid */}

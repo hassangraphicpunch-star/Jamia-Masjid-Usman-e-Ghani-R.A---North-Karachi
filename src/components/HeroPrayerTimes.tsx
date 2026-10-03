@@ -557,9 +557,17 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
           </div>
 
           {/* Mosque Entrance Dua from the Gate Archway */}
-          <div className="mb-3">
+          <div className="mb-2">
             <span className="text-xs sm:text-sm font-arabic font-bold text-emerald-300/90 tracking-wide bg-stone-950/70 px-3.5 py-1 rounded-full border border-emerald-800/60 inline-block">
               اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ
+            </span>
+          </div>
+
+          {/* Supervision Badge */}
+          <div className="mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-bold shadow-md">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>{isUrdu ? 'زیرِ نگرانی: جماعتِ اسلامی کراچی' : 'Under the Supervision of Jamaat-e-Islami Karachi'}</span>
             </span>
           </div>
 
@@ -1714,7 +1722,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                   key={p.id}
                   id={`prayer-card-${p.id}`}
                   className={`relative rounded-2xl p-3 sm:p-4 transition-all duration-300 bg-gradient-to-b ${p.color} border ${
-                    isLastOddCard ? 'col-span-1 min-[360px]:col-span-2 sm:col-span-1' : ''
+                    isLastOddCard ? 'col-span-1 min-[360px]:col-span-2 sm:col-span-2 md:col-span-3 lg:col-span-2 xl:col-span-1' : ''
                   } ${
                     isIqamahThis
                       ? 'border-amber-400 ring-2 ring-amber-400/60 scale-[1.03] shadow-2xl shadow-amber-950/50'

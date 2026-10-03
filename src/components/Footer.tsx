@@ -59,11 +59,13 @@ export const Footer: React.FC<FooterProps> = ({
 
             <p className="text-xs text-stone-400 leading-relaxed">
               {isUrdu
-                ? 'مرکزی جامع مسجد عثمانِ غنی رضی اللہ عنہ، نارتھ کراچی۔ پنج وقتہ باجماعت نماز، اسلامی کتب خانہ اور فلاحی خدمات کا مرکز۔'
-                : 'Center for Islamic worship, authentic Islamic library research, and welfare activities for the residents of Sector 5-A/1 North Karachi, Sindh.'}
+                ? 'مرکزی جامع مسجد عثمانِ غنی رضی اللہ عنہ، نارتھ کراچی۔ زیرِ نگرانی: جماعتِ اسلامی کراچی۔ پنج وقتہ باجماعت نماز، درسِ قرآن و فہمِ دین اور فلاحی خدمات کا مرکز۔'
+                : 'Under the supervision of Jamaat-e-Islami Karachi. Center for Islamic worship, authentic Quranic learning, and welfare activities for Sector 5-A/1 North Karachi.'}
             </p>
 
-            <div className="pt-1 text-xs text-emerald-400 flex items-center gap-1.5">
+            <div className="pt-1 text-xs text-emerald-400 flex items-center gap-1.5 flex-wrap">
+              <span className="text-amber-300 font-semibold">{isUrdu ? 'زیرِ نگرانی: جماعتِ اسلامی کراچی' : 'Supervision: Jamaat-e-Islami Karachi'}</span>
+              <span>•</span>
               <span>Established {MOSQUE_INFO.establishedYear}</span>
               <span>•</span>
               <span>Capacity {MOSQUE_INFO.capacity}</span>

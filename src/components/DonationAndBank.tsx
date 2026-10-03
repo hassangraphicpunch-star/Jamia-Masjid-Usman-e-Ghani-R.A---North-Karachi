@@ -673,6 +673,9 @@ export const DonationAndBank: React.FC<DonationAndBankProps> = ({ language }) =>
                 <h3 className="text-lg sm:text-xl font-bold text-white">
                   {isUrdu ? 'جامع مسجد عثمانِ غنی کا باضابطہ دفتر' : 'Jamia Masjid Usman-e-Ghani Office'}
                 </h3>
+                <span className="text-[11px] text-amber-300 font-medium block mt-0.5">
+                  {isUrdu ? 'زیرِ نگرانی: جماعتِ اسلامی کراچی' : 'Under the Supervision of Jamaat-e-Islami Karachi'}
+                </span>
               </div>
             </div>
 

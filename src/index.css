@@ -131,9 +131,12 @@ p, h1, h2, h3, h4, h5, h6 {
     padding-right: 0.75rem !important;
   }
 
-  /* Touch-friendly buttons (min 40px) */
-  button, a[role="button"], input[type="button"], input[type="submit"] {
-    min-height: 40px;
+  /* Touch-friendly buttons for standard interactive elements without distorting compact icons */
+  button:not([class*="w-"]):not([class*="h-"]):not([class*="p-1"]):not([class*="p-0"]):not([class*="text-[10px]"]):not([class*="text-[9px]"]),
+  a[role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 38px;
     touch-action: manipulation;
   }
 
@@ -169,8 +172,11 @@ p, h1, h2, h3, h4, h5, h6 {
     padding-right: 1rem !important;
   }
 
-  button, a[role="button"], input[type="button"], input[type="submit"] {
-    min-height: 40px;
+  button:not([class*="w-"]):not([class*="h-"]):not([class*="p-1"]):not([class*="p-0"]):not([class*="text-[10px]"]):not([class*="text-[9px]"]),
+  a[role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 38px;
   }
 
   .font-urdu {

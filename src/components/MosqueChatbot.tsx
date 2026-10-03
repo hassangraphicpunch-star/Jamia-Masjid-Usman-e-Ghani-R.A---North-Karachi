@@ -62,9 +62,9 @@ export const MosqueChatbot: React.FC<MosqueChatbotProps> = ({
       id: 'msg-welcome',
       sender: 'bot',
       textUr:
-        'السلام علیکم ورحمۃ اللہ! جامع مسجد عثمانِ غنی (رضی اللہ عنہ)، سیکٹر 5-اے/1 نارتھ کراچی کے ڈیجیٹل ڈیسک میں خوش آمدید۔ آپ اوقاتِ نماز، جمعہ، مسجد لوکیشن، عطیات یا مدارس سے متعلق سوال پوچھ سکتے ہیں۔',
+        'السلام علیکم ورحمۃ اللہ! جامع مسجد عثمانِ غنی (رضی اللہ عنہ)، سیکٹر 5-اے/1 نارتھ کراچی (زیرِ نگرانی: جماعتِ اسلامی کراچی) کے ڈیجیٹل ڈیسک میں خوش آمدید۔ آپ اوقاتِ نماز، جمعہ، مسجد لوکیشن، عطیات یا سہولیات سے متعلق سوال پوچھ سکتے ہیں۔',
       textEn:
-        'Assalamu Alaikum! Welcome to Jamia Masjid Usman-e-Ghani (R.A) North Karachi inquiry desk. How may I assist you with prayer times, Friday prayers, office donations, or facilities today?',
+        'Assalamu Alaikum! Welcome to Jamia Masjid Usman-e-Ghani (R.A) North Karachi inquiry desk (Under the supervision of Jamaat-e-Islami Karachi). How may I assist you with prayer times, Friday prayers, office donations, or facilities today?',
       actionButtons: [
         { labelUr: '🕌 نمازوں کے اوقات', labelEn: '🕌 Prayer Timings', query: 'prayer_times' },
         { labelUr: '👥 جمعہ کا شیڈول', labelEn: '👥 Friday Schedule', query: 'jumma' },
@@ -298,6 +298,27 @@ export const MosqueChatbot: React.FC<MosqueChatbotProps> = ({
         sender: 'bot',
         textUr: `تعلیمِ قرآن و دینی کتب خانہ:\n\n• مسجد میں ناظرہ قرآن کریم اور بنیادی تجوید کی رہنمائی کی جاتی ہے۔\n• روزانہ بعد نمازِ فجر: درسِ قرآن و تفسیر مع خطیبِ مسجد حضرت مولانا یونس منصوری صاحب۔\n• نوٹ: جامع مسجد عثمانِ غنی میں باقاعدہ حفظ کی کلاسز کا شعبہ موجود نہیں ہے۔\n\nمزید تفصیلات کے لیے مسجد دفتر تشریف لائیں۔`,
         textEn: `Quranic Learning & Study:\n\n• Quran Nazra reading and basic Tajweed guidance.\n• Daily after Fajr: Dars-e-Quran & Tafseer with Khateeb Maulana Younus Mansori.\n• Note: The mosque does NOT have a full-time Hifz memorization class.\n\nVisit the Masjid Office for details.`,
+        timestamp: now,
+      };
+    }
+
+    // Supervision & Administration Query (Jamaat-e-Islami Karachi)
+    if (
+      q.includes('jamaat') ||
+      q.includes('جماعت') ||
+      q.includes('اسلامی') ||
+      q.includes('نگرانی') ||
+      q.includes('انتظامیہ') ||
+      q.includes('کمیٹی') ||
+      q.includes('supervision') ||
+      q.includes('admin') ||
+      q.includes('management')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        textUr: `جامع مسجد عثمانِ غنی (رضی اللہ عنہ) کی نگرانی و سرپرستی:\n\n• یہ مسجد جماعتِ اسلامی کراچی کی زیرِ نگرانی قائم و فعال ہے۔\n• خطیبِ مسجد: حضرت مولانا یونس منصوری صاحب\n• امامِ مسجد: حضرت مولانا ہدایت اللہ صاحب\n• مؤذن و نگران: قاری کمال الدین صاحب\n• صدر انتظامی کمیٹی: حاجی معین الدین صاحب\n• مقام: ST-11، سیکٹر 5-اے/1، نارتھ کراچی، کراچی۔\n• یہاں پنج وقتہ باجماعت نماز، روزانہ درسِ قرآن، دینی کتب خانہ اور فلاحی سرگرمیاں انجام دی جاتی ہیں۔`,
+        textEn: `Supervision & Administration of Jamia Masjid Usman-e-Ghani:\n\n• This mosque operates under the supervision of Jamaat-e-Islami Karachi.\n• Khateeb: Maulana Younus Mansori\n• Imam: Maulana Hidayatullah\n• Moazzin & Caretaker: Qari Kamal ud Din\n• Committee President: Haji Moin ud Din\n• Location: ST-11, Sector 5-A/1, North Karachi.\n• Serving the community with daily congregational prayers, Dars-e-Quran, Islamic library, and welfare services.`,
         timestamp: now,
       };
     }
