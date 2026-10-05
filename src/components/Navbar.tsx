@@ -25,6 +25,7 @@ import { Language } from '../types';
 import { MOSQUE_INFO } from '../data/mockData';
 import { getStoredNotifications, getReadNotificationIds } from '../services/notificationService';
 import { KarachiWeatherData } from '../services/weatherService';
+import { calculateMoonPhase } from '../services/astronomyService';
 
 interface NavbarProps {
   language: Language;
@@ -69,6 +70,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadNotifsCount, setUnreadNotifsCount] = useState<number>(0);
   const [weatherDropdownOpen, setWeatherDropdownOpen] = useState(false);
+
+  const liveMoon = React.useMemo(() => {
+    return calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 });
+  }, []);
 
   const checkUnread = () => {
     try {
@@ -325,6 +330,27 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </div>
                     </div>
 
+                    {/* Moon Phase & Islamic Date Quick Banner */}
+                    <div className="p-2 rounded-xl bg-stone-950 border border-stone-800 space-y-1 text-[11px]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-stone-400 flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>{isUrdu ? 'اسلامی تاریخ:' : 'Islamic Date:'}</span>
+                          <strong className="text-amber-300 font-urdu">{liveMoon.hijriDate.formattedUr}</strong>
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between pt-1 border-t border-stone-800/60">
+                        <span className="text-stone-400 flex items-center gap-1.5">
+                          <Moon className="w-3.5 h-3.5 text-amber-300" />
+                          <span>{isUrdu ? 'موجودہ چاند:' : 'Moon Type:'}</span>
+                          <strong className="text-white">{liveMoon.currentType.nameUr}</strong>
+                        </span>
+                        <span className={`font-mono font-bold ${liveMoon.isWaxing ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          {liveMoon.illumination}% {liveMoon.directionSymbol}
+                        </span>
+                      </div>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -365,11 +391,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Azan Notification Sound Toggle */}
+            {/* Azan Notification Sound Toggle (Visible on 420px+ and accessible in Mobile Menu Drawer) */}
             <button
               id="btn-azan-sound-toggle"
               onClick={() => setAudioMuted(!audioMuted)}
-              className={`p-1.5 sm:p-2 rounded-lg text-xs font-medium transition-colors border ${
+              className={`p-1.5 sm:p-2 rounded-lg text-xs font-medium transition-colors border hidden min-[420px]:inline-flex ${
                 audioMuted
                   ? 'bg-stone-900 text-stone-400 border-stone-800 hover:text-stone-200'
                   : 'bg-emerald-950 text-emerald-300 border-emerald-700/80 hover:bg-emerald-900'
@@ -594,6 +620,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span className="text-amber-400">
                       AQI {weatherData.airQuality?.aqi ?? 86}
                     </span>
+                    <span className="text-stone-600">•</span>
+                    <span className="text-amber-300 flex items-center gap-0.5">
+                      <Moon className="w-2.5 h-2.5" />
+                      {liveMoon.currentType.nameUr} {liveMoon.illumination}% {liveMoon.directionSymbol}
+                    </span>
                   </div>
                 )}
               </button>
@@ -666,6 +697,32 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </button>
             )}
+
+            {/* Audio Toggle in Mobile Drawer */}
+            <button
+              onClick={() => setAudioMuted(!audioMuted)}
+              className="w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-semibold text-stone-200 bg-stone-900 border border-stone-800 flex items-center justify-between mt-1 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                {audioMuted ? (
+                  <VolumeX className="w-4 h-4 text-stone-400" />
+                ) : (
+                  <Volume2 className="w-4 h-4 text-emerald-400" />
+                )}
+                <span>
+                  {isUrdu
+                    ? audioMuted
+                      ? 'اذان آڈیو الرٹس: بند (Muted)'
+                      : 'اذان آڈیو الرٹس: فعال (Active)'
+                    : audioMuted
+                    ? 'Adhan Audio Alerts: Muted'
+                    : 'Adhan Audio Alerts: Active'}
+                </span>
+              </div>
+              <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${audioMuted ? 'bg-stone-800 text-stone-400' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}`}>
+                {audioMuted ? 'OFF' : 'ON'}
+              </span>
+            </button>
 
             {onOpenAdminModal && (
               <button

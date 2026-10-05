@@ -1,3 +1,5 @@
+import { calculateMoonPhase } from './astronomyService';
+
 export interface CurrentWeather {
   temperature: number;
   apparentTemperature: number;
@@ -440,6 +442,8 @@ export function getFallbackKarachiWeather(): KarachiWeatherData {
     });
   }
 
+  const dynamicMoon = calculateMoonPhase(now);
+
   return {
     locationEn: 'Karachi, Pakistan',
     locationUr: 'کراچی، پاکستان',
@@ -637,9 +641,9 @@ export function getFallbackKarachiWeather(): KarachiWeatherData {
       solarNoon: '12:21 PM',
       sunset: '06:19 PM',
       dayLength: '11 گھنٹے 56 منٹ (11h 56m)',
-      moonPhaseUr: 'ہلال (بڑھتا ہوا چاند / Waxing Crescent)',
-      moonPhaseEn: 'Waxing Crescent',
-      moonIllumination: 28,
+      moonPhaseUr: `${dynamicMoon.currentType.nameUr} (${dynamicMoon.directionUr})`,
+      moonPhaseEn: `${dynamicMoon.currentType.nameEn} (${dynamicMoon.directionEn})`,
+      moonIllumination: dynamicMoon.illumination,
     },
     islamicDuas: ISLAMIC_WEATHER_DUAS,
     lastUpdated: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -849,9 +853,9 @@ export async function fetchKarachiWeather(): Promise<KarachiWeatherData> {
           solarNoon: '12:21 PM',
           sunset: dailyList[0]?.sunset || '06:19 PM',
           dayLength: '11 گھنٹے 56 منٹ (11h 56m)',
-          moonPhaseUr: 'ہلال (بڑھتا ہوا چاند / Waxing Crescent)',
-          moonPhaseEn: 'Waxing Crescent',
-          moonIllumination: 28,
+          moonPhaseUr: `${calculateMoonPhase().currentType.nameUr} (${calculateMoonPhase().directionUr})`,
+          moonPhaseEn: `${calculateMoonPhase().currentType.nameEn} (${calculateMoonPhase().directionEn})`,
+          moonIllumination: calculateMoonPhase().illumination,
         },
         islamicDuas: ISLAMIC_WEATHER_DUAS,
         lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),

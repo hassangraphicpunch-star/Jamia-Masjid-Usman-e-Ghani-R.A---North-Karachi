@@ -43,6 +43,7 @@ import {
   NextPrayerState,
 } from '../types';
 import { KarachiWeatherData } from '../services/weatherService';
+import { calculateMoonPhase } from '../services/astronomyService';
 import {
   PRAYER_CALCULATION_METHODS,
 } from '../data/prayerMethodsData';
@@ -131,6 +132,11 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
   );
   const [showDemoControls, setShowDemoControls] = useState(false);
   const isUrdu = language === 'ur';
+
+  // Dynamic astronomical calculation for Karachi
+  const liveMoon = React.useMemo(() => {
+    return calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 });
+  }, []);
 
   // Determine effective Iqamah state (simulation overrides real live clock for demonstration)
   const effectiveIqamah =
@@ -646,8 +652,19 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                 <span className="text-amber-400 hidden lg:inline text-[11px] font-mono">
                   AQI: {weatherData.airQuality?.aqi ?? 86}
                 </span>
+                <span className="text-stone-500 hidden xl:inline">•</span>
+                <span className="text-amber-300 hidden xl:inline-flex items-center gap-1.5 text-[11px]">
+                  <Moon className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="font-urdu font-bold text-amber-300">{liveMoon.hijriDate.day} {liveMoon.hijriDate.month.ur}</span>
+                  <span className="text-stone-500">•</span>
+                  <span className="font-mono text-emerald-300">{liveMoon.currentType.nameUr}</span>
+                  <span className="text-stone-500">•</span>
+                  <span className={liveMoon.isWaxing ? 'text-emerald-400 font-mono font-bold' : 'text-amber-400 font-mono font-bold'}>
+                    {liveMoon.illumination}% {liveMoon.directionSymbol}
+                  </span>
+                </span>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-600 text-emerald-300 text-[10px] font-bold group-hover:bg-emerald-900 transition-colors ml-1">
-                  {isUrdu ? 'مکمل تفصیلات (سب کچھ) ›' : 'View All Weather ›'}
+                  {isUrdu ? 'موسمیات و چاند کی تفصیلات ›' : 'Weather & Moon Details ›'}
                 </span>
               </button>
             </div>
@@ -954,10 +971,16 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                     })}
                   </span>
                 </div>
-                <div className="text-amber-300 font-arabic text-base sm:text-lg font-semibold">
-                  {prayerData.hijriDate
+                <div className="text-amber-300 font-arabic text-base sm:text-lg font-bold">
+                  {prayerData.hijriDate && prayerData.hijriDate.day && prayerData.hijriDate.month?.ar && prayerData.hijriDate.month.ar !== 'صفر'
                     ? `${prayerData.hijriDate.day} ${prayerData.hijriDate.month.ar} ${prayerData.hijriDate.year}ھ`
-                    : '12 صفر 1448ھ'}
+                    : liveMoon.hijriDate.formattedUr}
+                </div>
+                <div className="flex items-center justify-center lg:justify-end gap-1.5 text-[11px] text-emerald-400 font-mono mt-0.5">
+                  <Moon className="w-3 h-3 text-amber-400" />
+                  <span>{liveMoon.currentType.nameUr}</span>
+                  <span>•</span>
+                  <span>{liveMoon.illumination}% {liveMoon.directionSymbol}</span>
                 </div>
               </div>
 

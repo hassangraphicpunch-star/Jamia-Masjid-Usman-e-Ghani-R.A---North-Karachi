@@ -14,6 +14,7 @@ import {
   DEFAULT_PRAYER_METHOD,
   MethodDetails,
 } from '../data/prayerMethodsData';
+import { getAccurateHijriDate } from './astronomyService';
 
 export { PRAYER_CALCULATION_METHODS, DEFAULT_PRAYER_METHOD };
 export type { MethodDetails, PrayerCalculationMethod };
@@ -957,21 +958,8 @@ export function getLocalKarachiPrayerTimes(date = new Date()): PrayerTimesApiRes
   
   const current = monthlyTables[month];
   
-  // Estimate Hijri date
-  const hijriMonths = [
-    { en: 'Muharram', ar: 'محرّم' },
-    { en: 'Safar', ar: 'صفر' },
-    { en: 'Rabi al-Awwal', ar: 'ربيع الأول' },
-    { en: 'Rabi al-Thani', ar: 'ربيع الثاني' },
-    { en: 'Jumada al-Awwal', ar: 'جمادى الأولى' },
-    { en: 'Jumada al-Thani', ar: 'جمادى الثانية' },
-    { en: 'Rajab', ar: 'رجب' },
-    { en: 'Sha\'ban', ar: 'شعبان' },
-    { en: 'Ramadan', ar: 'رمضان' },
-    { en: 'Shawwal', ar: 'شوّال' },
-    { en: 'Dhu al-Qi\'dah', ar: 'ذو القعدة' },
-    { en: 'Dhu al-Hijjah', ar: 'ذو الحجة' },
-  ];
+  // Accurate Hijri date calculation for Karachi, Pakistan
+  const accurateHijri = getAccurateHijriDate(date);
   
   return {
     fajr: current.fajr,
@@ -984,9 +972,12 @@ export function getLocalKarachiPrayerTimes(date = new Date()): PrayerTimesApiRes
     lastThird: '03:15',
     date: date.toISOString().split('T')[0],
     hijriDate: {
-      day: '12',
-      month: hijriMonths[1],
-      year: '1448',
+      day: accurateHijri.day.toString(),
+      month: {
+        en: accurateHijri.month.en,
+        ar: accurateHijri.month.ar,
+      },
+      year: accurateHijri.year.toString(),
     },
   };
 }
@@ -1015,6 +1006,16 @@ export async function fetchPrayerTimes(
   source: 'ummah_api' | 'aladhan_api' | 'karachi_offline' | 'server_api';
   method: string;
 }> {
+  const accurateHijri = getAccurateHijriDate(new Date());
+  const pakHijriDate = {
+    day: accurateHijri.day.toString(),
+    month: {
+      en: accurateHijri.month.en,
+      ar: accurateHijri.month.ar,
+    },
+    year: accurateHijri.year.toString(),
+  };
+
   // 1. Try local full-stack server proxy /api/prayer-times (Zero CORS, handles Ummah & Aladhan & offline fallbacks)
   try {
     const controller = new AbortController();
@@ -1075,7 +1076,7 @@ export async function fetchPrayerTimes(
             isha: timings.isha || timings.Isha,
             midnight: timings.midnight || '00:05',
             lastThird: timings.lastThird || '03:15',
-            hijriDate: json?.data?.date?.hijri,
+            hijriDate: pakHijriDate,
           },
           source: 'ummah_api',
           method,
@@ -1099,7 +1100,6 @@ export async function fetchPrayerTimes(
       const json = await response.json();
       if (json?.data?.timings) {
         const t = json.data.timings;
-        const h = json.data.date?.hijri;
         return {
           data: {
             fajr: t.Fajr,
@@ -1111,16 +1111,7 @@ export async function fetchPrayerTimes(
             midnight: t.Midnight,
             lastThird: t.Lastthird,
             date: json.data.date?.gregorian?.date,
-            hijriDate: h
-              ? {
-                  day: h.day,
-                  month: {
-                    en: h.month.en,
-                    ar: h.month.ar,
-                  },
-                  year: h.year,
-                }
-              : undefined,
+            hijriDate: pakHijriDate,
           },
           source: 'aladhan_api',
           method,
