@@ -92,6 +92,7 @@ html, body, #root {
   max-width: 100vw;
   overflow-x: hidden;
   width: 100%;
+  position: relative;
 }
 
 img, video, iframe, svg, canvas {
@@ -131,12 +132,12 @@ p, h1, h2, h3, h4, h5, h6 {
     padding-right: 0.75rem !important;
   }
 
-  /* Touch-friendly buttons for standard interactive elements without distorting compact icons */
+  /* Touch-friendly buttons (approx 44px) for primary interactive actions */
   button:not([class*="w-"]):not([class*="h-"]):not([class*="p-1"]):not([class*="p-0"]):not([class*="text-[10px]"]):not([class*="text-[9px]"]),
   a[role="button"],
   input[type="button"],
   input[type="submit"] {
-    min-height: 38px;
+    min-height: 42px;
     touch-action: manipulation;
   }
 
@@ -165,7 +166,7 @@ p, h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* 2. Mobile Landscape / Small Tablets (481px – 767px) */
+/* 2. Large Mobile (481px – 767px) */
 @media (min-width: 481px) and (max-width: 767px) {
   .max-w-7xl, .container {
     padding-left: 1rem !important;
@@ -176,7 +177,7 @@ p, h1, h2, h3, h4, h5, h6 {
   a[role="button"],
   input[type="button"],
   input[type="submit"] {
-    min-height: 38px;
+    min-height: 42px;
   }
 
   .font-urdu {
@@ -187,16 +188,16 @@ p, h1, h2, h3, h4, h5, h6 {
 /* 3. Tablets & iPads (768px – 1024px) */
 @media (min-width: 768px) and (max-width: 1024px) {
   .max-w-7xl, .container {
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
   }
 }
 
 /* 4. Desktop / Laptop (1025px – 1440px) */
 @media (min-width: 1025px) and (max-width: 1440px) {
   .max-w-7xl, .container {
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
+    padding-left: 1.75rem !important;
+    padding-right: 1.75rem !important;
   }
 }
 
@@ -206,6 +207,8 @@ p, h1, h2, h3, h4, h5, h6 {
     max-width: 1440px !important;
     margin-left: auto !important;
     margin-right: auto !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
   }
 }
 
