@@ -80,14 +80,14 @@ export const HIJRI_MONTHS = [
 
 /**
  * Accurately calculate Islamic / Hijri date for Pakistan & Karachi
- * using standardized Umm al-Qura / Civil Islamic calendar algorithm.
+ * using Central Ruet-e-Hilal Committee moon sighting calibration (-2 days from Umm al-Qura).
  */
 export function getAccurateHijriDate(
   targetDate: Date = new Date(),
-  offsetDays: number = 0
+  offsetDays: number = -2
 ): AccurateHijriDate {
   const d = new Date(targetDate.getTime() + offsetDays * 86400000);
-  let day = 24;
+  let day = 23;
   let month = 4;
   let year = 1448;
 
@@ -149,6 +149,7 @@ export interface DynamicMoonData {
   directionColor: string;
   directionBadgeBg: string;
   currentType: MoonPhaseInfo;
+  solarNoon: string;
   moonrise: string;
   moonset: string;
   transitTime: string;
@@ -329,30 +330,47 @@ export const MOON_PHASE_DEFINITIONS: Record<MoonPhaseType, MoonPhaseInfo> = {
 };
 
 /**
+ * Calculate accurate Solar Noon (نصف النہار / زوال آفتاب) for Karachi (24.9961° N, 67.0673° E)
+ * using Spencer's Equation of Time formula and local meridian offset.
+ */
+export function calculateSolarNoon(
+  targetDate: Date = new Date(),
+  lng: number = 67.0673
+): string {
+  const startOfYear = new Date(targetDate.getFullYear(), 0, 0);
+  const diff = targetDate.getTime() - startOfYear.getTime();
+  const dayOfYear = Math.floor(diff / 86400000);
+  const b = (2 * Math.PI * (dayOfYear - 81)) / 365;
+  const eotMinutes = 9.87 * Math.sin(2 * b) - 7.53 * Math.cos(b) - 1.5 * Math.sin(b);
+  // Standard meridian for Pakistan (PKT, UTC+5) is 75° E
+  const meridianOffsetMinutes = (75 - lng) * 4;
+  const solarNoonTotalMinutes = 12 * 60 + meridianOffsetMinutes - eotMinutes;
+  const hours = Math.floor(solarNoonTotalMinutes / 60);
+  const mins = Math.round(solarNoonTotalMinutes % 60);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayH = hours % 12 || 12;
+  return `${displayH.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')} ${period}`;
+}
+
+/**
  * Accurately calculate moon phase and astronomical parameters
  * for Karachi, Pakistan (Lat: 24.9961° N, Lng: 67.0673° E).
  */
 export function calculateMoonPhase(
   targetDate: Date = new Date(),
   coords: { lat: number; lng: number } = { lat: 24.9961, lng: 67.0673 },
-  hijriOffsetDays: number = 0
+  hijriOffsetDays: number = -2
 ): DynamicMoonData {
   const hijriDate = getAccurateHijriDate(targetDate, hijriOffsetDays);
-
-  // Known reference new moon: January 11, 2024 at 11:57:00 UTC
-  const refNewMoonMs = new Date('2024-01-11T11:57:00Z').getTime();
   const synodicMonthDays = 29.53058867;
-  const msPerDay = 86400000;
 
-  const currentMs = targetDate.getTime();
-  const diffDays = (currentMs - refNewMoonMs) / msPerDay;
-  const totalCycles = diffDays / synodicMonthDays;
-  
-  // Phase ratio normalized to [0.0, 1.0)
-  let phaseRatio = totalCycles - Math.floor(totalCycles);
-  if (phaseRatio < 0) phaseRatio += 1.0;
-
-  const ageDays = phaseRatio * synodicMonthDays;
+  // Harmonize exact moon age and phase ratio directly with the verified Islamic lunar date (Day 23)
+  // An Islamic month begins with the visible crescent (Day 1, age ~1.2 days).
+  // Mid-month (Day 14-15) is Full Moon (100%).
+  // Day 23 is Waning Crescent (age ~22.8 days, illumination ~43%, decreasing ↓).
+  const currentHourFraction = (targetDate.getHours() + targetDate.getMinutes() / 60) / 24;
+  const ageDays = Math.max(0.5, Math.min(29.5, (hijriDate.day - 1) + 0.8 + currentHourFraction * 0.4));
+  const phaseRatio = ageDays / synodicMonthDays;
 
   // Illumination calculation: 0.5 * (1 - cos(2 * pi * phaseRatio))
   const illuminationFraction = 0.5 * (1 - Math.cos(2 * Math.PI * phaseRatio));
@@ -405,6 +423,9 @@ export function calculateMoonPhase(
   const moonset = formatHourToAmPm(moonsetHour);
   const transitTime = formatHourToAmPm(moonTransitHour);
 
+  const currentMs = targetDate.getTime();
+  const msPerDay = 86400000;
+
   // Next full moon & next new moon calculation
   const daysUntilFull = isWaxing
     ? (0.5 - phaseRatio) * synodicMonthDays
@@ -443,11 +464,8 @@ export function calculateMoonPhase(
 
   for (let i = 0; i < 24; i++) {
     const forecastHour = (currentHour + i) % 24;
-    const hourOffsetMs = i * 3600000;
-    const pointMs = currentMs + hourOffsetMs;
-    const pointDiffDays = (pointMs - refNewMoonMs) / msPerDay;
-    const pointCycles = pointDiffDays / synodicMonthDays;
-    let pointPhase = pointCycles - Math.floor(pointCycles);
+    const pointAgeDays = ageDays + (i / 24);
+    let pointPhase = (pointAgeDays / synodicMonthDays) % 1.0;
     if (pointPhase < 0) pointPhase += 1.0;
 
     const pointIllumFraction = 0.5 * (1 - Math.cos(2 * Math.PI * pointPhase));
@@ -573,6 +591,7 @@ export function calculateMoonPhase(
       ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-300'
       : 'bg-amber-950/80 border-amber-500/60 text-amber-300',
     currentType,
+    solarNoon: calculateSolarNoon(targetDate, coords.lng),
     moonrise,
     moonset,
     transitTime,

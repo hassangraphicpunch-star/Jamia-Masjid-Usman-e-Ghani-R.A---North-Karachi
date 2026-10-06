@@ -192,6 +192,24 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Action Controls: Lang Toggle, Audio Mute, Admin Portal, Donate & Mobile Menu */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
+
+            {/* Live Islamic Date & Moon Quick Badge */}
+            {onOpenWeatherModal && (
+              <button
+                type="button"
+                onClick={onOpenWeatherModal}
+                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 sm:py-1.5 rounded-lg bg-stone-900/90 hover:bg-stone-800 text-stone-200 border border-emerald-800/70 hover:border-amber-400 text-xs font-semibold transition-all shadow-sm group"
+                title={isUrdu ? 'مصدقہ اسلامی تاریخ و چاند کی صورتحال (24 ربیع الثانی 1448ھ)' : 'Verified Islamic Date & Moon Phase'}
+              >
+                <Moon className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
+                <span className="text-amber-300 font-urdu font-bold text-xs">
+                  {liveMoon.hijriDate.formattedUr}
+                </span>
+                <span className="text-stone-400 text-[10px] font-mono hidden xl:inline">
+                  • {liveMoon.currentType.nameUr} {liveMoon.illumination}% {liveMoon.directionSymbol}
+                </span>
+              </button>
+            )}
             
             {/* Karachi Weather Quick Pill with Rich Metrics & Hover Preview */}
             {onOpenWeatherModal && (

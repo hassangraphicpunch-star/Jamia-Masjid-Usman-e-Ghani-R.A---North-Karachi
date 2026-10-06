@@ -306,6 +306,9 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
                   {isUrdu ? displayPhase.islamicSignificanceUr : displayPhase.islamicSignificanceEn}
                 </span>
               </div>
+              <div className="pt-1.5 border-t border-stone-800/60 text-[11px] text-amber-200/90 font-arabic text-center">
+                <span>وَالْقَمَرَ قَدَّرْنَاهُ مَنَازِلَ حَتَّىٰ عَادَ كَالْعُرْجُونِ الْقَدِيمِ (سورة يس: 39)</span>
+              </div>
             </div>
           </div>
         </div>

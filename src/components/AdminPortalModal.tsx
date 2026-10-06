@@ -898,7 +898,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                   <div className="p-3.5 rounded-xl bg-stone-950/90 border border-rose-900/40 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-rose-300 uppercase tracking-wide flex items-center gap-1.5">
-                        <span>{isUrdu ? 'روزانہ وقتِ زوال (نصف النہار شرعی)' : 'Daily Zawal & Shar\'i Midday'}</span>
+                        <span>{isUrdu ? 'روزانہ وقتِ زوال (مکروہ وقت برائے نماز)' : 'Daily Zawal Time (Prohibited Window)'}</span>
                       </span>
                       <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-medium">
                         {isUrdu ? 'روزانہ خودکار تبدیلی' : 'Daily Dynamic'}

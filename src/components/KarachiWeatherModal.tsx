@@ -125,7 +125,7 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
 
   const sunAndMoon = {
     sunrise: weatherData.daily[0]?.sunrise || '06:23 AM',
-    solarNoon: liveMoon.transitTime || '12:21 PM',
+    solarNoon: liveMoon.solarNoon || weatherData.sunAndMoon?.solarNoon || '12:19 PM',
     sunset: weatherData.daily[0]?.sunset || '06:19 PM',
     dayLength: '11 گھنٹے 56 منٹ (11h 56m)',
     moonPhaseUr: `${liveMoon.currentType.nameUr} (${liveMoon.directionSymbol} ${liveMoon.isWaxing ? 'بڑھ رہا ہے' : 'گھٹ رہا ہے'})`,
@@ -134,6 +134,7 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
     moonAgeUr: liveMoon.ageFormattedUr,
     moonrise: liveMoon.moonrise,
     moonset: liveMoon.moonset,
+    moonTransit: liveMoon.transitTime,
   };
 
   return (

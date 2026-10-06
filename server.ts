@@ -458,7 +458,9 @@ async function startServer() {
 
   // Helper: Accurate Pakistan / Karachi Central Ruet-e-Hilal Hijri Date
   function getPakistanVerifiedHijriDate(d: Date = new Date()) {
-    let day = 24;
+    // Pakistan Central Ruet-e-Hilal Committee Karachi calibration (-2 days from Saudi Umm al-Qura)
+    const pakDate = new Date(d.getTime() - 2 * 86400000);
+    let day = 23;
     let month = 4;
     let year = 1448;
 
@@ -467,14 +469,14 @@ async function startServer() {
         day: 'numeric',
         month: 'numeric',
         year: 'numeric',
-      }).formatToParts(d);
+      }).formatToParts(pakDate);
       for (const p of parts) {
         if (p.type === 'day') day = parseInt(p.value, 10);
         if (p.type === 'month') month = parseInt(p.value, 10);
         if (p.type === 'year') year = parseInt(p.value, 10);
       }
     } catch (e) {
-      day = 24;
+      day = 23;
       month = 4;
       year = 1448;
     }
@@ -512,16 +514,12 @@ async function startServer() {
   }
 
   // Helper: Moon phase & illumination synchronized with Islamic calendar day
-  function getMoonTelemetry(d: Date = new Date(), hijriDay: number = 24) {
-    const refNewMoonMs = new Date('2024-01-11T11:57:00Z').getTime();
+  function getMoonTelemetry(d: Date = new Date(), hijriDay: number = 23) {
     const synodicMonthDays = 29.53058867;
-    const currentMs = d.getTime();
-    const diffDays = (currentMs - refNewMoonMs) / 86400000;
-    const totalCycles = diffDays / synodicMonthDays;
-    let phaseRatio = totalCycles - Math.floor(totalCycles);
-    if (phaseRatio < 0) phaseRatio += 1.0;
+    const currentHourFraction = (d.getHours() + d.getMinutes() / 60) / 24;
+    const ageDays = Math.max(0.5, Math.min(29.5, (hijriDay - 1) + 0.8 + currentHourFraction * 0.4));
+    const phaseRatio = ageDays / synodicMonthDays;
 
-    const ageDays = Math.round(phaseRatio * synodicMonthDays * 10) / 10;
     const illuminationFraction = 0.5 * (1 - Math.cos(2 * Math.PI * phaseRatio));
     const illumination = Math.min(100, Math.max(0, Math.round(illuminationFraction * 100)));
     const isWaxing = phaseRatio < 0.5;

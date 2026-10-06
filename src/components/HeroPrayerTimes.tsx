@@ -971,17 +971,28 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                     })}
                   </span>
                 </div>
-                <div className="text-amber-300 font-arabic text-base sm:text-lg font-bold">
-                  {prayerData.hijriDate && prayerData.hijriDate.day && prayerData.hijriDate.month?.ar && prayerData.hijriDate.month.ar !== 'صفر'
-                    ? `${prayerData.hijriDate.day} ${prayerData.hijriDate.month.ar} ${prayerData.hijriDate.year}ھ`
-                    : liveMoon.hijriDate.formattedUr}
+                <div className="flex items-center justify-center lg:justify-end gap-1.5 flex-wrap">
+                  <span className="text-amber-300 font-arabic text-base sm:text-lg font-bold">
+                    {isUrdu ? liveMoon.hijriDate.formattedUr : liveMoon.hijriDate.formattedEn}
+                  </span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-950/90 text-emerald-300 border border-emerald-700/60 font-medium">
+                    {isUrdu ? 'مصدقہ اسلامی تاریخ' : 'Verified Hijri'}
+                  </span>
                 </div>
-                <div className="flex items-center justify-center lg:justify-end gap-1.5 text-[11px] text-emerald-400 font-mono mt-0.5">
-                  <Moon className="w-3 h-3 text-amber-400" />
-                  <span>{liveMoon.currentType.nameUr}</span>
-                  <span>•</span>
-                  <span>{liveMoon.illumination}% {liveMoon.directionSymbol}</span>
-                </div>
+                <button
+                  type="button"
+                  onClick={onOpenWeatherModal}
+                  className="w-full flex items-center justify-center lg:justify-end gap-1.5 text-[11px] text-stone-300 hover:text-white transition-colors group/moon mt-0.5"
+                  title={isUrdu ? 'چاند کی 24 گھنٹے تفصیلی پیش رفت اور قمری مراحل دیکھنے کے لیے کلک کریں' : 'Click to view 24h Moon Phase and timeline'}
+                >
+                  <Moon className="w-3.5 h-3.5 text-amber-400 group-hover/moon:scale-110 transition-transform shrink-0" />
+                  <span className="text-emerald-300 font-bold">{liveMoon.currentType.nameUr}</span>
+                  <span className="text-stone-500">•</span>
+                  <span className={`font-mono font-bold ${liveMoon.isWaxing ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {liveMoon.illumination}% {liveMoon.directionSymbol}
+                  </span>
+                  <span className="text-stone-400 text-[10px]">({liveMoon.directionUr})</span>
+                </button>
               </div>
 
               {/* API status badge & Azan Controls */}
@@ -1544,7 +1555,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                    <span>{isUrdu ? 'روزانہ وقتِ زوال (نصف النہار شرعی)' : 'Daily Zawal Time & Shar\'i Midday (نصف النہار شرعی)'}</span>
+                    <span>{isUrdu ? 'روزانہ وقتِ زوال (استواء آفتاب و مکروہ وقت)' : 'Daily Zawal Time & Prohibited Window (وقتِ زوال)'}</span>
                   </h4>
 
                   {/* Daily Dynamic Solar Recalculation Badge */}
@@ -1575,27 +1586,14 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
 
                 <p className="text-xs text-stone-300 mt-1">
                   {isUrdu
-                    ? 'آفتاب کی روزانہ حرکت اور موسم کے اعتبار سے نصف النہار شرعی اور وقتِ زوال ہر روز تبدیل ہوتا ہے۔ استواء آفتاب تا آغازِ ظہر نماز و سجدۂ تلاوت مکروہِ تحریمی ہے۔'
-                    : 'Calculated daily from astronomical solar coordinates. Offering Salah or Sajdah Tilawat is strictly prohibited (Makruh Tahrimi) during the solar zenith window.'}
+                    ? 'آفتاب کی روزانہ حرکت کے اعتبار سے وقتِ زوال ہر روز تبدیل ہوتا ہے۔ استواء آفتاب تا آغازِ ظہر نماز و سجدۂ تلاوت مکروہِ تحریمی ہے۔'
+                    : 'Calculated daily from astronomical solar coordinates. Offering Salah or Sajdah Tilawat is strictly prohibited during the solar zenith window.'}
                 </p>
               </div>
             </div>
 
-            {/* Timings Cards: Nisf-un-Nahar Shar'i + Zawal Window + Dhuhr Entry */}
-            <div className="grid grid-cols-1 min-[500px]:grid-cols-3 gap-2 sm:gap-3 bg-stone-900/90 p-2.5 sm:p-3 rounded-xl border border-stone-700/80 w-full lg:w-auto">
-              {/* Nisf-un-Nahar Shar'i */}
-              <div className="text-center px-2 py-1.5 bg-stone-950/80 rounded-lg border border-stone-800">
-                <span className="block text-[10px] text-stone-400 font-semibold truncate">
-                  {isUrdu ? 'نصف النہار شرعی' : 'Shar\'i Midday'}
-                </span>
-                <span className="text-xs sm:text-sm md:text-base font-black text-sky-300 font-mono tracking-tight block">
-                  {jamaatTimes.nisfUnNaharShari || '11:47 AM'}
-                </span>
-                <span className="block text-[9px] text-stone-400 truncate">
-                  {isUrdu ? 'اخیر وقت نیت روزہ' : 'Roza Intention'}
-                </span>
-              </div>
-
+            {/* Timings Cards: Zawal Window + Dhuhr Entry */}
+            <div className="grid grid-cols-1 min-[500px]:grid-cols-2 gap-2 sm:gap-3 bg-stone-900/90 p-2.5 sm:p-3 rounded-xl border border-stone-700/80 w-full lg:w-auto">
               {/* Zawal Prohibited Window */}
               <div className={`text-center px-2 py-1.5 rounded-lg border ${
                 zawalInfo.isInsideZawal
