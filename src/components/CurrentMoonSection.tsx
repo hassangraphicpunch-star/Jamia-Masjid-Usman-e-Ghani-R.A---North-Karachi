@@ -315,7 +315,7 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
       </div>
 
       {/* TWO DIRECTION STATUS CARDS (WAXING & WANING) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-6" dir={isUrdu ? 'rtl' : 'ltr'}>
         {/* Status Card 1: Waxing Moon (چاند بڑھ رہا ہے) */}
         <div
           className={`p-4 rounded-2xl border transition-all ${
@@ -405,7 +405,7 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-2 min-[480px]:grid-cols-4 lg:grid-cols-8 gap-2.5">
+        <div className="grid grid-cols-2 min-[480px]:grid-cols-4 lg:grid-cols-8 gap-2.5" dir={isUrdu ? 'rtl' : 'ltr'}>
           {moonData.allPhases.map((phase) => {
             const isSelected = selectedPhasePreview === phase.id || (!selectedPhasePreview && phase.isCurrent);
             return (
@@ -513,8 +513,11 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
         </div>
 
         {/* Horizontal Smooth Scroll Bar */}
-        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900 pb-2">
-          <div className="flex items-stretch gap-2.5 min-w-max">
+        <div
+          className="overflow-x-auto scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900 pb-2"
+          dir={isUrdu ? 'rtl' : 'ltr'}
+        >
+          <div className="flex items-stretch gap-2.5 min-w-max" dir={isUrdu ? 'rtl' : 'ltr'}>
             {(timelineMode === 'cycle'
               ? moonData.cycle24hTimeline || moonData.hourly24hTimeline
               : moonData.hourly24hTimeline

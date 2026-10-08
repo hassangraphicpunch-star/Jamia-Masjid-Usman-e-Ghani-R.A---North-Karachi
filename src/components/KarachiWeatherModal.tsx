@@ -63,9 +63,16 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
   >('overview');
   const [copiedDuaId, setCopiedDuaId] = useState<string | null>(null);
 
-  // Dynamic astronomical calculation for Karachi
-  const liveMoon = React.useMemo(() => {
-    return calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 });
+  // Dynamic astronomical calculation for Karachi (Transitions daily at Maghrib prayer)
+  const [liveMoon, setLiveMoon] = React.useState(() =>
+    calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 })
+  );
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }));
+    }, 30000);
+    return () => clearInterval(timer);
   }, []);
 
   if (!isOpen || !weatherData) return null;
@@ -628,12 +635,13 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
                   {/* 12. Lunar Phase (چاند کی حالت - Dynamic) */}
                   <div
                     onClick={() => setActiveTab('moon_phase')}
+                    dir={isUrdu ? 'rtl' : 'ltr'}
                     className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-stone-950 to-stone-950 border border-indigo-500/40 hover:border-amber-400/80 space-y-1.5 shadow-sm col-span-2 sm:col-span-1 cursor-pointer transition-all hover:scale-[1.02] group"
                     title={isUrdu ? 'مکمل قمری تفصیلات اور 24 گھنٹے ٹائم لائن کے لیے کلک کریں' : 'Click for complete moon phase dashboard'}
                   >
                     <div className="flex items-center justify-between text-xs text-stone-400">
                       <span className="flex items-center gap-1.5 font-semibold group-hover:text-amber-300 transition-colors">
-                        <Moon className="w-4 h-4 text-amber-300" />
+                        <Moon className="w-4 h-4 text-amber-300 shrink-0" />
                         <span>{isUrdu ? 'موجودہ چاند کی حالت' : 'Current Moon Type'}</span>
                       </span>
                       <span className={`text-[10px] font-mono font-bold ${liveMoon.isWaxing ? 'text-emerald-400' : 'text-amber-400'}`}>
@@ -641,12 +649,16 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
                       </span>
                     </div>
                     <div className="text-xs sm:text-sm font-bold text-white group-hover:text-amber-300 transition-colors truncate">
-                      {liveMoon.currentType.nameUr}
+                      {isUrdu ? liveMoon.currentType.nameUr : liveMoon.currentType.nameEn}
                     </div>
                     <div className="flex items-center justify-between text-[10px] text-stone-400 pt-0.5 border-t border-stone-800/80">
-                      <span className="text-amber-300 font-urdu truncate">{liveMoon.hijriDate.formattedUr}</span>
+                      <span className="text-amber-300 font-urdu truncate">
+                        {isUrdu ? liveMoon.hijriDate.formattedUr : liveMoon.hijriDate.formattedEn}
+                      </span>
                       <span className={liveMoon.isWaxing ? 'text-emerald-400 font-bold shrink-0' : 'text-amber-400 font-bold shrink-0'}>
-                        {liveMoon.directionSymbol === '↑' ? '↑ بڑھ رہا ہے' : '↓ گھٹ رہا ہے'}
+                        {isUrdu
+                          ? (liveMoon.directionSymbol === '↑' ? '↑ بڑھ رہا ہے' : '↓ گھٹ رہا ہے')
+                          : (liveMoon.isWaxing ? '↑ Waxing' : '↓ Waning')}
                       </span>
                     </div>
                   </div>

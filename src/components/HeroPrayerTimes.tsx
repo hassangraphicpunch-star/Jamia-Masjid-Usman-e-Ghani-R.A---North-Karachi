@@ -133,9 +133,17 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
   const [showDemoControls, setShowDemoControls] = useState(false);
   const isUrdu = language === 'ur';
 
-  // Dynamic astronomical calculation for Karachi
-  const liveMoon = React.useMemo(() => {
-    return calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 });
+  // Dynamic astronomical calculation for Karachi (Transitions daily at Maghrib prayer)
+  const [liveMoon, setLiveMoon] = useState(() =>
+    calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 })
+  );
+
+  useEffect(() => {
+    // Check every 30 seconds so the Islamic date and moon telemetry update automatically at Maghrib sunset
+    const timer = setInterval(() => {
+      setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }));
+    }, 30000);
+    return () => clearInterval(timer);
   }, []);
 
   // Determine effective Iqamah state (simulation overrides real live clock for demonstration)
@@ -653,11 +661,15 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                   AQI: {weatherData.airQuality?.aqi ?? 86}
                 </span>
                 <span className="text-stone-500 hidden xl:inline">•</span>
-                <span className="text-amber-300 hidden xl:inline-flex items-center gap-1.5 text-[11px]">
-                  <Moon className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="font-urdu font-bold text-amber-300">{liveMoon.hijriDate.day} {liveMoon.hijriDate.month.ur}</span>
+                <span className="text-amber-300 hidden xl:inline-flex items-center gap-1.5 text-[11px]" dir={isUrdu ? 'rtl' : 'ltr'}>
+                  <Moon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="font-urdu font-bold text-amber-300">
+                    {isUrdu ? `${liveMoon.hijriDate.day} ${liveMoon.hijriDate.month.ur}` : `${liveMoon.hijriDate.day} ${liveMoon.hijriDate.month.en}`}
+                  </span>
                   <span className="text-stone-500">•</span>
-                  <span className="font-mono text-emerald-300">{liveMoon.currentType.nameUr}</span>
+                  <span className="font-mono text-emerald-300">
+                    {isUrdu ? liveMoon.currentType.nameUr : liveMoon.currentType.nameEn}
+                  </span>
                   <span className="text-stone-500">•</span>
                   <span className={liveMoon.isWaxing ? 'text-emerald-400 font-mono font-bold' : 'text-amber-400 font-mono font-bold'}>
                     {liveMoon.illumination}% {liveMoon.directionSymbol}
@@ -958,10 +970,10 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
             )}
 
             {/* Right Col: Current Time & Date & API Sync details */}
-            <div className="lg:col-span-3 text-center lg:text-right space-y-2">
+            <div className="lg:col-span-3 text-center lg:text-right space-y-2" dir={isUrdu ? 'rtl' : 'ltr'}>
               <div className="p-3 rounded-xl bg-stone-950/60 border border-stone-800">
-                <div className="flex items-center justify-center lg:justify-end gap-1.5 text-xs text-stone-400 mb-1">
-                  <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                <div className={`flex items-center justify-center ${isUrdu ? 'lg:justify-start' : 'lg:justify-end'} gap-1.5 text-xs text-stone-400 mb-1`} dir={isUrdu ? 'rtl' : 'ltr'}>
+                  <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   <span>
                     {new Date().toLocaleDateString(isUrdu ? 'ur-PK' : 'en-US', {
                       weekday: 'long',
@@ -971,32 +983,33 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                     })}
                   </span>
                 </div>
-                <div className="flex items-center justify-center lg:justify-end gap-1.5 flex-wrap">
+                <div className={`flex items-center justify-center ${isUrdu ? 'lg:justify-start' : 'lg:justify-end'} gap-1.5 flex-wrap`} dir={isUrdu ? 'rtl' : 'ltr'}>
                   <span className="text-amber-300 font-arabic text-base sm:text-lg font-bold">
                     {isUrdu ? liveMoon.hijriDate.formattedUr : liveMoon.hijriDate.formattedEn}
                   </span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-950/90 text-emerald-300 border border-emerald-700/60 font-medium">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-950/90 text-emerald-300 border border-emerald-700/60 font-medium shrink-0">
                     {isUrdu ? 'مصدقہ اسلامی تاریخ' : 'Verified Hijri'}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={onOpenWeatherModal}
-                  className="w-full flex items-center justify-center lg:justify-end gap-1.5 text-[11px] text-stone-300 hover:text-white transition-colors group/moon mt-0.5"
+                  className={`w-full flex items-center justify-center ${isUrdu ? 'lg:justify-start' : 'lg:justify-end'} gap-1.5 text-[11px] text-stone-300 hover:text-white transition-colors group/moon mt-0.5`}
                   title={isUrdu ? 'چاند کی 24 گھنٹے تفصیلی پیش رفت اور قمری مراحل دیکھنے کے لیے کلک کریں' : 'Click to view 24h Moon Phase and timeline'}
+                  dir={isUrdu ? 'rtl' : 'ltr'}
                 >
                   <Moon className="w-3.5 h-3.5 text-amber-400 group-hover/moon:scale-110 transition-transform shrink-0" />
-                  <span className="text-emerald-300 font-bold">{liveMoon.currentType.nameUr}</span>
+                  <span className="text-emerald-300 font-bold">{isUrdu ? liveMoon.currentType.nameUr : liveMoon.currentType.nameEn}</span>
                   <span className="text-stone-500">•</span>
                   <span className={`font-mono font-bold ${liveMoon.isWaxing ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {liveMoon.illumination}% {liveMoon.directionSymbol}
                   </span>
-                  <span className="text-stone-400 text-[10px]">({liveMoon.directionUr})</span>
+                  <span className="text-stone-400 text-[10px]">({isUrdu ? liveMoon.directionUr : (liveMoon.isWaxing ? 'Waxing' : 'Waning')})</span>
                 </button>
               </div>
 
               {/* API status badge & Azan Controls */}
-              <div className="flex items-center justify-center lg:justify-end gap-2 text-[11px] flex-wrap">
+              <div className={`flex items-center justify-center ${isUrdu ? 'lg:justify-start' : 'lg:justify-end'} gap-2 text-[11px] flex-wrap`} dir={isUrdu ? 'rtl' : 'ltr'}>
                 <span className="inline-flex items-center gap-1 text-emerald-400 font-medium bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-800/80">
                   <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                   {apiSource === 'ummah_api'

@@ -75,9 +75,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   const moreDropdownRef = useRef<HTMLDivElement>(null);
   const weatherDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Accurate moon phase and verified Islamic Date (Day 25)
-  const liveMoon = useMemo(() => {
-    return calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 });
+  // Accurate moon phase and verified Islamic Date (Transitions daily at Maghrib prayer)
+  const [liveMoon, setLiveMoon] = useState(() =>
+    calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 })
+  );
+
+  useEffect(() => {
+    // Check every 30 seconds so the Islamic date updates automatically at Maghrib sunset
+    const timer = setInterval(() => {
+      setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }));
+    }, 30000);
+    return () => clearInterval(timer);
   }, []);
 
   // Check unread notifications count
@@ -264,12 +272,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 id="btn-nav-date-weather-tablet"
                 type="button"
                 onClick={onOpenWeatherModal}
+                dir={isUrdu ? 'rtl' : 'ltr'}
                 className="hidden md:inline-flex lg:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-stone-900/90 hover:bg-stone-800 text-stone-200 border border-emerald-800/70 hover:border-amber-400 text-xs font-semibold transition-all shadow-sm shrink-0 min-h-[38px]"
-                title={isUrdu ? `مصدقہ اسلامی تاریخ (${liveMoon.hijriDate.formattedUr}) اور کراچی کا موسم` : 'Verified Islamic Date & Karachi Weather'}
+                title={isUrdu ? `مصدقہ اسلامی تاریخ (${liveMoon.hijriDate.formattedUr}) اور کراچی کا موسم` : `Verified Islamic Date (${liveMoon.hijriDate.formattedEn}) & Karachi Weather`}
               >
                 <Moon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 <span className="text-amber-300 font-urdu font-bold text-xs">
-                  {liveMoon.hijriDate.formattedUr}
+                  {isUrdu ? liveMoon.hijriDate.formattedUr : liveMoon.hijriDate.formattedEn}
                 </span>
                 <span className="text-stone-600">•</span>
                 <CloudSun className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -285,15 +294,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 id="btn-nav-date-desktop"
                 type="button"
                 onClick={onOpenWeatherModal}
+                dir={isUrdu ? 'rtl' : 'ltr'}
                 className="hidden lg:inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-lg bg-stone-900/90 hover:bg-stone-800 text-stone-200 border border-emerald-800/70 hover:border-amber-400 text-xs font-semibold transition-all shadow-sm group shrink-0 min-h-[38px]"
-                title={isUrdu ? `مصدقہ اسلامی تاریخ و چاند کی صورتحال (${liveMoon.hijriDate.formattedUr})` : 'Verified Islamic Date & Moon Phase'}
+                title={isUrdu ? `مصدقہ اسلامی تاریخ و چاند کی صورتحال (${liveMoon.hijriDate.formattedUr})` : `Verified Islamic Date & Moon Phase (${liveMoon.hijriDate.formattedEn})`}
               >
                 <Moon className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
                 <span className="text-amber-300 font-urdu font-bold text-xs">
-                  {liveMoon.hijriDate.formattedUr}
+                  {isUrdu ? liveMoon.hijriDate.formattedUr : liveMoon.hijriDate.formattedEn}
                 </span>
-                <span className="text-stone-400 text-[10px] font-mono hidden xl:inline">
-                  • {liveMoon.currentType.nameUr} {liveMoon.illumination}% {liveMoon.directionSymbol}
+                <span className="text-stone-400 text-[10px] font-mono hidden xl:inline" dir={isUrdu ? 'rtl' : 'ltr'}>
+                  • {isUrdu ? liveMoon.currentType.nameUr : liveMoon.currentType.nameEn} {liveMoon.illumination}% {liveMoon.directionSymbol}
                 </span>
               </button>
             )}
@@ -400,19 +410,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
 
                     {/* Moon Phase & Islamic Date Quick Banner */}
-                    <div className="p-2 rounded-xl bg-stone-950 border border-stone-800 space-y-1 text-[11px]">
+                    <div className="p-2 rounded-xl bg-stone-950 border border-stone-800 space-y-1 text-[11px]" dir={isUrdu ? 'rtl' : 'ltr'}>
                       <div className="flex items-center justify-between">
                         <span className="text-stone-400 flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-emerald-400" />
                           <span>{isUrdu ? 'اسلامی تاریخ:' : 'Islamic Date:'}</span>
-                          <strong className="text-amber-300 font-urdu">{liveMoon.hijriDate.formattedUr}</strong>
+                          <strong className="text-amber-300 font-urdu">{isUrdu ? liveMoon.hijriDate.formattedUr : liveMoon.hijriDate.formattedEn}</strong>
                         </span>
                       </div>
                       <div className="flex items-center justify-between pt-1 border-t border-stone-800/60">
                         <span className="text-stone-400 flex items-center gap-1.5">
                           <Moon className="w-3.5 h-3.5 text-amber-300" />
                           <span>{isUrdu ? 'موجودہ چاند:' : 'Moon Type:'}</span>
-                          <strong className="text-white">{liveMoon.currentType.nameUr}</strong>
+                          <strong className="text-white">{isUrdu ? liveMoon.currentType.nameUr : liveMoon.currentType.nameEn}</strong>
                         </span>
                         <span className={`font-mono font-bold ${liveMoon.isWaxing ? 'text-emerald-400' : 'text-amber-400'}`}>
                           {liveMoon.illumination}% {liveMoon.directionSymbol}
@@ -803,7 +813,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onOpenWeatherModal();
                   setMobileMenuOpen(false);
                 }}
-                className="w-full text-left p-3.5 rounded-2xl bg-stone-900/90 border border-emerald-800/80 hover:border-amber-400 transition-colors flex items-center justify-between shadow-sm min-h-[44px] group"
+                dir={isUrdu ? 'rtl' : 'ltr'}
+                className={`w-full p-3.5 rounded-2xl bg-stone-900/90 border border-emerald-800/80 hover:border-amber-400 transition-colors flex items-center justify-between shadow-sm min-h-[44px] group ${
+                  isUrdu ? 'text-right' : 'text-left'
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-stone-950 border border-stone-800 flex items-center justify-center shrink-0">
@@ -816,13 +829,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </span>
                     </div>
                     <strong className="text-amber-300 font-urdu text-sm block">
-                      {liveMoon.hijriDate.formattedUr}
+                      {isUrdu ? liveMoon.hijriDate.formattedUr : liveMoon.hijriDate.formattedEn}
                     </strong>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className={isUrdu ? 'text-left' : 'text-right'}>
                   <span className="text-stone-300 text-xs block font-medium">
-                    {liveMoon.currentType.nameUr}
+                    {isUrdu ? liveMoon.currentType.nameUr : liveMoon.currentType.nameEn}
                   </span>
                   <span className={`text-[11px] font-mono font-bold ${liveMoon.isWaxing ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {liveMoon.illumination}% {liveMoon.directionSymbol}

@@ -456,29 +456,79 @@ async function startServer() {
     Hanbali: 3,
   };
 
+  // Monthly Maghrib sunset times for Karachi (Lat 24.9961° N, Lng 67.0673° E)
+  const KARACHI_MONTHLY_MAGHRIB: Record<number, { h: number; m: number }> = {
+    1: { h: 18, m: 5 },
+    2: { h: 18, m: 22 },
+    3: { h: 18, m: 40 },
+    4: { h: 18, m: 55 },
+    5: { h: 19, m: 12 },
+    6: { h: 19, m: 24 },
+    7: { h: 19, m: 25 },
+    8: { h: 19, m: 8 },
+    9: { h: 18, m: 42 },
+    10: { h: 18, m: 12 },
+    11: { h: 17, m: 50 },
+    12: { h: 17, m: 48 },
+  };
+
   // Helper: Accurate Pakistan / Karachi Central Ruet-e-Hilal Hijri Date
+  // In Islamic lunar calendar, the date changes daily at MAGHRIB (sunset), NOT at midnight!
   function getPakistanVerifiedHijriDate(d: Date = new Date()) {
-    // Pakistan Central Ruet-e-Hilal Committee Karachi calibration (-2 days from Saudi Umm al-Qura)
-    const pakDate = new Date(d.getTime() - 2 * 86400000);
-    let day = 23;
-    let month = 4;
-    let year = 1448;
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Karachi',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(d);
+    let year = d.getFullYear();
+    let month = d.getMonth() + 1;
+    let day = d.getDate();
+    let hour = d.getHours();
+    let minute = d.getMinutes();
+
+    for (const p of parts) {
+      if (p.type === 'year') year = parseInt(p.value, 10);
+      if (p.type === 'month') month = parseInt(p.value, 10);
+      if (p.type === 'day') day = parseInt(p.value, 10);
+      if (p.type === 'hour') hour = parseInt(p.value, 10);
+      if (p.type === 'minute') minute = parseInt(p.value, 10);
+    }
+
+    // Check if Maghrib (sunset) has arrived today in Karachi
+    const maghrib = KARACHI_MONTHLY_MAGHRIB[month] || { h: 18, m: 15 };
+    const currentMins = hour * 60 + minute;
+    const maghribMins = maghrib.h * 60 + maghrib.m;
+    const isPostMaghrib = currentMins >= maghribMins;
+    const maghribShift = isPostMaghrib ? 1 : 0;
+
+    const effectiveCivilDate = new Date(Date.UTC(year, month - 1, day + maghribShift, 12, 0, 0));
+    const calculationDate = new Date(effectiveCivilDate.getTime() - 2 * 86400000);
+
+    let hijriDay = 26;
+    let hijriMonth = 4;
+    let hijriYear = 1448;
 
     try {
-      const parts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+      const hParts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+        timeZone: 'UTC',
         day: 'numeric',
         month: 'numeric',
         year: 'numeric',
-      }).formatToParts(pakDate);
-      for (const p of parts) {
-        if (p.type === 'day') day = parseInt(p.value, 10);
-        if (p.type === 'month') month = parseInt(p.value, 10);
-        if (p.type === 'year') year = parseInt(p.value, 10);
+      }).formatToParts(calculationDate);
+      for (const p of hParts) {
+        if (p.type === 'day') hijriDay = parseInt(p.value, 10);
+        if (p.type === 'month') hijriMonth = parseInt(p.value, 10);
+        if (p.type === 'year') hijriYear = parseInt(p.value, 10);
       }
     } catch (e) {
-      day = 23;
-      month = 4;
-      year = 1448;
+      hijriDay = 26;
+      hijriMonth = 4;
+      hijriYear = 1448;
     }
 
     const months = [
