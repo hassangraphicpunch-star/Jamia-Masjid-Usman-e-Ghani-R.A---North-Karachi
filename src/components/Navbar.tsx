@@ -132,16 +132,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       }`}
     >
       {/* Top micro banner with address and quick status */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           
-          {/* Mosque Logo & Title */}
+          {/* Mosque Logo & Full Brand Identity (Left, Never squished) */}
           <div
             onClick={() => handleItemClick('hero')}
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0 flex-1"
+            className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group shrink-0"
           >
             {/* Mosque Logo & Emblem */}
-            <div className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-xl overflow-hidden shadow-md shadow-emerald-950/60 border border-amber-500/50 group-hover:scale-105 transition-transform bg-stone-950 flex items-center justify-center shrink-0">
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden shadow-md shadow-emerald-950/60 border border-amber-500/60 group-hover:scale-105 transition-transform bg-stone-950 flex items-center justify-center shrink-0">
               <img
                 src="/images/masjid_logo.jpg"
                 alt="Jamia Masjid Usman-e-Ghani Logo"
@@ -150,84 +150,61 @@ export const Navbar: React.FC<NavbarProps> = ({
               />
             </div>
 
-            <div className="min-w-0">
+            <div className="shrink-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-[13px] min-[360px]:text-sm sm:text-base md:text-lg font-bold tracking-tight text-white group-hover:text-emerald-300 transition-colors truncate max-w-[140px] min-[360px]:max-w-[190px] min-[440px]:max-w-[280px] sm:max-w-none">
+                <span className="text-sm sm:text-base md:text-lg font-bold tracking-tight text-white group-hover:text-emerald-300 transition-colors whitespace-nowrap">
                   {isUrdu ? MOSQUE_INFO.nameUr : MOSQUE_INFO.nameEn}
                 </span>
                 <span className="hidden md:inline-flex text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800/60 shrink-0">
                   ST-11 Sector 5-A/1
                 </span>
               </div>
-              <p className="text-[10px] sm:text-xs text-stone-400 flex items-center gap-1 sm:gap-1.5 truncate">
+              <p className="text-[10px] sm:text-xs text-stone-400 flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
                 <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-400 shrink-0" />
-                <span className="truncate">{isUrdu ? 'نارتھ کراچی، کراچی' : 'North Karachi, Karachi'}</span>
+                <span>{isUrdu ? 'نارتھ کراچی، کراچی' : 'North Karachi, Karachi'}</span>
                 <span className="text-stone-600 hidden xs:inline">•</span>
                 <span className="text-amber-400/90 font-medium hidden xs:inline">Hanafi</span>
               </p>
             </div>
           </div>
 
-          {/* Desktop Next Prayer Live Pill */}
-          {nextPrayerInfo && (
-            <div
-              onClick={() => handleItemClick('prayer-times')}
-              className="hidden xl:flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-700/40 hover:border-emerald-500/60 transition-colors cursor-pointer shadow-inner shadow-black/40 shrink-0"
-            >
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <div className="text-xs flex items-center gap-1.5">
-                <span className="text-stone-400">
-                  {isUrdu ? 'اگلی نماز:' : 'Next Prayer:'}
-                </span>
-                <span className="font-bold text-amber-300">
-                  {isUrdu ? nextPrayerInfo.nameUr : nextPrayerInfo.nameEn}
-                </span>
-                <span className="text-stone-500">|</span>
-                <span className="text-emerald-300 font-mono font-semibold">
-                  {nextPrayerInfo.countdownStr}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Right Action Controls: Desktop buttons, Tablet collapsed, Mobile compact essentials */}
-          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 min-[1025px]:gap-1.5 xl:gap-2 shrink-0">
-
-            {/* Live Islamic Date & Moon Quick Badge (Desktop >= 1180px) */}
+          {/* Centered Live Badges: Hijri Date & Moon + Karachi Weather (Center) */}
+          <div className="hidden lg:flex items-center justify-center gap-2 flex-1 mx-2">
+            {/* Live Islamic Date & Moon Quick Badge */}
             {onOpenWeatherModal && (
               <button
                 type="button"
                 onClick={onOpenWeatherModal}
-                className="hidden min-[1180px]:flex items-center gap-1.5 px-2 xl:px-2.5 py-1 xl:py-1.5 rounded-lg bg-stone-900/90 hover:bg-stone-800 text-stone-200 border border-emerald-800/70 hover:border-amber-400 text-[11px] xl:text-xs font-semibold transition-all shadow-sm group shrink-0"
-                title={isUrdu ? 'مصدقہ اسلامی تاریخ و چاند کی صورتحال (24 ربیع الثانی 1448ھ)' : 'Verified Islamic Date & Moon Phase'}
+                className="flex items-center gap-1.5 px-2 xl:px-2.5 py-1.5 rounded-lg bg-stone-900/90 hover:bg-stone-800 text-stone-200 border border-emerald-800/70 hover:border-amber-400 text-xs font-semibold transition-all shadow-sm group shrink-0"
+                title={isUrdu ? `مصدقہ اسلامی تاریخ و چاند کی صورتحال (${liveMoon.hijriDate.formattedUr})` : 'Verified Islamic Date & Moon Phase'}
               >
                 <Moon className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
                 <span className="text-amber-300 font-urdu font-bold text-xs">
                   {liveMoon.hijriDate.formattedUr}
                 </span>
-                <span className="text-stone-400 text-[10px] font-mono hidden 2xl:inline">
+                <span className="text-stone-400 text-[10px] font-mono hidden xl:inline">
                   • {liveMoon.currentType.nameUr} {liveMoon.illumination}% {liveMoon.directionSymbol}
                 </span>
               </button>
             )}
             
-            {/* Karachi Weather Quick Pill for Desktop (>= 1025px) */}
+            {/* Single Karachi Weather Quick Pill with Dropdown */}
             {onOpenWeatherModal && (
               <div
-                className="relative hidden min-[1025px]:block shrink-0"
+                className="relative shrink-0"
                 onMouseEnter={() => setWeatherDropdownOpen(true)}
                 onMouseLeave={() => setWeatherDropdownOpen(false)}
               >
                 <button
                   id="btn-nav-weather"
                   onClick={onOpenWeatherModal}
-                  className="flex items-center gap-1.5 px-2 xl:px-2.5 py-1 xl:py-1.5 rounded-lg bg-stone-900/90 hover:bg-stone-800 text-stone-200 border border-emerald-800/70 hover:border-amber-400 text-[11px] xl:text-xs font-semibold transition-all shadow-sm group"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-stone-900/90 hover:bg-stone-800 text-stone-200 border border-emerald-800/70 hover:border-amber-400 text-xs font-semibold transition-all shadow-sm group"
                   title={isUrdu ? 'کراچی کا موسم، ہوا کا معیار اور مکمل تفصیلات' : 'View Karachi Weather & Forecast'}
                 >
                   <CloudSun className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
                   
                   {/* Temperature */}
-                  <span className="font-mono font-bold text-white text-[11px] xl:text-xs">
+                  <span className="font-mono font-bold text-white text-xs">
                     {weatherData ? `${weatherData.current.temperature}°C` : '27°C'}
                   </span>
 
@@ -311,7 +288,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                       <div className="p-2 rounded-xl bg-stone-950 border border-stone-800 space-y-0.5">
                         <span className="text-stone-400 text-[10px] block flex items-center gap-1">
-                          <Sun className="w-3 h-3 text-yellow-400" />
+                          <Sun className="w-3.5 h-3.5 text-yellow-400" />
                           {isUrdu ? 'دھوپ کی شدت' : 'UV Index'}
                         </span>
                         <strong className="text-yellow-400 font-mono">{weatherData.current.uvIndex} / 11</strong>
@@ -354,33 +331,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </div>
             )}
+          </div>
 
-            {/* Compact Weather Pill for Tablet (768px – 1024px) */}
-            {onOpenWeatherModal && (
-              <button
-                type="button"
-                onClick={onOpenWeatherModal}
-                className="hidden md:flex min-[1025px]:hidden items-center gap-1 px-2 py-1 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-800 text-[11px] font-semibold transition-colors shrink-0"
-                title={isUrdu ? 'کراچی کا موسم' : 'Karachi Weather'}
-              >
-                <CloudSun className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="font-mono font-bold text-white text-[11px]">
-                  {weatherData ? `${weatherData.current.temperature}°C` : '27°C'}
-                </span>
-                <span className="text-emerald-400 font-bold text-[10px]">
-                  {isUrdu ? 'کراچی' : 'Khi'}
-                </span>
-              </button>
-            )}
+          {/* Right Action Controls: Quick buttons on desktop, compact essentials on mobile */}
+          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
 
             {/* Language Switcher - Accessible on all viewports */}
             <button
               id="btn-language-toggle"
               onClick={() => setLanguage(isUrdu ? 'en' : 'ur')}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700/80 text-[11px] sm:text-xs font-semibold transition-colors shrink-0 min-h-[34px] sm:min-h-[36px]"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700/80 text-xs font-semibold transition-colors shrink-0"
               title={isUrdu ? 'Switch to English' : 'اردو میں تبدیل کریں'}
             >
-              <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400 shrink-0" />
+              <Globe className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <span>{isUrdu ? 'English' : 'اردو'}</span>
             </button>
 
@@ -389,7 +352,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="btn-nav-azan-player"
                 onClick={onOpenAzanModal}
-                className="hidden min-[1025px]:inline-flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 py-1 xl:py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 text-[11px] xl:text-xs font-semibold transition-colors shrink-0"
+                className="hidden lg:inline-flex items-center gap-1.5 px-2 xl:px-2.5 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 text-xs font-semibold transition-colors shrink-0"
                 title="Play Adhan & Prayer Voice"
               >
                 <Volume2 className="w-3.5 h-3.5 text-amber-300 animate-pulse shrink-0" />
@@ -397,30 +360,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Azan Notification Sound Toggle (Desktop >= 1280px) */}
-            <button
-              id="btn-azan-sound-toggle"
-              onClick={() => setAudioMuted(!audioMuted)}
-              className={`p-1.5 xl:p-2 rounded-lg text-xs font-medium transition-colors border hidden min-[1280px]:inline-flex shrink-0 ${
-                audioMuted
-                  ? 'bg-stone-900 text-stone-400 border-stone-800 hover:text-stone-200'
-                  : 'bg-emerald-950 text-emerald-300 border-emerald-700/80 hover:bg-emerald-900'
-              }`}
-              title={audioMuted ? 'Adhan notifications muted' : 'Adhan audio active'}
-            >
-              {audioMuted ? (
-                <VolumeX className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-stone-400" />
-              ) : (
-                <Volume2 className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-emerald-400" />
-              )}
-            </button>
-
-            {/* Quran Reader & Audio Modal Button (Desktop >= 1025px) */}
+            {/* Quran Reader Modal Button (Desktop >= 1025px) */}
             {onOpenQuranModal && (
               <button
                 id="btn-nav-quran"
                 onClick={onOpenQuranModal}
-                className="hidden min-[1025px]:inline-flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 py-1 xl:py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 border border-emerald-600/50 text-[11px] xl:text-xs font-bold transition-all shadow-sm shrink-0"
+                className="hidden lg:inline-flex items-center gap-1.5 px-2 xl:px-2.5 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 border border-emerald-600/50 text-xs font-bold transition-all shadow-sm shrink-0"
                 title="The Holy Quran - 114 Surahs & 13 Reciters"
               >
                 <BookOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
@@ -433,20 +378,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="btn-nav-duas"
                 onClick={onOpenDuasModal}
-                className="hidden min-[1025px]:inline-flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 py-1 xl:py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 border border-amber-600/50 text-[11px] xl:text-xs font-bold transition-all shadow-sm shrink-0"
+                className="hidden lg:inline-flex items-center gap-1.5 px-2 xl:px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 border border-amber-600/50 text-xs font-bold transition-all shadow-sm shrink-0"
                 title="126 Masnoon Duas (27 Categories)"
               >
                 <Heart className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>{isUrdu ? 'مسنون دعائیں' : 'Duas'}</span>
+                <span>{isUrdu ? 'دعائیں' : 'Duas'}</span>
               </button>
             )}
 
-            {/* Ramadan 2027 Quick Calendar Button (Tablet & Desktop >= 768px) */}
+            {/* Ramadan 2027 Quick Calendar Button (Tablet & Desktop) */}
             {onOpenRamadanModal && (
               <button
                 id="btn-nav-ramadan-calendar"
                 onClick={onOpenRamadanModal}
-                className="hidden md:inline-flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 py-1 xl:py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 border border-amber-500/50 text-[11px] xl:text-xs font-bold transition-all shadow-sm ring-1 ring-amber-500/30 shrink-0"
+                className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/80 text-amber-300 border border-amber-500/50 text-xs font-bold transition-all shadow-sm ring-1 ring-amber-500/30 shrink-0"
                 title="Ramadan Calendar & Timetable (30 Days)"
               >
                 <Moon className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20 shrink-0" />
@@ -459,10 +404,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="btn-nav-notifications"
                 onClick={onOpenNotifications}
-                className="relative p-1.5 sm:p-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-300 border border-stone-800 transition-colors shrink-0 min-h-[34px] sm:min-h-[36px] min-w-[34px] sm:min-w-[36px] flex items-center justify-center"
+                className="relative p-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-300 border border-stone-800 transition-colors shrink-0 flex items-center justify-center"
                 title={isUrdu ? 'اعلانات و الرٹس' : 'Notifications & Alerts'}
               >
-                <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" />
+                <Bell className="w-4 h-4 text-amber-300" />
                 {unreadNotifsCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-[10px] font-bold text-white flex items-center justify-center animate-pulse">
                     {unreadNotifsCount}
@@ -471,34 +416,34 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Admin Portal Button (Desktop >= 1025px) */}
+            {/* Admin Portal Button */}
             {onOpenAdminModal && (
               <button
                 id="btn-nav-admin-portal"
                 onClick={onOpenAdminModal}
-                className="hidden min-[1025px]:inline-flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 py-1 xl:py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-500/30 text-[11px] xl:text-xs font-semibold transition-colors shrink-0"
+                className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-500/30 text-xs font-semibold transition-colors shrink-0"
                 title="Admin Namaz Timetable Editor"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="hidden xl:inline">{isUrdu ? 'انتظامیہ پورٹل' : 'Admin Portal'}</span>
+                <span>{isUrdu ? 'انتظامیہ پورٹل' : 'Admin Portal'}</span>
               </button>
             )}
 
-            {/* Quick Donate Button (Desktop >= 1025px) */}
+            {/* Quick Donate Button */}
             <button
               id="btn-nav-donate"
               onClick={() => handleItemClick('donate')}
-              className="hidden min-[1025px]:inline-flex items-center gap-1 xl:gap-1.5 px-2.5 xl:px-3 py-1 xl:py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold text-[11px] xl:text-xs shadow-md shadow-amber-900/30 transition-all hover:scale-105 shrink-0"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold text-xs shadow-md shadow-amber-900/30 transition-all hover:scale-105 shrink-0"
             >
               <Heart className="w-3.5 h-3.5 fill-current text-stone-950 shrink-0" />
               <span>{isUrdu ? 'تعاون کریں' : 'Donate'}</span>
             </button>
 
-            {/* Mobile & Tablet Hamburger Toggle (< 1025px) */}
+            {/* Mobile & Tablet Hamburger Toggle */}
             <button
               id="btn-mobile-menu"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="min-[1025px]:hidden p-1.5 sm:p-2 rounded-lg bg-stone-900 text-stone-300 border border-stone-800 hover:text-white hover:border-emerald-700/60 transition-colors shrink-0 min-h-[34px] sm:min-h-[36px] min-w-[34px] sm:min-w-[36px] flex items-center justify-center"
+              className="lg:hidden p-2 rounded-lg bg-stone-900 text-stone-300 border border-stone-800 hover:text-white hover:border-emerald-700/60 transition-colors shrink-0 flex items-center justify-center"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5 text-amber-400" /> : <Menu className="w-5 h-5" />}
@@ -506,8 +451,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Desktop Navigation Links (>= 1025px) */}
-        <nav className="hidden min-[1025px]:flex items-center justify-center gap-1 mt-3 pt-2.5 border-t border-stone-800/40">
+        {/* Desktop Centered Navigation Links */}
+        <nav className="hidden lg:flex items-center justify-center gap-1 mt-3 pt-2.5 border-t border-stone-800/40">
           {navItems.map((item) => {
             const isActive = activeSection === item.id;
             return (
@@ -515,7 +460,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={item.id}
                 id={`nav-link-${item.id}`}
                 onClick={() => handleItemClick(item.id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
+                className={`px-3.5 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
                   isActive
                     ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/50'
                     : 'text-stone-300 hover:text-white hover:bg-stone-900/60'
@@ -528,11 +473,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
       </div>
 
-      {/* Mobile & Tablet Drawer Menu (< 1025px) */}
+      {/* Mobile & Tablet Drawer Menu */}
       {mobileMenuOpen && (
         <div
           id="mobile-drawer-menu"
-          className="min-[1025px]:hidden bg-stone-950/98 backdrop-blur-xl border-b border-stone-800 px-3.5 sm:px-5 py-4 space-y-3 animate-in slide-in-from-top-4 duration-200 max-h-[85vh] overflow-y-auto w-full shadow-2xl"
+          className="lg:hidden bg-stone-950/98 backdrop-blur-xl border-b border-stone-800 px-3.5 sm:px-5 py-4 space-y-3 animate-in slide-in-from-top-4 duration-200 max-h-[85vh] overflow-y-auto w-full shadow-2xl"
         >
           {/* Card 1: Next Prayer Status */}
           {nextPrayerInfo && (

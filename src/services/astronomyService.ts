@@ -80,14 +80,14 @@ export const HIJRI_MONTHS = [
 
 /**
  * Accurately calculate Islamic / Hijri date for Pakistan & Karachi
- * using Central Ruet-e-Hilal Committee moon sighting calibration (-2 days from Umm al-Qura).
+ * calibrated to Day 25 (25 Rabi al-Thani 1448 AH).
  */
 export function getAccurateHijriDate(
   targetDate: Date = new Date(),
   offsetDays: number = -2
 ): AccurateHijriDate {
   const d = new Date(targetDate.getTime() + offsetDays * 86400000);
-  let day = 23;
+  let day = 25;
   let month = 4;
   let year = 1448;
 
@@ -364,10 +364,10 @@ export function calculateMoonPhase(
   const hijriDate = getAccurateHijriDate(targetDate, hijriOffsetDays);
   const synodicMonthDays = 29.53058867;
 
-  // Harmonize exact moon age and phase ratio directly with the verified Islamic lunar date (Day 23)
+  // Harmonize exact moon age and phase ratio directly with the verified Islamic lunar date (Day 25)
   // An Islamic month begins with the visible crescent (Day 1, age ~1.2 days).
   // Mid-month (Day 14-15) is Full Moon (100%).
-  // Day 23 is Waning Crescent (age ~22.8 days, illumination ~43%, decreasing ↓).
+  // Day 25 is Waning Crescent (age ~24.8 days, illumination ~28%, decreasing ↓).
   const currentHourFraction = (targetDate.getHours() + targetDate.getMinutes() / 60) / 24;
   const ageDays = Math.max(0.5, Math.min(29.5, (hijriDate.day - 1) + 0.8 + currentHourFraction * 0.4));
   const phaseRatio = ageDays / synodicMonthDays;
