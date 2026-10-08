@@ -688,8 +688,8 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
             
-            {/* Left Col: Next Prayer Name & Jamaat Schedule / Iqamah Status - Centered */}
-            <div className="lg:col-span-4 text-center space-y-2.5 flex flex-col items-center justify-center">
+            {/* Left Col: Next Prayer Name & Jamaat Schedule / Iqamah Status */}
+            <div className="lg:col-span-5 text-center lg:text-left space-y-2">
               {isIqamahActive ? (
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider shadow-md ${
                   effectiveIqamah.isTimeForIqamah
@@ -720,8 +720,8 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                 </div>
               )}
 
-              <div className="flex items-center justify-center gap-4 pt-1">
-                <div className="text-center">
+              <div className="flex items-center justify-center lg:justify-start gap-4 pt-1">
+                <div>
                   <h2 className="text-3xl sm:text-4xl font-black text-white">
                     {isIqamahActive
                       ? isUrdu
@@ -738,7 +738,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               </div>
 
               {/* Azan vs Jamaat comparison badge */}
-              <div className="flex items-center justify-center gap-3 pt-2">
+              <div className="flex items-center justify-center lg:justify-start gap-3 pt-2">
                 <div className="px-3.5 py-2 rounded-xl bg-stone-900/80 border border-stone-700 text-center">
                   <span className="text-[11px] text-stone-400 block uppercase">
                     {isUrdu ? 'وقت اذان' : 'Athan Time'}
@@ -957,10 +957,10 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               </div>
             )}
 
-            {/* Right Col: Current Time & Date & API Sync details - Centered */}
-            <div className="lg:col-span-4 text-center space-y-2.5 flex flex-col items-center justify-center">
-              <div className="p-3 rounded-xl bg-stone-950/60 border border-stone-800 w-full max-w-xs mx-auto">
-                <div className="flex items-center justify-center gap-1.5 text-xs text-stone-400 mb-1">
+            {/* Right Col: Current Time & Date & API Sync details */}
+            <div className="lg:col-span-3 text-center lg:text-right space-y-2">
+              <div className="p-3 rounded-xl bg-stone-950/60 border border-stone-800">
+                <div className="flex items-center justify-center lg:justify-end gap-1.5 text-xs text-stone-400 mb-1">
                   <Calendar className="w-3.5 h-3.5 text-emerald-400" />
                   <span>
                     {new Date().toLocaleDateString(isUrdu ? 'ur-PK' : 'en-US', {
@@ -971,7 +971,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                     })}
                   </span>
                 </div>
-                <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                <div className="flex items-center justify-center lg:justify-end gap-1.5 flex-wrap">
                   <span className="text-amber-300 font-arabic text-base sm:text-lg font-bold">
                     {isUrdu ? liveMoon.hijriDate.formattedUr : liveMoon.hijriDate.formattedEn}
                   </span>
@@ -982,7 +982,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                 <button
                   type="button"
                   onClick={onOpenWeatherModal}
-                  className="w-full flex items-center justify-center gap-1.5 text-[11px] text-stone-300 hover:text-white transition-colors group/moon mt-0.5"
+                  className="w-full flex items-center justify-center lg:justify-end gap-1.5 text-[11px] text-stone-300 hover:text-white transition-colors group/moon mt-0.5"
                   title={isUrdu ? 'چاند کی 24 گھنٹے تفصیلی پیش رفت اور قمری مراحل دیکھنے کے لیے کلک کریں' : 'Click to view 24h Moon Phase and timeline'}
                 >
                   <Moon className="w-3.5 h-3.5 text-amber-400 group-hover/moon:scale-110 transition-transform shrink-0" />
@@ -996,7 +996,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               </div>
 
               {/* API status badge & Azan Controls */}
-              <div className="flex items-center justify-center gap-2 text-[11px] flex-wrap">
+              <div className="flex items-center justify-center lg:justify-end gap-2 text-[11px] flex-wrap">
                 <span className="inline-flex items-center gap-1 text-emerald-400 font-medium bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-800/80">
                   <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                   {apiSource === 'ummah_api'
@@ -1018,7 +1018,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               </div>
 
               {/* Azan Player Quick Action in Banner */}
-              <div className="pt-1 flex items-center justify-center gap-2">
+              <div className="pt-1 flex items-center justify-center lg:justify-end gap-2">
                 <button
                   id="hero-play-azan-btn"
                   onClick={() => {
@@ -1629,21 +1629,21 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
 
         {/* PRIMARY PRAYER TIMETABLE 7-CARD GRID (Including Chasht) */}
         <div className="mb-6">
-          <div className="flex flex-col items-center justify-center text-center gap-3 mb-6">
-            <div className="text-center">
-              <h3 className="text-xl sm:text-2xl font-bold text-white flex items-center justify-center gap-2">
+          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
+            <div>
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white flex items-center gap-2">
                 <Clock className="w-5 h-5 text-emerald-400" />
                 <span>{isUrdu ? 'آج کے نماز کے اوقات و باجماعت شیڈول' : 'Today’s Prayer Timings & Jamaat Schedule'}</span>
               </h3>
-              <p className="text-xs text-stone-400 mt-1">
+              <p className="text-xs text-stone-400 mt-0.5">
                 {isUrdu
                   ? 'جامع مسجد عثمان غنی، سیکٹر 5-اے/1 نارتھ کراچی (فقہ حنفی)'
                   : 'ST-11 Sector 5-A/1 North Karachi (Karachi Hanafi Standard)'}
               </p>
             </div>
 
-            {/* Quick Action Buttons - Centered */}
-            <div className="flex items-center justify-center gap-2 flex-wrap">
+            {/* Quick Action Buttons */}
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Ramadan Calendar Button */}
               {onOpenRamadanModal && (
                 <button
