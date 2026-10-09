@@ -103,6 +103,26 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
     return closest.hour;
   }, [moonData]);
 
+  const timelineScrollRef = React.useRef<HTMLDivElement>(null);
+
+  // Scroll to the start position (right in RTL, left in LTR) when language or mode changes
+  React.useEffect(() => {
+    if (timelineScrollRef.current) {
+      timelineScrollRef.current.scrollTo({
+        left: isUrdu ? (timelineScrollRef.current.scrollWidth - timelineScrollRef.current.clientWidth) : 0,
+        behavior: 'smooth',
+      });
+    }
+  }, [isUrdu, timelineMode]);
+
+  const scrollTimeline = (direction: 'prev' | 'next') => {
+    if (!timelineScrollRef.current) return;
+    const scrollAmount = 260;
+    // In RTL, visual forward means scrolling left
+    const factor = isUrdu ? (direction === 'next' ? -1 : 1) : (direction === 'next' ? 1 : -1);
+    timelineScrollRef.current.scrollBy({ left: factor * scrollAmount, behavior: 'smooth' });
+  };
+
   const resetToCurrent = () => {
     setSelectedPhasePreview(null);
     setActiveDate(new Date());
@@ -217,15 +237,15 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
                 </div>
                 <div>
                   <span className="text-xs font-extrabold block">
-                    {displayDirectionUr}
+                    {isUrdu ? displayDirectionUr : (displayPhase.id === 'full_moon' ? 'Full Moon (100%)' : displayPhase.id === 'new_moon' ? 'New Moon (0%)' : displayPhase.directionEn)}
                   </span>
                   <span className="text-[11px] text-stone-300 font-mono opacity-90 block">
-                    Direction: {displayPhase.rangeEn}
+                    {isUrdu ? `حدود و سمت: ${displayPhase.rangeUr}` : `Direction & Range: ${displayPhase.rangeEn}`}
                   </span>
                 </div>
               </div>
 
-              <div className="text-right sm:text-left font-mono">
+              <div className={isUrdu ? 'text-left font-mono' : 'text-right font-mono'}>
                 <span className="text-2xl font-black text-white block">
                   {displayIllumination}%
                 </span>
@@ -334,8 +354,8 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
                   <span>{isUrdu ? 'چاند بڑھ رہا ہے' : 'Waxing Moon'}</span>
                   <span className="text-emerald-400 font-mono font-bold">↑</span>
                 </h5>
-                <span className="text-[11px] text-stone-400 font-mono">
-                  Waxing Phase (Increasing Illumination)
+                <span className="text-[11px] text-stone-400 font-mono block">
+                  {isUrdu ? 'بڑھنے کا دورانیہ (روشنی میں اضافہ)' : 'Waxing Phase (Increasing Illumination)'}
                 </span>
               </div>
             </div>
@@ -346,7 +366,7 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
               </span>
             )}
           </div>
-          <p className="text-xs text-stone-300 leading-relaxed font-urdu">
+          <p className={`text-xs text-stone-300 leading-relaxed ${isUrdu ? 'font-urdu text-right' : 'text-left'}`}>
             {isUrdu
               ? 'نئے چاند (0%) سے لے کر بدرِ کامل (100%) تک چاندنی کا تناسب روز بروز بڑھتا ہے (سبز انڈیکیٹر ↑)۔'
               : 'From New Moon (0%) to Full Moon (100%), the illuminated fraction grows day by day with green upward arrow ↑.'}
@@ -371,8 +391,8 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
                   <span>{isUrdu ? 'چاند گھٹ رہا ہے' : 'Waning Moon'}</span>
                   <span className="text-amber-400 font-mono font-bold">↓</span>
                 </h5>
-                <span className="text-[11px] text-stone-400 font-mono">
-                  Waning Phase (Decreasing Illumination)
+                <span className="text-[11px] text-stone-400 font-mono block">
+                  {isUrdu ? 'گھٹنے کا دورانیہ (روشنی میں کمی)' : 'Waning Phase (Decreasing Illumination)'}
                 </span>
               </div>
             </div>
@@ -383,7 +403,7 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
               </span>
             )}
           </div>
-          <p className="text-xs text-stone-300 leading-relaxed font-urdu">
+          <p className={`text-xs text-stone-300 leading-relaxed ${isUrdu ? 'font-urdu text-right' : 'text-left'}`}>
             {isUrdu
               ? 'بدرِ کامل (100%) کے بعد سے لے کر اگلے محاق (0%) تک چاندنی گھٹتی ہے (اورنج/پیلا انڈیکیٹر ↓)۔'
               : 'From Full Moon (100%) to the next New Moon (0%), illumination shrinks steadily with orange/yellow downward arrow ↓.'}
@@ -438,15 +458,15 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
                 </div>
 
                 {/* Names & Illumination */}
-                <div className="space-y-0.5 w-full">
-                  <span className="text-xs font-bold text-white block font-urdu truncate">
-                    {phase.nameUr}
+                <div className="space-y-0.5 w-full text-center">
+                  <span className={`text-xs font-bold text-white block truncate ${isUrdu ? 'font-urdu' : ''}`}>
+                    {isUrdu ? phase.nameUr : phase.nameEn}
                   </span>
                   <span className="text-[10px] text-stone-400 font-mono block truncate">
-                    {phase.nameEn}
+                    {isUrdu ? phase.nameEn : phase.nameUr}
                   </span>
                   <span className={`text-[10px] font-mono font-bold block pt-1 border-t border-stone-800/80 ${phase.directionColor}`}>
-                    {phase.rangeEn}
+                    {isUrdu ? phase.rangeUr : phase.rangeEn}
                   </span>
                 </div>
               </div>
@@ -472,35 +492,57 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
             </p>
           </div>
 
-          {/* Mode Switcher Buttons */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-stone-900 border border-stone-800 self-start md:self-auto shrink-0">
-            <button
-              type="button"
-              onClick={() => setTimelineMode('cycle')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                timelineMode === 'cycle'
-                  ? 'bg-emerald-600 text-stone-950 shadow-md font-black'
-                  : 'text-stone-400 hover:text-stone-200'
-              }`}
-            >
-              {isUrdu ? '24 مرحلہ وار چکر (↑ و ↓ دونوں)' : '24h Cycle (↑ & ↓)'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setTimelineMode('live')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                timelineMode === 'live'
-                  ? 'bg-emerald-600 text-stone-950 shadow-md font-black'
-                  : 'text-stone-400 hover:text-stone-200'
-              }`}
-            >
-              {isUrdu ? '24 گھنٹے لائیو کراچی' : '24h Live Karachi'}
-            </button>
+          {/* Mode Switcher Buttons & Scroll Controls */}
+          <div className="flex items-center gap-2 flex-wrap self-start md:self-auto shrink-0" dir={isUrdu ? 'rtl' : 'ltr'}>
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-stone-900 border border-stone-800">
+              <button
+                type="button"
+                onClick={() => setTimelineMode('cycle')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  timelineMode === 'cycle'
+                    ? 'bg-emerald-600 text-stone-950 shadow-md font-black'
+                    : 'text-stone-400 hover:text-stone-200'
+                }`}
+              >
+                {isUrdu ? '24 مرحلہ وار چکر (↑ و ↓ دونوں)' : '24h Cycle (↑ & ↓)'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTimelineMode('live')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  timelineMode === 'live'
+                    ? 'bg-emerald-600 text-stone-950 shadow-md font-black'
+                    : 'text-stone-400 hover:text-stone-200'
+                }`}
+              >
+                {isUrdu ? '24 گھنٹے لائیو کراچی' : '24h Live Karachi'}
+              </button>
+            </div>
+
+            {/* Scroll Navigation Chevrons */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-stone-900 border border-stone-800">
+              <button
+                type="button"
+                onClick={() => scrollTimeline('prev')}
+                className="p-1 rounded-lg hover:bg-stone-800 text-stone-300 hover:text-amber-400 transition-colors"
+                title={isUrdu ? 'پچھلے گھنٹے' : 'Scroll previous'}
+              >
+                {isUrdu ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollTimeline('next')}
+                className="p-1 rounded-lg hover:bg-stone-800 text-stone-300 hover:text-amber-400 transition-colors"
+                title={isUrdu ? 'اگلے گھنٹے' : 'Scroll next'}
+              >
+                {isUrdu ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Direction Key Indicator */}
-        <div className="flex items-center gap-3 text-[11px] font-mono border-t border-stone-800/60 pt-2 flex-wrap">
+        <div className="flex items-center gap-3 text-[11px] font-mono border-t border-stone-800/60 pt-2 flex-wrap" dir={isUrdu ? 'rtl' : 'ltr'}>
           <span className="flex items-center gap-1 text-emerald-400 font-bold">
             <span>↑</span>
             <span>{isUrdu ? 'سبز تیر = چاندنی بڑھ رہی ہے (0% تا 100% بدر)' : 'Green ↑ = Illumination Increasing (Waxing)'}</span>
@@ -514,6 +556,7 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
 
         {/* Horizontal Smooth Scroll Bar */}
         <div
+          ref={timelineScrollRef}
           className="overflow-x-auto scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900 pb-2"
           dir={isUrdu ? 'rtl' : 'ltr'}
         >
@@ -536,7 +579,7 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
                   <div>
                     <div className="flex items-center justify-center gap-1">
                       <span className="text-xs font-mono font-bold text-white block">
-                        {h.timeFormatted}
+                        {isUrdu ? h.timeUr : h.timeFormatted}
                       </span>
                       {isItemActive && (
                         <span className="px-1.5 py-0.2 rounded-full bg-emerald-500 text-stone-950 text-[8px] font-black uppercase">
@@ -545,7 +588,7 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
                       )}
                     </div>
                     <span className="text-[10px] text-stone-400 font-urdu block">
-                      {h.timeUr}
+                      {isUrdu ? h.timeFormatted : h.timeUr}
                     </span>
                   </div>
 
@@ -600,9 +643,11 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
                     </span>
                   </div>
 
-                  {/* Phase name in Urdu */}
-                  <div className="pt-1.5 border-t border-stone-800/80 w-full text-[10px] font-urdu text-stone-300 truncate">
-                    {h.phaseNameUr}
+                  {/* Phase name in Urdu / English */}
+                  <div className="pt-1.5 border-t border-stone-800/80 w-full text-[10px] text-stone-300 truncate">
+                    <span className={isUrdu ? 'font-urdu' : 'font-sans'}>
+                      {isUrdu ? h.phaseNameUr : (h.phaseNameEn || h.phaseId)}
+                    </span>
                   </div>
                 </div>
               );
