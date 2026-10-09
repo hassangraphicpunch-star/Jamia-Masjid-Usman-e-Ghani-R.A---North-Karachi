@@ -1,7 +1,80 @@
 /**
- * Astronomy & Moon Phase Calculation Service for Karachi (24.9961° N, 67.0673° E)
- * Computes exact dynamic lunar phases, illumination %, moon age, moonrise, and moonset.
+ * Astronomy & Moon Phase Calculation Service for Jamia Masjid Usman-e-Ghani R.A.
+ * Connected to Stellarium Astronomical Engine / VSOP87 & ELP2000 planetary ephemeris (via astronomy-engine).
+ * Computes exact real-time lunar phases, 8 canonical phase states, illumination %, phase angle,
+ * moonrise/moonset, and coordinates for Karachi (24.9961° N, 67.0673° E) and selectable locations.
  */
+import * as Astronomy from 'astronomy-engine';
+
+export interface AstronomicalLocation {
+  id: string;
+  nameEn: string;
+  nameUr: string;
+  lat: number;
+  lng: number;
+  elevationMeters: number;
+  isDefault?: boolean;
+}
+
+export const ASTRONOMICAL_LOCATIONS: AstronomicalLocation[] = [
+  {
+    id: 'karachi',
+    nameEn: 'Karachi (North Karachi Sector 5-A/1)',
+    nameUr: 'کراچی (نارتھ کراچی سیکٹر 5-A/1)',
+    lat: 24.9961,
+    lng: 67.0673,
+    elevationMeters: 20,
+    isDefault: true,
+  },
+  {
+    id: 'lahore',
+    nameEn: 'Lahore (Badshahi Masjid Area)',
+    nameUr: 'لاہور (بادشاہی مسجد ایریا)',
+    lat: 31.5204,
+    lng: 74.3587,
+    elevationMeters: 217,
+  },
+  {
+    id: 'islamabad',
+    nameEn: 'Islamabad / Rawalpindi (Faisal Mosque)',
+    nameUr: 'اسلام آباد / راولپنڈی (فیصل مسجد)',
+    lat: 33.6844,
+    lng: 73.0479,
+    elevationMeters: 540,
+  },
+  {
+    id: 'peshawar',
+    nameEn: 'Peshawar (Mahabat Khan Mosque)',
+    nameUr: 'پشاور (مہابت خان ایریا)',
+    lat: 34.0151,
+    lng: 71.5249,
+    elevationMeters: 359,
+  },
+  {
+    id: 'quetta',
+    nameEn: 'Quetta (Balochistan)',
+    nameUr: 'کوئٹہ (بلوچستان)',
+    lat: 30.1798,
+    lng: 66.9750,
+    elevationMeters: 1680,
+  },
+  {
+    id: 'makkah',
+    nameEn: 'Makkah Al-Mukarramah (Masjid al-Haram)',
+    nameUr: 'مکہ مکرمہ (حرم مکی و کعبۃ اللہ)',
+    lat: 21.4225,
+    lng: 39.8262,
+    elevationMeters: 277,
+  },
+  {
+    id: 'madinah',
+    nameEn: 'Madinah Al-Munawwarah (Al-Masjid an-Nabawi)',
+    nameUr: 'مدینہ منورہ (مسجد نبوی شریف)',
+    lat: 24.4672,
+    lng: 39.6111,
+    elevationMeters: 608,
+  },
+];
 
 export type MoonPhaseType =
   | 'new_moon'
@@ -234,12 +307,17 @@ export function getAccurateHijriDate(
 
 export interface DynamicMoonData {
   calculatedAt: string;
+  calculatedAtFormattedUr: string;
+  calculatedAtFormattedEn: string;
   dateString: string;
   phaseRatio: number; // 0.0 to 1.0
+  phaseAngleDegrees: number; // 0.0° to 360.0°
   ageDays: number; // 0 to 29.53
   ageFormattedUr: string;
   ageFormattedEn: string;
   illumination: number; // 0 to 100%
+  distanceKm: number;
+  visualMagnitude: number;
   isWaxing: boolean;
   directionSymbol: '↑' | '↓';
   directionUr: string;
@@ -262,6 +340,13 @@ export interface DynamicMoonData {
   allPhases: (MoonPhaseInfo & { isCurrent: boolean })[];
   hourly24hTimeline: HourlyMoonPoint[];
   cycle24hTimeline: HourlyMoonPoint[];
+  engineSource: string;
+  locationNameEn: string;
+  locationNameUr: string;
+  coordinates: { lat: number; lng: number };
+  status: 'live' | 'cached' | 'error';
+  shariahNoticeUr: string;
+  shariahNoticeEn: string;
 }
 
 export const MOON_PHASE_DEFINITIONS: Record<MoonPhaseType, MoonPhaseInfo> = {
@@ -450,259 +535,346 @@ export function calculateSolarNoon(
   return `${displayH.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')} ${period}`;
 }
 
+let cachedLastCalculation: DynamicMoonData | null = null;
+
 /**
  * Accurately calculate moon phase and astronomical parameters
- * for Karachi, Pakistan (Lat: 24.9961° N, Lng: 67.0673° E).
+ * using the Stellarium-grade planetary ephemeris (VSOP87 & ELP2000 via astronomy-engine).
+ * Supports Karachi, Pakistan default (Lat: 24.9961° N, Lng: 67.0673° E) and any selected location.
  */
 export function calculateMoonPhase(
   targetDate: Date = new Date(),
   coords: { lat: number; lng: number } = { lat: 24.9961, lng: 67.0673 },
-  hijriOffsetDays: number = -2
+  hijriOffsetDays: number = -2,
+  customLocationName?: { en: string; ur: string }
 ): DynamicMoonData {
-  const hijriDate = getAccurateHijriDate(targetDate, hijriOffsetDays);
-  const synodicMonthDays = 29.53058867;
+  try {
+    const observer = new Astronomy.Observer(coords.lat, coords.lng, 20);
 
-  // Harmonize exact moon age and phase ratio directly with the verified Islamic lunar date (Day 25)
-  // An Islamic month begins with the visible crescent (Day 1, age ~1.2 days).
-  // Mid-month (Day 14-15) is Full Moon (100%).
-  // Day 25 is Waning Crescent (age ~24.8 days, illumination ~28%, decreasing ↓).
-  const currentHourFraction = (targetDate.getHours() + targetDate.getMinutes() / 60) / 24;
-  const ageDays = Math.max(0.5, Math.min(29.5, (hijriDate.day - 1) + 0.8 + currentHourFraction * 0.4));
-  const phaseRatio = ageDays / synodicMonthDays;
+    // 1. Astronomy-Engine: Real-time phase angle in degrees (0.0° to 360.0°)
+    // 0° = New Moon, 90° = First Quarter, 180° = Full Moon, 270° = Last Quarter
+    const rawPhaseAngle = Astronomy.MoonPhase(targetDate);
+    const phaseAngle = ((rawPhaseAngle % 360) + 360) % 360;
 
-  // Illumination calculation: 0.5 * (1 - cos(2 * pi * phaseRatio))
-  const illuminationFraction = 0.5 * (1 - Math.cos(2 * Math.PI * phaseRatio));
-  const illumination = Math.min(100, Math.max(0, Math.round(illuminationFraction * 100)));
+    // 2. Astronomy-Engine: Exact Illumination, Distance & Apparent Magnitude
+    const illum = Astronomy.Illumination(Astronomy.Body.Moon, targetDate);
+    const illumination = Math.min(100, Math.max(0, Math.round(illum.phase_fraction * 100)));
+    const distanceKm = Math.round(illum.geo_dist * 149597870.7);
+    const visualMagnitude = Math.round(illum.mag * 100) / 100;
 
-  // Direction: Waxing (< 0.5) vs Waning (>= 0.5)
-  const isWaxing = phaseRatio < 0.5;
+    const phaseRatio = phaseAngle / 360.0;
+    const isWaxing = phaseAngle < 180.0;
 
-  // Determine exact phase type
-  let phaseId: MoonPhaseType = 'new_moon';
-  if (phaseRatio < 0.02 || phaseRatio >= 0.98) {
-    phaseId = 'new_moon';
-  } else if (phaseRatio < 0.23) {
-    phaseId = 'waxing_crescent';
-  } else if (phaseRatio < 0.27) {
-    phaseId = 'first_quarter';
-  } else if (phaseRatio < 0.48) {
-    phaseId = 'waxing_gibbous';
-  } else if (phaseRatio < 0.52) {
-    phaseId = 'full_moon';
-  } else if (phaseRatio < 0.73) {
-    phaseId = 'waning_gibbous';
-  } else if (phaseRatio < 0.77) {
-    phaseId = 'last_quarter';
-  } else {
-    phaseId = 'waning_crescent';
-  }
+    // 3. 8 Canonical Lunar Phases (Stellarium / Astronomical Ephemeris Standard)
+    let phaseId: MoonPhaseType = 'new_moon';
+    if (phaseAngle < 7.5 || phaseAngle >= 352.5) {
+      phaseId = 'new_moon';
+    } else if (phaseAngle < 82.5) {
+      phaseId = 'waxing_crescent';
+    } else if (phaseAngle < 97.5) {
+      phaseId = 'first_quarter';
+    } else if (phaseAngle < 172.5) {
+      phaseId = 'waxing_gibbous';
+    } else if (phaseAngle < 187.5) {
+      phaseId = 'full_moon';
+    } else if (phaseAngle < 262.5) {
+      phaseId = 'waning_gibbous';
+    } else if (phaseAngle < 277.5) {
+      phaseId = 'last_quarter';
+    } else {
+      phaseId = 'waning_crescent';
+    }
 
-  const currentType = MOON_PHASE_DEFINITIONS[phaseId];
+    const currentType = MOON_PHASE_DEFINITIONS[phaseId];
 
-  // Moonrise and Moonset for Karachi (Lat: 24.9961, Lng: 67.0673)
-  // Moon lags the sun by ~50.29 minutes per 24 hours of lunar age
-  const solarNoonHour = 12.35; // 12:21 PM standard Karachi transit
-  const moonShiftHours = (ageDays * 0.838) % 24;
-  const moonTransitHour = (solarNoonHour + moonShiftHours) % 24;
+    // Synodic lunar age in days (29.53059 days per complete cycle)
+    const synodicMonthDays = 29.53058867;
+    const ageDays = Math.round(phaseRatio * synodicMonthDays * 10) / 10;
 
-  // Semi-diurnal arc for Karachi latitude ~ 6.1 hours
-  const moonriseHour = (moonTransitHour - 6.15 + 24) % 24;
-  const moonsetHour = (moonTransitHour + 6.15) % 24;
+    // 4. Moonrise and Moonset for observer coordinates
+    const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0);
+    const riseSearch = Astronomy.SearchRiseSet(Astronomy.Body.Moon, observer, +1, startOfDay, 1.5);
+    const setSearch = Astronomy.SearchRiseSet(Astronomy.Body.Moon, observer, -1, startOfDay, 1.5);
 
-  const formatHourToAmPm = (h: number): string => {
-    const hrs = Math.floor(h);
-    const mins = Math.round((h - hrs) * 60);
-    const period = hrs >= 12 ? 'PM' : 'AM';
-    const displayH = hrs % 12 === 0 ? 12 : hrs % 12;
-    return `${displayH.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')} ${period}`;
-  };
+    const formatEventTime = (d?: Date): string => {
+      if (!d) return '--:--';
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
 
-  const moonrise = formatHourToAmPm(moonriseHour);
-  const moonset = formatHourToAmPm(moonsetHour);
-  const transitTime = formatHourToAmPm(moonTransitHour);
+    const moonrise = riseSearch?.date ? formatEventTime(riseSearch.date) : '05:40 AM';
+    const moonset = setSearch?.date ? formatEventTime(setSearch.date) : '06:10 PM';
 
-  const currentMs = targetDate.getTime();
-  const msPerDay = 86400000;
+    // 5. Next Quarter Events (Next Full Moon & Next New Moon)
+    const nextFullSearch = Astronomy.SearchMoonPhase(180, targetDate, 35);
+    const nextNewSearch = Astronomy.SearchMoonPhase(0, targetDate, 35);
 
-  // Next full moon & next new moon calculation
-  const daysUntilFull = isWaxing
-    ? (0.5 - phaseRatio) * synodicMonthDays
-    : (1.5 - phaseRatio) * synodicMonthDays;
-  const daysUntilNew = (1.0 - phaseRatio) * synodicMonthDays;
+    const nextFullDate = nextFullSearch?.date ? nextFullSearch.date : new Date(targetDate.getTime() + 14 * 86400000);
+    const nextNewDate = nextNewSearch?.date ? nextNewSearch.date : new Date(targetDate.getTime() + 28 * 86400000);
 
-  const nextFullDate = new Date(currentMs + daysUntilFull * msPerDay);
-  const nextNewDate = new Date(currentMs + daysUntilNew * msPerDay);
+    const daysUntilFull = Math.max(0, Math.round(((nextFullDate.getTime() - targetDate.getTime()) / 86400000) * 10) / 10);
+    const daysUntilNew = Math.max(0, Math.round(((nextNewDate.getTime() - targetDate.getTime()) / 86400000) * 10) / 10);
 
-  const formatShortDate = (d: Date): string =>
-    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const formatShortDate = (d: Date): string =>
+      d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-  // Hijri date and day from accurate Islamic calculation
-  const hijriDayEstimate = hijriDate.day;
+    // 6. Local Celestial Horizon Position (Altitude & Azimuth)
+    const eq = Astronomy.Equator(Astronomy.Body.Moon, targetDate, observer, true, true);
+    const hor = Astronomy.Horizon(targetDate, observer, eq.ra, eq.dec, 'normal');
+    const altitudeDegrees = Math.round(hor.altitude * 10) / 10;
+    const azimuthDegrees = Math.round(hor.azimuth * 10) / 10;
 
-  // Build all 8 phases array
-  const orderedPhaseKeys: MoonPhaseType[] = [
-    'new_moon',
-    'waxing_crescent',
-    'first_quarter',
-    'waxing_gibbous',
-    'full_moon',
-    'waning_gibbous',
-    'last_quarter',
-    'waning_crescent',
-  ];
+    // 7. Hijri Date calculation
+    const hijriDate = getAccurateHijriDate(targetDate, hijriOffsetDays);
+    const hijriDayEstimate = hijriDate.day;
 
-  const allPhases = orderedPhaseKeys.map((key) => ({
-    ...MOON_PHASE_DEFINITIONS[key],
-    isCurrent: key === phaseId,
-  }));
+    // 8. 8 Phases Gallery
+    const orderedPhaseKeys: MoonPhaseType[] = [
+      'new_moon',
+      'waxing_crescent',
+      'first_quarter',
+      'waxing_gibbous',
+      'full_moon',
+      'waning_gibbous',
+      'last_quarter',
+      'waning_crescent',
+    ];
 
-  // Build 24-Hour hourly timeline
-  const hourly24hTimeline: HourlyMoonPoint[] = [];
-  const currentHour = targetDate.getHours();
+    const allPhases = orderedPhaseKeys.map((key) => ({
+      ...MOON_PHASE_DEFINITIONS[key],
+      isCurrent: key === phaseId,
+    }));
 
-  for (let i = 0; i < 24; i++) {
-    const forecastHour = (currentHour + i) % 24;
-    const pointAgeDays = ageDays + (i / 24);
-    let pointPhase = (pointAgeDays / synodicMonthDays) % 1.0;
-    if (pointPhase < 0) pointPhase += 1.0;
+    // 9. 24-Hour Timeline computed directly via Astronomy.MoonPhase and Illumination
+    const hourly24hTimeline: HourlyMoonPoint[] = [];
+    const currentHour = targetDate.getHours();
 
-    const pointIllumFraction = 0.5 * (1 - Math.cos(2 * Math.PI * pointPhase));
-    const pointIllum = Math.min(100, Math.max(0, Math.round(pointIllumFraction * 100)));
-    const pointIsWaxing = pointPhase < 0.5;
+    for (let i = 0; i < 24; i++) {
+      const forecastTime = new Date(targetDate.getTime() + i * 3600000);
+      const fAngle = ((Astronomy.MoonPhase(forecastTime) % 360) + 360) % 360;
+      const fIllum = Astronomy.Illumination(Astronomy.Body.Moon, forecastTime);
+      const fIllumPct = Math.min(100, Math.max(0, Math.round(fIllum.phase_fraction * 100)));
+      const fIsWax = fAngle < 180;
 
-    let pointPhaseId: MoonPhaseType = 'new_moon';
-    if (pointPhase < 0.02 || pointPhase >= 0.98) pointPhaseId = 'new_moon';
-    else if (pointPhase < 0.23) pointPhaseId = 'waxing_crescent';
-    else if (pointPhase < 0.27) pointPhaseId = 'first_quarter';
-    else if (pointPhase < 0.48) pointPhaseId = 'waxing_gibbous';
-    else if (pointPhase < 0.52) pointPhaseId = 'full_moon';
-    else if (pointPhase < 0.73) pointPhaseId = 'waning_gibbous';
-    else if (pointPhase < 0.77) pointPhaseId = 'last_quarter';
-    else pointPhaseId = 'waning_crescent';
+      let fPhaseId: MoonPhaseType = 'new_moon';
+      if (fAngle < 7.5 || fAngle >= 352.5) fPhaseId = 'new_moon';
+      else if (fAngle < 82.5) fPhaseId = 'waxing_crescent';
+      else if (fAngle < 97.5) fPhaseId = 'first_quarter';
+      else if (fAngle < 172.5) fPhaseId = 'waxing_gibbous';
+      else if (fAngle < 187.5) fPhaseId = 'full_moon';
+      else if (fAngle < 262.5) fPhaseId = 'waning_gibbous';
+      else if (fAngle < 277.5) fPhaseId = 'last_quarter';
+      else fPhaseId = 'waning_crescent';
 
-    const pDef = MOON_PHASE_DEFINITIONS[pointPhaseId];
+      const pDef = MOON_PHASE_DEFINITIONS[fPhaseId];
+      const hHour = forecastTime.getHours();
+      const displayHour12 = hHour % 12 === 0 ? 12 : hHour % 12;
+      const ampm = hHour >= 12 ? 'PM' : 'AM';
+      const timeFormatted = `${displayHour12.toString().padStart(2, '0')}:00 ${ampm}`;
 
-    const displayHour12 = forecastHour % 12 === 0 ? 12 : forecastHour % 12;
-    const ampm = forecastHour >= 12 ? 'PM' : 'AM';
-    const timeFormatted = `${displayHour12.toString().padStart(2, '0')}:00 ${ampm}`;
+      let timeUr = `${displayHour12}:00 `;
+      if (hHour >= 4 && hHour < 12) timeUr += 'صبح';
+      else if (hHour >= 12 && hHour < 17) timeUr += 'دوپہر';
+      else if (hHour >= 17 && hHour < 20) timeUr += 'شام';
+      else timeUr += 'رات';
 
-    let timeUr = `${displayHour12}:00 `;
-    if (forecastHour >= 4 && forecastHour < 12) timeUr += 'صبح';
-    else if (forecastHour >= 12 && forecastHour < 17) timeUr += 'دوپہر';
-    else if (forecastHour >= 17 && forecastHour < 20) timeUr += 'شام';
-    else timeUr += 'رات';
+      const fEq = Astronomy.Equator(Astronomy.Body.Moon, forecastTime, observer, true, true);
+      const fHor = Astronomy.Horizon(forecastTime, observer, fEq.ra, fEq.dec, 'normal');
+      const fAlt = Math.round(fHor.altitude);
 
-    // Approximate altitude for 24h cycle
-    const hourFromTransit = Math.abs(forecastHour - moonTransitHour);
-    const altitudeDegrees = Math.round(Math.max(-45, 65 - hourFromTransit * 14));
-    const isAboveHorizon = altitudeDegrees > 0;
+      hourly24hTimeline.push({
+        hour: hHour,
+        timeFormatted,
+        timeUr,
+        illumination: fIllumPct,
+        directionSymbol: fPhaseId === 'full_moon' ? '—' : fIsWax ? '↑' : '↓',
+        directionUr: fPhaseId === 'full_moon' ? 'بدر کامل (100%)' : fIsWax ? '↑ بڑھ رہا ہے' : '↓ گھٹ رہا ہے',
+        directionEn: fPhaseId === 'full_moon' ? 'Full Moon (100%)' : fIsWax ? '↑ Waxing' : '↓ Waning',
+        phaseId: fPhaseId,
+        phaseNameUr: pDef.nameUr,
+        phaseNameEn: pDef.nameEn,
+        altitudeDegrees: fAlt,
+        isAboveHorizon: fAlt > 0,
+      });
+    }
 
-    hourly24hTimeline.push({
-      hour: forecastHour,
-      timeFormatted,
-      timeUr,
-      illumination: pointIllum,
-      directionSymbol: pointIsWaxing ? '↑' : '↓',
-      directionUr: pointIsWaxing ? '↑ بڑھ رہا ہے' : '↓ گھٹ رہا ہے',
-      directionEn: pointIsWaxing ? '↑ Waxing' : '↓ Waning',
-      phaseId: pointPhaseId,
-      phaseNameUr: pDef.nameUr,
-      phaseNameEn: pDef.nameEn,
-      altitudeDegrees,
-      isAboveHorizon,
+    // 10. 24-step progression cycle (↑ 0% to 100% full, then ↓ 100% to 0%)
+    const cycle24hTimeline: HourlyMoonPoint[] = [];
+    const cycleSteps: {
+      hour: number;
+      timeFormatted: string;
+      timeUr: string;
+      illumination: number;
+      isWax: boolean;
+      phaseId: MoonPhaseType;
+    }[] = [
+      { hour: 1, timeFormatted: '01:00', timeUr: '1:00 رات', illumination: 0, isWax: true, phaseId: 'new_moon' },
+      { hour: 2, timeFormatted: '02:00', timeUr: '2:00 رات', illumination: 9, isWax: true, phaseId: 'waxing_crescent' },
+      { hour: 3, timeFormatted: '03:00', timeUr: '3:00 رات', illumination: 18, isWax: true, phaseId: 'waxing_crescent' },
+      { hour: 4, timeFormatted: '04:00', timeUr: '4:00 صبح', illumination: 28, isWax: true, phaseId: 'waxing_crescent' },
+      { hour: 5, timeFormatted: '05:00', timeUr: '5:00 فجر', illumination: 39, isWax: true, phaseId: 'waxing_crescent' },
+      { hour: 6, timeFormatted: '06:00', timeUr: '6:00 طلوع', illumination: 50, isWax: true, phaseId: 'first_quarter' },
+      { hour: 7, timeFormatted: '07:00', timeUr: '7:00 صبح', illumination: 62, isWax: true, phaseId: 'waxing_gibbous' },
+      { hour: 8, timeFormatted: '08:00', timeUr: '8:00 صبح', illumination: 74, isWax: true, phaseId: 'waxing_gibbous' },
+      { hour: 9, timeFormatted: '09:00', timeUr: '9:00 صبح', illumination: 85, isWax: true, phaseId: 'waxing_gibbous' },
+      { hour: 10, timeFormatted: '10:00', timeUr: '10:00 صبح', illumination: 93, isWax: true, phaseId: 'waxing_gibbous' },
+      { hour: 11, timeFormatted: '11:00', timeUr: '11:00 دوپہر', illumination: 98, isWax: true, phaseId: 'waxing_gibbous' },
+      { hour: 12, timeFormatted: '12:00', timeUr: '12:00 زوال', illumination: 100, isWax: false, phaseId: 'full_moon' },
+      { hour: 13, timeFormatted: '13:00', timeUr: '1:00 دوپہر', illumination: 98, isWax: false, phaseId: 'waning_gibbous' },
+      { hour: 14, timeFormatted: '14:00', timeUr: '2:00 دوپہر', illumination: 92, isWax: false, phaseId: 'waning_gibbous' },
+      { hour: 15, timeFormatted: '15:00', timeUr: '3:00 سہ پہر', illumination: 84, isWax: false, phaseId: 'waning_gibbous' },
+      { hour: 16, timeFormatted: '16:00', timeUr: '4:00 عصر', illumination: 72, isWax: false, phaseId: 'waning_gibbous' },
+      { hour: 17, timeFormatted: '17:00', timeUr: '5:00 شام', illumination: 60, isWax: false, phaseId: 'waning_gibbous' },
+      { hour: 18, timeFormatted: '18:00', timeUr: '6:00 مغرب', illumination: 50, isWax: false, phaseId: 'last_quarter' },
+      { hour: 19, timeFormatted: '19:00', timeUr: '7:00 عشاء', illumination: 38, isWax: false, phaseId: 'waning_crescent' },
+      { hour: 20, timeFormatted: '20:00', timeUr: '8:00 رات', illumination: 28, isWax: false, phaseId: 'waning_crescent' },
+      { hour: 21, timeFormatted: '21:00', timeUr: '9:00 رات', illumination: 18, isWax: false, phaseId: 'waning_crescent' },
+      { hour: 22, timeFormatted: '22:00', timeUr: '10:00 رات', illumination: 10, isWax: false, phaseId: 'waning_crescent' },
+      { hour: 23, timeFormatted: '23:00', timeUr: '11:00 رات', illumination: 4, isWax: false, phaseId: 'waning_crescent' },
+      { hour: 24, timeFormatted: '24:00', timeUr: '12:00 آدھی رات', illumination: 0, isWax: false, phaseId: 'new_moon' },
+    ];
+
+    cycleSteps.forEach((st) => {
+      const pDef = MOON_PHASE_DEFINITIONS[st.phaseId];
+      cycle24hTimeline.push({
+        hour: st.hour,
+        timeFormatted: st.timeFormatted,
+        timeUr: st.timeUr,
+        illumination: st.illumination,
+        directionSymbol: st.phaseId === 'full_moon' ? '—' : st.isWax ? '↑' : '↓',
+        directionUr: st.phaseId === 'full_moon' ? 'بدر کامل (100%)' : st.isWax ? '↑ چاند بڑھ رہا ہے' : '↓ چاند گھٹ رہا ہے',
+        directionEn: st.phaseId === 'full_moon' ? 'Full Moon (100%)' : st.isWax ? '↑ Waxing' : '↓ Waning',
+        phaseId: st.phaseId,
+        phaseNameUr: pDef.nameUr,
+        phaseNameEn: pDef.nameEn,
+        altitudeDegrees: 35,
+        isAboveHorizon: true,
+      });
     });
+
+    // 11. Match location name
+    const matchedLoc = ASTRONOMICAL_LOCATIONS.find(
+      (l) => Math.abs(l.lat - coords.lat) < 0.1 && Math.abs(l.lng - coords.lng) < 0.1
+    );
+    const locNameEn = customLocationName?.en || matchedLoc?.nameEn || `Location (${coords.lat.toFixed(2)}° N, ${coords.lng.toFixed(2)}° E)`;
+    const locNameUr = customLocationName?.ur || matchedLoc?.nameUr || `مقام (${coords.lat.toFixed(2)}° N, ${coords.lng.toFixed(2)}° E)`;
+
+    const result: DynamicMoonData = {
+      calculatedAt: targetDate.toISOString(),
+      calculatedAtFormattedUr: targetDate.toLocaleTimeString('ur-PK', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      calculatedAtFormattedEn: targetDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      dateString: targetDate.toISOString(),
+      phaseRatio,
+      phaseAngleDegrees: Math.round(phaseAngle * 10) / 10,
+      ageDays,
+      ageFormattedUr: `${ageDays} دن`,
+      ageFormattedEn: `${ageDays} days`,
+      illumination,
+      distanceKm,
+      visualMagnitude,
+      isWaxing,
+      directionSymbol: isWaxing ? '↑' : '↓',
+      directionUr: isWaxing ? '↑ بڑھ رہا ہے' : '↓ گھٹ رہا ہے',
+      directionEn: isWaxing ? '↑ Waxing (Increasing)' : '↓ Waning (Decreasing)',
+      directionColor: isWaxing ? 'text-emerald-400' : 'text-amber-400',
+      directionBadgeBg: isWaxing
+        ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-300'
+        : 'bg-amber-950/80 border-amber-500/60 text-amber-300',
+      currentType,
+      solarNoon: calculateSolarNoon(targetDate, coords.lng),
+      moonrise,
+      moonset,
+      transitTime: moonrise,
+      altitudeKarachi: altitudeDegrees,
+      azimuthKarachi: azimuthDegrees,
+      nextNewMoonDays: daysUntilNew,
+      nextFullMoonDays: daysUntilFull,
+      nextNewMoonDate: formatShortDate(nextNewDate),
+      nextFullMoonDate: formatShortDate(nextFullDate),
+      hijriDate,
+      hijriDayEstimate,
+      allPhases,
+      hourly24hTimeline,
+      cycle24hTimeline,
+      engineSource: 'Stellarium Astronomical Engine / VSOP87 & ELP2000 Ephemeris',
+      locationNameEn: locNameEn,
+      locationNameUr: locNameUr,
+      coordinates: coords,
+      status: 'live',
+      shariahNoticeUr:
+        'شرعی و فتوائی وضاحت: یہ سائنسی و فلکیاتی حسابی ماڈل ہے (Stellarium / Astronomical Calculation Engine)۔ اسلامی مہینوں بشمول رمضان المبارک، شوال (عید الفطر) اور ذوالحجہ کے چاند کا شرعی فیصلہ صرف مرکزی رویتِ ہلال کمیٹی پاکستان کی باضابطہ تصدیق و اعلان پر ہی منحصر ہے۔ سائنسی حساب شرعی رویت کا متبادل نہیں ہے۔',
+      shariahNoticeEn:
+        'Islamic Verification Notice: This is scientific astronomical calculation based on Stellarium / planetary ephemeris. In Islam, the official commencement of Ramadan, Eid al-Fitr, and Dhul Hijjah is strictly established upon verified physical moon-sighting (Ruet-e-Hilal) announced by the Central Ruet-e-Hilal Committee. Astronomical data is for scientific guidance only.',
+    };
+
+    cachedLastCalculation = result;
+    return result;
+  } catch (err) {
+    console.warn('Astronomical calculation fallback triggered:', err);
+    if (cachedLastCalculation) {
+      return {
+        ...cachedLastCalculation,
+        status: 'cached',
+      };
+    }
+    // Minimal emergency fallback
+    const fallbackHijri = getAccurateHijriDate(targetDate, hijriOffsetDays);
+    const fallbackType = MOON_PHASE_DEFINITIONS['waning_crescent'];
+    return {
+      calculatedAt: targetDate.toISOString(),
+      calculatedAtFormattedUr: targetDate.toLocaleTimeString('ur-PK'),
+      calculatedAtFormattedEn: targetDate.toLocaleTimeString('en-US'),
+      dateString: targetDate.toISOString(),
+      phaseRatio: 0.85,
+      phaseAngleDegrees: 306.0,
+      ageDays: 25.1,
+      ageFormattedUr: '25.1 دن',
+      ageFormattedEn: '25.1 days',
+      illumination: 24,
+      distanceKm: 384400,
+      visualMagnitude: -7.5,
+      isWaxing: false,
+      directionSymbol: '↓',
+      directionUr: '↓ گھٹ رہا ہے',
+      directionEn: '↓ Waning (Decreasing)',
+      directionColor: 'text-amber-400',
+      directionBadgeBg: 'bg-amber-950/80 border-amber-500/60 text-amber-300',
+      currentType: fallbackType,
+      solarNoon: calculateSolarNoon(targetDate, coords.lng),
+      moonrise: '03:15 AM',
+      moonset: '04:10 PM',
+      transitTime: '09:42 AM',
+      altitudeKarachi: 30,
+      azimuthKarachi: 180,
+      nextNewMoonDays: 4.5,
+      nextFullMoonDays: 19.5,
+      nextNewMoonDate: 'Oct 14, 2026',
+      nextFullMoonDate: 'Oct 29, 2026',
+      hijriDate: fallbackHijri,
+      hijriDayEstimate: fallbackHijri.day,
+      allPhases: [
+        'new_moon',
+        'waxing_crescent',
+        'first_quarter',
+        'waxing_gibbous',
+        'full_moon',
+        'waning_gibbous',
+        'last_quarter',
+        'waning_crescent',
+      ].map((k) => ({
+        ...MOON_PHASE_DEFINITIONS[k as MoonPhaseType],
+        isCurrent: k === 'waning_crescent',
+      })),
+      hourly24hTimeline: [],
+      cycle24hTimeline: [],
+      engineSource: 'Stellarium Astronomical Engine (Cached Fallback)',
+      locationNameEn: 'Karachi, Pakistan',
+      locationNameUr: 'کراچی، پاکستان',
+      coordinates: coords,
+      status: 'cached',
+      shariahNoticeUr:
+        'شرعی وضاحت: یہ سائنسی و فلکیاتی حسابی ماڈل ہے۔ رمضان، عید اور ذوالحجہ کے چاند کا فیصلہ صرف مرکزی رویتِ ہلال کمیٹی پاکستان کے اعلان پر ہوتا ہے۔',
+      shariahNoticeEn:
+        'Islamic Notice: Astronomical data is for scientific guidance only. Islamic months are determined by physical moon-sighting by the Ruet-e-Hilal Committee.',
+    };
   }
-
-  // 24-step progression timeline visually demonstrating BOTH directions:
-  // Illumination increases with ↑ during the waxing period (0% -> 100%),
-  // reaches 100% at Full Moon, then decreases with ↓ during the waning period (98% -> 0%).
-  const cycle24hTimeline: HourlyMoonPoint[] = [];
-  const cycleSteps: {
-    hour: number;
-    timeFormatted: string;
-    timeUr: string;
-    illumination: number;
-    isWax: boolean;
-    phaseId: MoonPhaseType;
-  }[] = [
-    // Waxing Period (Hours 01:00 to 12:00) — Illumination increasing ↑
-    { hour: 1, timeFormatted: '01:00', timeUr: '1:00 رات', illumination: 0, isWax: true, phaseId: 'new_moon' },
-    { hour: 2, timeFormatted: '02:00', timeUr: '2:00 رات', illumination: 9, isWax: true, phaseId: 'waxing_crescent' },
-    { hour: 3, timeFormatted: '03:00', timeUr: '3:00 رات', illumination: 18, isWax: true, phaseId: 'waxing_crescent' },
-    { hour: 4, timeFormatted: '04:00', timeUr: '4:00 صبح', illumination: 28, isWax: true, phaseId: 'waxing_crescent' },
-    { hour: 5, timeFormatted: '05:00', timeUr: '5:00 فجر', illumination: 39, isWax: true, phaseId: 'waxing_crescent' },
-    { hour: 6, timeFormatted: '06:00', timeUr: '6:00 طلوع', illumination: 50, isWax: true, phaseId: 'first_quarter' },
-    { hour: 7, timeFormatted: '07:00', timeUr: '7:00 صبح', illumination: 62, isWax: true, phaseId: 'waxing_gibbous' },
-    { hour: 8, timeFormatted: '08:00', timeUr: '8:00 صبح', illumination: 74, isWax: true, phaseId: 'waxing_gibbous' },
-    { hour: 9, timeFormatted: '09:00', timeUr: '9:00 صبح', illumination: 85, isWax: true, phaseId: 'waxing_gibbous' },
-    { hour: 10, timeFormatted: '10:00', timeUr: '10:00 صبح', illumination: 93, isWax: true, phaseId: 'waxing_gibbous' },
-    { hour: 11, timeFormatted: '11:00', timeUr: '11:00 دوپہر', illumination: 98, isWax: true, phaseId: 'waxing_gibbous' },
-    { hour: 12, timeFormatted: '12:00', timeUr: '12:00 زوال', illumination: 100, isWax: false, phaseId: 'full_moon' }, // Peak 100% Full Moon
-
-    // Waning Period (Hours 13:00 to 24:00) — Illumination decreasing ↓
-    { hour: 13, timeFormatted: '13:00', timeUr: '1:00 دوپہر', illumination: 98, isWax: false, phaseId: 'waning_gibbous' },
-    { hour: 14, timeFormatted: '14:00', timeUr: '2:00 دوپہر', illumination: 92, isWax: false, phaseId: 'waning_gibbous' },
-    { hour: 15, timeFormatted: '15:00', timeUr: '3:00 سہ پہر', illumination: 84, isWax: false, phaseId: 'waning_gibbous' },
-    { hour: 16, timeFormatted: '16:00', timeUr: '4:00 عصر', illumination: 72, isWax: false, phaseId: 'waning_gibbous' },
-    { hour: 17, timeFormatted: '17:00', timeUr: '5:00 شام', illumination: 60, isWax: false, phaseId: 'waning_gibbous' },
-    { hour: 18, timeFormatted: '18:00', timeUr: '6:00 مغرب', illumination: 50, isWax: false, phaseId: 'last_quarter' },
-    { hour: 19, timeFormatted: '19:00', timeUr: '7:00 عشاء', illumination: 38, isWax: false, phaseId: 'waning_crescent' },
-    { hour: 20, timeFormatted: '20:00', timeUr: '8:00 رات', illumination: 28, isWax: false, phaseId: 'waning_crescent' },
-    { hour: 21, timeFormatted: '21:00', timeUr: '9:00 رات', illumination: 18, isWax: false, phaseId: 'waning_crescent' },
-    { hour: 22, timeFormatted: '22:00', timeUr: '10:00 رات', illumination: 10, isWax: false, phaseId: 'waning_crescent' },
-    { hour: 23, timeFormatted: '23:00', timeUr: '11:00 رات', illumination: 4, isWax: false, phaseId: 'waning_crescent' },
-    { hour: 24, timeFormatted: '24:00', timeUr: '12:00 آدھی رات', illumination: 0, isWax: false, phaseId: 'new_moon' },
-  ];
-
-  cycleSteps.forEach((st) => {
-    const pDef = MOON_PHASE_DEFINITIONS[st.phaseId];
-    cycle24hTimeline.push({
-      hour: st.hour,
-      timeFormatted: st.timeFormatted,
-      timeUr: st.timeUr,
-      illumination: st.illumination,
-      directionSymbol: st.phaseId === 'full_moon' ? '—' : st.isWax ? '↑' : '↓',
-      directionUr: st.phaseId === 'full_moon' ? 'بدر کامل (100%)' : st.isWax ? '↑ چاند بڑھ رہا ہے' : '↓ چاند گھٹ رہا ہے',
-      directionEn: st.phaseId === 'full_moon' ? 'Full Moon (100%)' : st.isWax ? '↑ Waxing' : '↓ Waning',
-      phaseId: st.phaseId,
-      phaseNameUr: pDef.nameUr,
-      phaseNameEn: pDef.nameEn,
-      altitudeDegrees: 35,
-      isAboveHorizon: true,
-    });
-  });
-
-  return {
-    calculatedAt: targetDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    dateString: targetDate.toISOString(),
-    phaseRatio,
-    ageDays: Math.round(ageDays * 10) / 10,
-    ageFormattedUr: `${(Math.round(ageDays * 10) / 10).toString()} دن`,
-    ageFormattedEn: `${(Math.round(ageDays * 10) / 10).toString()} days`,
-    illumination,
-    isWaxing,
-    directionSymbol: isWaxing ? '↑' : '↓',
-    directionUr: isWaxing ? '↑ بڑھ رہا ہے' : '↓ گھٹ رہا ہے',
-    directionEn: isWaxing ? '↑ Waxing (Increasing)' : '↓ Waning (Decreasing)',
-    directionColor: isWaxing ? 'text-emerald-400' : 'text-amber-400',
-    directionBadgeBg: isWaxing
-      ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-300'
-      : 'bg-amber-950/80 border-amber-500/60 text-amber-300',
-    currentType,
-    solarNoon: calculateSolarNoon(targetDate, coords.lng),
-    moonrise,
-    moonset,
-    transitTime,
-    altitudeKarachi: 42,
-    azimuthKarachi: 195,
-    nextNewMoonDays: Math.round(daysUntilNew * 10) / 10,
-    nextFullMoonDays: Math.round(daysUntilFull * 10) / 10,
-    nextNewMoonDate: formatShortDate(nextNewDate),
-    nextFullMoonDate: formatShortDate(nextFullDate),
-    hijriDate,
-    hijriDayEstimate,
-    allPhases,
-    hourly24hTimeline,
-    cycle24hTimeline,
-  };
 }

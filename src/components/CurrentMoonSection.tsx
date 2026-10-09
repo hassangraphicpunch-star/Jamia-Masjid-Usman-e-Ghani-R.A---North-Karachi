@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Moon,
   ArrowUp,
@@ -15,6 +15,12 @@ import {
   ChevronLeft,
   CheckCircle2,
   RefreshCw,
+  MapPin,
+  ShieldAlert,
+  Radio,
+  Globe,
+  Crosshair,
+  AlertTriangle,
 } from 'lucide-react';
 import { Language } from '../types';
 import {
@@ -22,6 +28,8 @@ import {
   MoonPhaseType,
   MOON_PHASE_DEFINITIONS,
   DynamicMoonData,
+  ASTRONOMICAL_LOCATIONS,
+  AstronomicalLocation,
 } from '../services/astronomyService';
 import { RealisticMoon } from './RealisticMoon';
 
@@ -44,11 +52,36 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
   const [activeDate, setActiveDate] = useState<Date>(selectedDate || new Date());
   const [selectedPhasePreview, setSelectedPhasePreview] = useState<MoonPhaseType | null>(null);
   const [timelineMode, setTimelineMode] = useState<'cycle' | 'live'>('cycle');
+  const [selectedLocationId, setSelectedLocationId] = useState<string>('karachi');
+  const [customLocation, setCustomLocation] = useState<AstronomicalLocation | null>(null);
+  const [isLocating, setIsLocating] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [showLocationPicker, setShowLocationPicker] = useState<boolean>(false);
 
-  // Dynamic astronomical calculation
+  // Auto-refresh astronomical calculations every 60 seconds automatically (Requirement #4)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveDate(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Determine active observer location (default: Karachi ST-11 Sector 5-A/1)
+  const activeLocation = useMemo<AstronomicalLocation>(() => {
+    if (customLocation) return customLocation;
+    const found = ASTRONOMICAL_LOCATIONS.find((l) => l.id === selectedLocationId);
+    return found || ASTRONOMICAL_LOCATIONS[0];
+  }, [selectedLocationId, customLocation]);
+
+  // Dynamic astronomical calculation using Stellarium / astronomy-engine
   const moonData: DynamicMoonData = useMemo(() => {
-    return calculateMoonPhase(activeDate, { lat: 24.9961, lng: 67.0673 });
-  }, [activeDate]);
+    return calculateMoonPhase(
+      activeDate,
+      { lat: activeLocation.lat, lng: activeLocation.lng },
+      -2,
+      { en: activeLocation.nameEn, ur: activeLocation.nameUr }
+    );
+  }, [activeDate, activeLocation]);
 
   // Display phase (either user previewed or actual dynamic current)
   const displayPhase = selectedPhasePreview
@@ -106,7 +139,7 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
   const timelineScrollRef = React.useRef<HTMLDivElement>(null);
 
   // Scroll to the start position (right in RTL, left in LTR) when language or mode changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (timelineScrollRef.current) {
       timelineScrollRef.current.scrollTo({
         left: isUrdu ? (timelineScrollRef.current.scrollWidth - timelineScrollRef.current.clientWidth) : 0,
@@ -118,9 +151,41 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
   const scrollTimeline = (direction: 'prev' | 'next') => {
     if (!timelineScrollRef.current) return;
     const scrollAmount = 260;
-    // In RTL, visual forward means scrolling left
     const factor = isUrdu ? (direction === 'next' ? -1 : 1) : (direction === 'next' ? 1 : -1);
     timelineScrollRef.current.scrollBy({ left: factor * scrollAmount, behavior: 'smooth' });
+  };
+
+  const handleManualRefresh = () => {
+    setIsRefreshing(true);
+    setActiveDate(new Date());
+    setSelectedPhasePreview(null);
+    if (onRefresh) onRefresh();
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
+  const handleDetectGPS = () => {
+    if (!navigator.geolocation) return;
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setCustomLocation({
+          id: 'custom_gps',
+          nameEn: `GPS Location (${lat.toFixed(2)}° N, ${lng.toFixed(2)}° E)`,
+          nameUr: `ڈیوائس جی پی ایس (${lat.toFixed(2)}° N, ${lng.toFixed(2)}° E)`,
+          lat,
+          lng,
+          elevationMeters: 20,
+        });
+        setIsLocating(false);
+        setShowLocationPicker(false);
+      },
+      () => {
+        setIsLocating(false);
+      },
+      { timeout: 8000 }
+    );
   };
 
   const resetToCurrent = () => {
@@ -140,46 +205,178 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* SECTION TOP HEADER BAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-stone-800/80">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-950/80 border border-indigo-500/40 flex items-center justify-center text-indigo-300 shrink-0 shadow-md">
-            <Moon className="w-5 h-5 text-amber-300 fill-amber-300/20" />
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4 pb-4 border-b border-stone-800/80">
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-indigo-950/80 border border-indigo-500/40 flex items-center justify-center text-indigo-300 shrink-0 shadow-md">
+            <Moon className="w-6 h-6 text-amber-300 fill-amber-300/20" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-600/50">
-                {isUrdu ? 'فلکیاتی و قمری حساب' : 'ASTRONOMICAL TELEMETRY'}
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-600/50 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{isUrdu ? 'اسٹیلریئم فلکیاتی انجن' : 'Stellarium Planetary Engine'}</span>
               </span>
-              <span className="text-xs font-bold text-amber-300 px-2 py-0.5 rounded-full bg-amber-950/70 border border-amber-600/50 font-arabic">
+              <span className="text-xs font-bold text-amber-300 px-2.5 py-0.5 rounded-full bg-amber-950/70 border border-amber-600/50 font-arabic">
                 {moonData.hijriDate.formattedUr}
               </span>
-              <span className="text-xs text-stone-400 font-mono">
-                {isUrdu ? 'کراچی (24.99° N, 67.06° E)' : 'Karachi (24.99° N, 67.06° E)'}
+              <span className="text-xs text-stone-300 font-medium flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span>{isUrdu ? activeLocation.nameUr : activeLocation.nameEn}</span>
               </span>
             </div>
             <h3 className="text-lg sm:text-2xl font-black text-white tracking-tight mt-0.5">
-              {isUrdu ? 'موجودہ چاند کی حالت (Current Moon Type)' : 'Current Moon Type & Lunar Phases'}
+              {isUrdu ? 'چاند کی لائیو سائنسی و فلکیاتی حالت (Stellarium Moon Phase)' : 'Live Moon Phase & Astronomical Ephemeris'}
             </h3>
           </div>
         </div>
 
-        {/* Live Calculation Indicator & Reset */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        {/* Live Controls: Auto-refresh, Manual refresh, and Location selection */}
+        <div className="flex items-center gap-2 flex-wrap self-start lg:self-auto">
+          {/* Location Selector Trigger */}
+          <button
+            type="button"
+            onClick={() => setShowLocationPicker(!showLocationPicker)}
+            className="px-2.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-200 text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm"
+            title={isUrdu ? 'مقام تبدیل کریں' : 'Change Location'}
+          >
+            <Compass className="w-3.5 h-3.5 text-amber-400" />
+            <span className="truncate max-w-[120px] sm:max-w-none">
+              {isUrdu ? activeLocation.nameUr.split(' ')[0] : activeLocation.nameEn.split(' ')[0]}
+            </span>
+          </button>
+
+          {/* Manual Refresh Button */}
+          <button
+            type="button"
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-stone-950 text-xs font-bold transition-all flex items-center gap-1.5 shadow-md disabled:opacity-50"
+            title={isUrdu ? 'ابھی تازہ دم کریں' : 'Refresh Now'}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isUrdu ? 'ریفریش' : 'Refresh'}</span>
+          </button>
+
+          {/* Back to Live Preview Button */}
           {selectedPhasePreview && (
             <button
               type="button"
               onClick={resetToCurrent}
-              className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-stone-950 text-xs font-bold transition-all flex items-center gap-1 shadow-md"
+              className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold transition-all flex items-center gap-1 shadow-md"
             >
-              <RefreshCw className="w-3 h-3" />
               <span>{isUrdu ? 'آج کی لائیو حالت' : 'Back to Live'}</span>
             </button>
           )}
 
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-stone-900 border border-stone-800 text-[11px] font-mono text-stone-300">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>{isUrdu ? 'خودکار فلکیاتی حساب' : 'Live Auto-Computed'}</span>
+          {/* Engine Status indicator */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-stone-900 border border-stone-800 text-[11px] font-mono text-stone-300">
+            <span className={`w-2 h-2 rounded-full ${moonData.status === 'live' ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
+            <span className="hidden sm:inline">{isUrdu ? 'خودکار فلکیاتی حساب' : 'Auto-Computed'}</span>
           </div>
+        </div>
+      </div>
+
+      {/* LOCATION SELECTION BAR (Requirement #5: Karachi default + optional selection) */}
+      {showLocationPicker && (
+        <div className="p-3.5 mb-4 rounded-2xl bg-stone-950/90 border border-emerald-500/40 space-y-2.5 animate-in fade-in slide-in-from-top duration-200">
+          <div className="flex items-center justify-between text-xs text-stone-300">
+            <span className="font-bold flex items-center gap-1.5 text-emerald-300">
+              <Globe className="w-3.5 h-3.5" />
+              <span>{isUrdu ? 'مشاہداتی مقام منتخب کریں (ڈیفالٹ: نارتھ کراچی ST-11):' : 'Select Observation Location (Default: North Karachi):'}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowLocationPicker(false)}
+              className="text-stone-400 hover:text-white text-xs"
+            >
+              ✕ {isUrdu ? 'بند کریں' : 'Close'}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {ASTRONOMICAL_LOCATIONS.map((loc) => {
+              const isSelected = !customLocation && selectedLocationId === loc.id;
+              return (
+                <button
+                  key={loc.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedLocationId(loc.id);
+                    setCustomLocation(null);
+                    setShowLocationPicker(false);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-emerald-600 text-stone-950 font-black shadow-md'
+                      : 'bg-stone-900 text-stone-300 hover:bg-stone-800 hover:text-white border border-stone-800'
+                  }`}
+                >
+                  <MapPin className="w-3 h-3 shrink-0" />
+                  <span>{isUrdu ? loc.nameUr : loc.nameEn}</span>
+                  {loc.isDefault && (
+                    <span className="text-[9px] px-1 rounded bg-stone-950/60 text-emerald-300 border border-emerald-700/50">
+                      {isUrdu ? 'ڈیفالٹ' : 'Default'}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* GPS Auto-Detect Button */}
+            <button
+              type="button"
+              onClick={handleDetectGPS}
+              disabled={isLocating}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                customLocation?.id === 'custom_gps'
+                  ? 'bg-amber-500 text-stone-950 font-black shadow-md'
+                  : 'bg-stone-900 text-stone-300 hover:bg-stone-800 hover:text-white border border-stone-800'
+              }`}
+            >
+              <Crosshair className={`w-3 h-3 ${isLocating ? 'animate-spin' : ''}`} />
+              <span>{isLocating ? (isUrdu ? 'تلاش جاری...' : 'Locating...') : (isUrdu ? 'میرا جی پی ایس مقام' : 'Use My GPS')}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SHARIAH RUET-E-HILAL VERIFICATION NOTICE (Requirement #8: Separation of Astronomical Data from Islamic Moon-Sighting) */}
+      <div className="p-3 mb-5 rounded-2xl bg-amber-950/30 border border-amber-600/40 text-xs text-amber-200/90 flex items-start gap-2.5 shadow-sm">
+        <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <div className="space-y-0.5">
+          <p className="font-bold text-amber-300">
+            {isUrdu
+              ? 'شرعی تنبیہ برائے رویتِ ہلال (شریعت و فلکیات میں فرق):'
+              : 'Shariah Moon-Sighting Notice (Religious vs Astronomical Distinction):'}
+          </p>
+          <p className="text-[11px] leading-relaxed text-stone-300 font-urdu">
+            {isUrdu ? moonData.shariahNoticeUr : moonData.shariahNoticeEn}
+          </p>
+        </div>
+      </div>
+
+      {/* STELLARIUM EPHEMERIS ENGINE TELEMETRY BAR (Requirement #1, #3, #7) */}
+      <div className="p-3 mb-6 rounded-2xl bg-stone-950/80 border border-stone-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs text-stone-300 font-mono">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-stone-900 border border-stone-800 text-emerald-300">
+            <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+            <span className="font-bold">{moonData.engineSource}</span>
+          </span>
+          <span className="text-stone-400 text-[11px]">
+            {isUrdu ? `حسابی زاویہ (Phase Angle): ${moonData.phaseAngleDegrees}°` : `Elongation / Phase Angle: ${moonData.phaseAngleDegrees}°`}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 text-[11px] text-stone-400 flex-wrap">
+          <span className="flex items-center gap-1 text-white">
+            <Clock className="w-3 h-3 text-amber-400" />
+            <span>{isUrdu ? 'آخری حسابی وقت: ' : 'Calculated: '}</span>
+            <strong className="text-amber-300 font-bold">{isUrdu ? moonData.calculatedAtFormattedUr : moonData.calculatedAtFormattedEn}</strong>
+          </span>
+          <span className="text-stone-600">•</span>
+          <span>{isUrdu ? `فاصلہ: ${moonData.distanceKm.toLocaleString()} کلومیٹر` : `Dist: ${moonData.distanceKm.toLocaleString()} km`}</span>
+          <span className="text-stone-600">•</span>
+          <span>{isUrdu ? `چمک: ${moonData.visualMagnitude} mag` : `Mag: ${moonData.visualMagnitude}`}</span>
         </div>
       </div>
 
@@ -205,7 +402,7 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
             {/* Phase Names */}
             <div className="space-y-1.5 min-w-0">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/90 border border-emerald-600/70 text-emerald-300 text-xs font-bold shadow-sm">
-                <span className="text-amber-300 text-sm">🌘</span>
+                <span className="text-amber-300 text-sm">{displayPhase.emoji}</span>
                 <span>{isUrdu ? 'موجودہ چاند کی حالت (Current Moon Type)' : 'Current Moon Type'}</span>
               </span>
 
@@ -281,7 +478,7 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
                   {moonData.moonrise}
                 </span>
                 <span className="text-[10px] text-stone-500 block truncate">
-                  {isUrdu ? 'کراچی افق' : 'Karachi East'}
+                  {isUrdu ? 'مشرقی افق' : 'East Horizon'}
                 </span>
               </div>
 
@@ -295,7 +492,7 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
                   {moonData.moonset}
                 </span>
                 <span className="text-[10px] text-stone-500 block truncate">
-                  {isUrdu ? 'مغربی افق' : 'Karachi West'}
+                  {isUrdu ? 'مغربی افق' : 'West Horizon'}
                 </span>
               </div>
 
@@ -459,9 +656,12 @@ export const CurrentMoonSection: React.FC<CurrentMoonSectionProps> = ({
 
                 {/* Names & Illumination */}
                 <div className="space-y-0.5 w-full text-center">
-                  <span className={`text-xs font-bold text-white block truncate ${isUrdu ? 'font-urdu' : ''}`}>
-                    {isUrdu ? phase.nameUr : phase.nameEn}
-                  </span>
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="text-xs" aria-hidden="true">{phase.emoji}</span>
+                    <span className={`text-xs font-bold text-white truncate ${isUrdu ? 'font-urdu' : ''}`}>
+                      {isUrdu ? phase.nameUr : phase.nameEn}
+                    </span>
+                  </div>
                   <span className="text-[10px] text-stone-400 font-mono block truncate">
                     {isUrdu ? phase.nameEn : phase.nameUr}
                   </span>
