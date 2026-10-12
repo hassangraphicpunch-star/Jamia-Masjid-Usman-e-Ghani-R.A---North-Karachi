@@ -59,6 +59,12 @@ export default function App() {
   const [adminModalOpen, setAdminModalOpen] = useState<boolean>(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState<boolean>(false);
   const [weatherModalOpen, setWeatherModalOpen] = useState<boolean>(false);
+  const [weatherModalTab, setWeatherModalTab] = useState<'overview' | 'moon_phase'>('overview');
+
+  const handleOpenWeatherModal = (tab: 'overview' | 'moon_phase' = 'overview') => {
+    setWeatherModalTab(tab);
+    setWeatherModalOpen(true);
+  };
   const [weatherData, setWeatherData] = useState<KarachiWeatherData | null>(() => getFallbackKarachiWeather());
   const [isWeatherRefreshing, setIsWeatherRefreshing] = useState<boolean>(false);
   const [azanModalOpen, setAzanModalOpen] = useState<boolean>(false);
@@ -302,7 +308,7 @@ export default function App() {
         onOpenRamadanModal={() => setRamadanModalOpen(true)}
         onOpenQuranModal={() => setQuranModalOpen(true)}
         onOpenDuasModal={() => setDuasModalOpen(true)}
-        onOpenWeatherModal={() => setWeatherModalOpen(true)}
+        onOpenWeatherModal={() => handleOpenWeatherModal('overview')}
         weatherData={weatherData}
       />
 
@@ -328,7 +334,8 @@ export default function App() {
           currentMethod={calculationMethod}
           onOpenMethodsModal={() => setPrayerMethodsModalOpen(true)}
           weatherData={weatherData}
-          onOpenWeatherModal={() => setWeatherModalOpen(true)}
+          onOpenWeatherModal={() => handleOpenWeatherModal('overview')}
+          onOpenMoonModal={() => handleOpenWeatherModal('moon_phase')}
         />
 
         {/* 2. Announcements & Notice Board (Requested feature) */}
@@ -450,6 +457,7 @@ export default function App() {
         weatherData={weatherData}
         onRefreshWeather={loadWeather}
         isRefreshing={isWeatherRefreshing}
+        initialTab={weatherModalTab}
       />
 
       {/* Floating & Mobile Bottom-Sheet Mosque Chatbot */}

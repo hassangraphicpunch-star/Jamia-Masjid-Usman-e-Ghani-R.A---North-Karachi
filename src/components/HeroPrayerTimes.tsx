@@ -103,6 +103,7 @@ interface HeroPrayerTimesProps {
   onOpenMethodsModal?: () => void;
   weatherData?: KarachiWeatherData | null;
   onOpenWeatherModal?: () => void;
+  onOpenMoonModal?: () => void;
 }
 
 export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
@@ -125,6 +126,7 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
   onOpenMethodsModal,
   weatherData,
   onOpenWeatherModal,
+  onOpenMoonModal,
 }) => {
   const [copiedNotification, setCopiedNotification] = useState(false);
   const [playbackState, setPlaybackState] = useState<AzanPlaybackState>(() =>
@@ -993,9 +995,9 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
                 </div>
                 <button
                   type="button"
-                  onClick={onOpenWeatherModal}
+                  onClick={onOpenMoonModal || onOpenWeatherModal}
                   className={`w-full flex items-center justify-center ${isUrdu ? 'lg:justify-start' : 'lg:justify-end'} gap-1.5 text-[11px] text-stone-300 hover:text-white transition-colors group/moon mt-0.5`}
-                  title={isUrdu ? 'چاند کی 24 گھنٹے تفصیلی پیش رفت اور قمری مراحل دیکھنے کے لیے کلک کریں' : 'Click to view 24h Moon Phase and timeline'}
+                  title={isUrdu ? 'چاند کی تفصیلی صورتحال، روشن فیصد اور ماہانہ قمری کیلنڈر دیکھنے کے لیے کلک کریں' : 'Click to view Moon Phase & Monthly Calendar'}
                   dir={isUrdu ? 'rtl' : 'ltr'}
                 >
                   <Moon className="w-3.5 h-3.5 text-amber-400 group-hover/moon:scale-110 transition-transform shrink-0" />

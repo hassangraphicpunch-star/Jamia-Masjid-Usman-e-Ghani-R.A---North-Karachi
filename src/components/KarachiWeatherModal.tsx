@@ -37,7 +37,8 @@ import {
   ISLAMIC_WEATHER_DUAS,
   IslamicWeatherDua,
 } from '../services/weatherService';
-import { CurrentMoonSection } from './CurrentMoonSection';
+import { MoonPhaseSection } from './MoonPhaseSection';
+import { RealisticMoon } from './RealisticMoon';
 import { calculateMoonPhase } from '../services/astronomyService';
 
 interface KarachiWeatherModalProps {
@@ -47,6 +48,14 @@ interface KarachiWeatherModalProps {
   weatherData: KarachiWeatherData | null;
   onRefreshWeather?: () => void;
   isRefreshing?: boolean;
+  initialTab?:
+    | 'overview'
+    | 'moon_phase'
+    | 'hourly'
+    | 'daily'
+    | 'air_quality'
+    | 'islamic_duas'
+    | 'mosque_advice';
 }
 
 export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
@@ -56,12 +65,19 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
   weatherData,
   onRefreshWeather,
   isRefreshing = false,
+  initialTab,
 }) => {
   const isUrdu = language === 'ur';
   const [activeTab, setActiveTab] = useState<
     'overview' | 'moon_phase' | 'hourly' | 'daily' | 'air_quality' | 'islamic_duas' | 'mosque_advice'
-  >('overview');
+  >(initialTab || 'overview');
   const [copiedDuaId, setCopiedDuaId] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (isOpen && initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   // Dynamic astronomical calculation for Karachi (Transitions daily at Maghrib prayer)
   const [liveMoon, setLiveMoon] = React.useState(() =>
@@ -708,9 +724,36 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
                 </div>
               </div>
 
-              {/* Prominent Current Moon Phase Section & Progression */}
-              <div className="pt-2">
-                <CurrentMoonSection language={language} />
+              {/* Quick Jump to Moon Phase & Calendar Tracker */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-stone-950 via-stone-900 to-emerald-950/40 border border-emerald-500/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="w-12 h-12 rounded-2xl bg-stone-950 border border-emerald-600/60 flex items-center justify-center shrink-0 shadow-md">
+                    <RealisticMoon
+                      illumination={liveMoon.illumination}
+                      isWaxing={liveMoon.isWaxing}
+                      phaseId={liveMoon.currentType.id}
+                      size={38}
+                      showGlow={true}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h5 className="font-extrabold text-sm text-white">
+                      {isUrdu ? 'مکمل قمری تقویم و چاند کا ماہانہ کیلنڈر' : 'Complete Moon Phase & Monthly Calendar'}
+                    </h5>
+                    <p className="text-xs text-stone-400 mt-0.5 truncate">
+                      {isUrdu
+                        ? `چاند: ${liveMoon.illuminationPctStr} (${liveMoon.currentType.nameUr}) • روزانہ کی مکمل تفصیلات`
+                        : `Moon: ${liveMoon.illuminationPctStr} (${liveMoon.currentType.nameEn}) • View daily calendar & upcoming phases`}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('moon_phase')}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-extrabold text-xs transition-all shadow-md active:scale-95 shrink-0 text-center"
+                >
+                  {isUrdu ? 'قمری کیلنڈر کھولیں ›' : 'Open Moon Calendar ›'}
+                </button>
               </div>
 
             </div>
@@ -719,7 +762,7 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
           {/* TAB: DEDICATED MOON PHASE & CURRENT MOON TYPE */}
           {activeTab === 'moon_phase' && (
             <div className="space-y-4 animate-in fade-in duration-200">
-              <CurrentMoonSection language={language} />
+              <MoonPhaseSection language={language} />
             </div>
           )}
 

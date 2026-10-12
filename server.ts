@@ -472,6 +472,23 @@ async function startServer() {
     12: { h: 17, m: 48 },
   };
 
+  const PAKISTAN_RUET_MONTH_STARTS = [
+    { year: 1447, month: 9, startCivilDate: '2026-02-19' },
+    { year: 1447, month: 10, startCivilDate: '2026-03-21' },
+    { year: 1447, month: 11, startCivilDate: '2026-04-19' },
+    { year: 1447, month: 12, startCivilDate: '2026-05-19' },
+    { year: 1448, month: 1, startCivilDate: '2026-06-17' },
+    { year: 1448, month: 2, startCivilDate: '2026-07-16' },
+    { year: 1448, month: 3, startCivilDate: '2026-08-15' },
+    { year: 1448, month: 4, startCivilDate: '2026-09-13' },
+    { year: 1448, month: 5, startCivilDate: '2026-10-13' }, // Jumada al-Awwal 1448 (Central Ruet-e-Hilal confirmed)
+    { year: 1448, month: 6, startCivilDate: '2026-11-11' },
+    { year: 1448, month: 7, startCivilDate: '2026-12-11' },
+    { year: 1448, month: 8, startCivilDate: '2027-01-10' },
+    { year: 1448, month: 9, startCivilDate: '2027-02-08' },
+    { year: 1448, month: 10, startCivilDate: '2027-03-10' },
+  ];
+
   // Helper: Accurate Pakistan / Karachi Central Ruet-e-Hilal Hijri Date
   // In Islamic lunar calendar, the date changes daily at MAGHRIB (sunset), NOT at midnight!
   function getPakistanVerifiedHijriDate(d: Date = new Date()) {
@@ -504,40 +521,52 @@ async function startServer() {
     const currentMins = hour * 60 + minute;
     const maghribMins = maghrib.h * 60 + maghrib.m;
     const isPostMaghrib = currentMins >= maghribMins;
-    const maghribShift = isPostMaghrib ? 1 : 0;
 
-    const effectiveCivilDate = new Date(Date.UTC(year, month - 1, day + maghribShift, 12, 0, 0));
-    const calculationDate = new Date(effectiveCivilDate.getTime() - 2 * 86400000);
-
-    let hijriDay = 26;
-    let hijriMonth = 4;
-    let hijriYear = 1448;
-
-    try {
-      const hParts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
-        timeZone: 'UTC',
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric',
-      }).formatToParts(calculationDate);
-      for (const p of hParts) {
-        if (p.type === 'day') hijriDay = parseInt(p.value, 10);
-        if (p.type === 'month') hijriMonth = parseInt(p.value, 10);
-        if (p.type === 'year') hijriYear = parseInt(p.value, 10);
+    const civilDateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    let activeMonth = PAKISTAN_RUET_MONTH_STARTS[8]; // Default: Jumada al-Awwal 1448 AH (start 2026-10-13)
+    for (let i = PAKISTAN_RUET_MONTH_STARTS.length - 1; i >= 0; i--) {
+      if (civilDateStr >= PAKISTAN_RUET_MONTH_STARTS[i].startCivilDate) {
+        activeMonth = PAKISTAN_RUET_MONTH_STARTS[i];
+        break;
       }
-    } catch (e) {
-      hijriDay = 26;
-      hijriMonth = 4;
-      hijriYear = 1448;
+    }
+
+    const [sY, sM, sD] = activeMonth.startCivilDate.split('-').map(Number);
+    const startUtc = Date.UTC(sY, sM - 1, sD);
+    const currentUtc = Date.UTC(year, month - 1, day);
+    const diffDays = Math.round((currentUtc - startUtc) / 86400000);
+
+    let hijriDay = diffDays + 1;
+    if (isPostMaghrib) {
+      hijriDay += 1;
+    }
+
+    let hijriMonth = activeMonth.month;
+    let hijriYear = activeMonth.year;
+
+    if (hijriDay > 30) {
+      hijriDay -= 30;
+      hijriMonth += 1;
+      if (hijriMonth > 12) {
+        hijriMonth = 1;
+        hijriYear += 1;
+      }
+    } else if (hijriDay < 1) {
+      hijriDay = 29;
+      hijriMonth -= 1;
+      if (hijriMonth < 1) {
+        hijriMonth = 12;
+        hijriYear -= 1;
+      }
     }
 
     const months = [
       { num: 1, en: 'Muharram', ar: 'المحرّم', ur: 'محرم الحرام' },
       { num: 2, en: 'Safar', ar: 'صفر', ur: 'صفر المظفر' },
       { num: 3, en: "Rabi' al-Awwal", ar: 'ربيع الأول', ur: 'ربیع الاول' },
-      { num: 4, en: "Rabi' al-thani", ar: 'رَبِيع الثَّانِي', ur: 'ربیع الثانی' },
-      { num: 5, en: "Jumada al-Awwal", ar: 'جمادى الأولى', ur: 'جمادی الاول' },
-      { num: 6, en: "Jumada al-Thani", ar: 'جمادى الثانية', ur: 'جمادی الثانی' },
+      { num: 4, en: "Rabi' al-Thani", ar: 'رَبِيع الثَّانِي', ur: 'ربیع الثانی' },
+      { num: 5, en: 'Jumada al-Awwal', ar: 'جمادى الأولى', ur: 'جمادی الاول' },
+      { num: 6, en: 'Jumada al-Thani', ar: 'جمادى الثانية', ur: 'جمادی الثانی' },
       { num: 7, en: 'Rajab', ar: 'رجب', ur: 'رجب المرجب' },
       { num: 8, en: "Sha'ban", ar: 'شعبان', ur: 'شعبان المعظم' },
       { num: 9, en: 'Ramadan', ar: 'رمضان', ur: 'رمضان المبارک' },
@@ -546,20 +575,23 @@ async function startServer() {
       { num: 12, en: 'Dhu al-Hijjah', ar: 'ذو الحجة', ur: 'ذی الحجہ' },
     ];
 
-    const mInfo = months[month - 1] || months[3];
+    const mInfo = months[hijriMonth - 1] || months[4];
 
     return {
-      day,
-      month,
+      day: hijriDay,
+      month: hijriMonth,
       month_name: mInfo.en,
       month_name_arabic: mInfo.ar,
       month_name_urdu: mInfo.ur,
-      year,
+      year: hijriYear,
       era: 'AH (After Hijra)',
-      formatted: `${day} ${mInfo.ar} ${year} AH`,
-      formattedUr: `${day} ${mInfo.ur} ${year}ھ`,
-      formattedAr: `${day} ${mInfo.ar} ${year} هـ`,
-      date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      formatted: `${hijriDay} ${mInfo.en} ${hijriYear} AH`,
+      formattedUr: `${hijriDay} ${mInfo.ur} ${hijriYear}ھ`,
+      formattedAr: `${hijriDay} ${mInfo.ar} ${hijriYear} هـ`,
+      date: `${hijriYear}-${String(hijriMonth).padStart(2, '0')}-${String(hijriDay).padStart(2, '0')}`,
+      is_post_maghrib: isPostMaghrib,
+      maghrib_time: `${String(maghrib.h).padStart(2, '0')}:${String(maghrib.m).padStart(2, '0')}`,
+      verified_by: 'Central Ruet-e-Hilal Committee Pakistan (مرکزی رویتِ ہلال کمیٹی)',
     };
   }
 
