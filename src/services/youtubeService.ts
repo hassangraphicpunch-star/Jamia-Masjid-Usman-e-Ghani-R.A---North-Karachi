@@ -3,7 +3,7 @@ import { YouTubeChannelVideo } from '../types';
 export const MOSQUE_YOUTUBE_CONFIG = {
   channelId: 'UCwVpogbMkz9FqhtdGNS5Gvg',
   channelUrl: 'https://www.youtube.com/channel/UCwVpogbMkz9FqhtdGNS5Gvg',
-  channelTitle: 'Jamia Masjid Usman-e-Ghani Official (Sector 5-A/1 North Karachi)',
+  channelTitle: 'Islamic Studio',
   subscribeUrl: 'https://www.youtube.com/channel/UCwVpogbMkz9FqhtdGNS5Gvg?sub_confirmation=1',
 };
 
@@ -15,7 +15,7 @@ export const DEFAULT_CHANNEL_VIDEOS: YouTubeChannelVideo[] = [
     url: 'https://www.youtube.com/watch?v=rL9U3d5qT2k',
     published_at: '2026-08-28T14:30:00Z',
     thumbnailUrl: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?auto=format&fit=crop&w=1200&q=80',
-    channelTitle: 'Jamia Masjid Usman-e-Ghani Official',
+    channelTitle: 'Islamic Studio',
   },
   {
     video_id: 'wVpogbM101',
@@ -23,7 +23,7 @@ export const DEFAULT_CHANNEL_VIDEOS: YouTubeChannelVideo[] = [
     url: 'https://www.youtube.com/watch?v=wVpogbM101',
     published_at: '2026-08-25T16:00:00Z',
     thumbnailUrl: 'https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?auto=format&fit=crop&w=1200&q=80',
-    channelTitle: 'Jamia Masjid Usman-e-Ghani Official',
+    channelTitle: 'Islamic Studio',
   },
   {
     video_id: 'wVpogbM102',
@@ -31,15 +31,15 @@ export const DEFAULT_CHANNEL_VIDEOS: YouTubeChannelVideo[] = [
     url: 'https://www.youtube.com/watch?v=wVpogbM102',
     published_at: '2026-08-21T13:45:00Z',
     thumbnailUrl: 'https://images.unsplash.com/photo-1542816417-0983c9c9ad53?auto=format&fit=crop&w=1200&q=80',
-    channelTitle: 'Jamia Masjid Usman-e-Ghani Official',
+    channelTitle: 'Islamic Studio',
   },
   {
     video_id: 'wVpogbM103',
     title: 'تلاوت کلام پاک و حسن قرأت | دارالقرآن و مکتب جامع مسجد عثمان غنی',
-    url: 'https://www.youtube.com/watch?v=wVpogbM103',
+    url: 'https://www.youtube.com/live/9QSj0ZCLkg8?si=N9oaqLYPLBLkIKFu',
     published_at: '2026-08-18T10:15:00Z',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1609599006353-e629aaabfeae?auto=format&fit=crop&w=1200&q=80',
-    channelTitle: 'Jamia Masjid Usman-e-Ghani Official',
+    thumbnailUrl: '',
+    channelTitle: 'Islamic Studio',
   },
 ];
 
