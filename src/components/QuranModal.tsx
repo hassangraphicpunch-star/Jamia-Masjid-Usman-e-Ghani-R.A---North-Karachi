@@ -225,11 +225,14 @@ export const QuranModal: React.FC<QuranModalProps> = ({
                 <span className="hidden sm:inline px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 border border-amber-700 text-amber-300">
                   {isUrdu ? 'صدقۂ جاریہ' : 'Sadaqah Jariah'}
                 </span>
+                <span className="hidden md:inline px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950 border border-emerald-700/70 text-emerald-300" title={isUrdu ? 'مصحفِ عثمانی و کوفی کے مطابق کل آیات 6236 ہیں۔ 6666 کا عدد مضامین و احکام کی روایتی تقسیم پر مبنی ہے' : 'Standard Mushaf Hafs/Kufan verse count is exactly 6236'}>
+                  {isUrdu ? 'مصحفِ عثمانی: 6236 آیات' : 'Mushaf: 6,236 Verses'}
+                </span>
               </div>
               <p className="text-[11px] sm:text-xs text-stone-400 mt-0.5">
                 {isUrdu
-                  ? 'مکمل 114 سورتیں، 6236 آیات، 30 پارے، 10 مستند تراجم اور 13 قراء کرام کی صوتی تلاوت'
-                  : 'Complete 114 Surahs, 6236 Verses, 30 Juz, 10 Authentic Translations & 13 Reciters'}
+                  ? 'مکمل 114 سورتیں، 6236 آیات (مصحفِ کوفی متفقہ)، 30 پارے، 10 مستند تراجم اور 13 قراء کرام کی صوتی تلاوت'
+                  : 'Complete 114 Surahs, 6,236 Verses (Standard Kufan count), 30 Juz, 10 Authentic Translations & 13 Reciters'}
               </p>
             </div>
           </div>
