@@ -41,6 +41,8 @@ import {
   AdminPrayerSettings,
   IqamahCountdownState,
   NextPrayerState,
+  AllRestrictionsState,
+  PrayerRestrictionStatus,
 } from '../types';
 import { KarachiWeatherData } from '../services/weatherService';
 import { calculateMoonPhase } from '../services/astronomyService';
@@ -53,6 +55,7 @@ import {
   MOSQUE_COORDINATES,
   createSimulatedIqamahState,
   evaluateZawalStatus,
+  getAllPrayerRestrictions,
 } from '../services/prayerService';
 import {
   azanAudioEngine,
@@ -207,17 +210,23 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
   // Compute Ramadan Day
   const ramadanDay = getAdjustedRamadanDay(selectedRoza, selectedLocation);
 
-  // Zawal Evaluation
+  // Sunrise & Zawal Prayer Restrictions Evaluation (Dynamic Daily for Karachi Hanafi)
   const zawalWindow = jamaatTimes.zawal || '12:12 PM - 12:28 PM';
   const [zawalInfo, setZawalInfo] = useState(() => evaluateZawalStatus(zawalWindow));
+  const [restrictions, setRestrictions] = useState<AllRestrictionsState>(() =>
+    getAllPrayerRestrictions(prayerData, zawalWindow, new Date())
+  );
 
   useEffect(() => {
-    setZawalInfo(evaluateZawalStatus(zawalWindow));
-    const timer = setInterval(() => {
-      setZawalInfo(evaluateZawalStatus(zawalWindow));
-    }, 15000);
+    const update = () => {
+      const now = new Date();
+      setZawalInfo(evaluateZawalStatus(zawalWindow, now));
+      setRestrictions(getAllPrayerRestrictions(prayerData, zawalWindow, now));
+    };
+    update();
+    const timer = setInterval(update, 10000);
     return () => clearInterval(timer);
-  }, [zawalWindow]);
+  }, [prayerData, zawalWindow]);
 
   // Auto trigger Sehri & Iftar Siren in Demo Mode at scheduled times
   const lastTriggeredSirenMinute = useRef<string>('');
@@ -1543,101 +1552,244 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
           </div>
         )}
 
-        {/* PROMINENT DAILY ZAWAL & NISF-UN-NAHAR SHAR'I DISPLAY */}
+        {/* PROMINENT DAILY PRAYER RESTRICTIONS: SUNRISE & ZAWAL (ممنوعہ اوقاتِ نماز) */}
         <div
-          id="zawal-time-section"
-          className={`mb-6 rounded-2xl border p-4 sm:p-5 transition-all shadow-lg ${
-            zawalInfo.isInsideZawal
-              ? 'bg-rose-950/90 border-rose-500 ring-2 ring-rose-500/50 shadow-rose-950/50'
-              : zawalInfo.minutesRemainingUntilZawal > 0 && zawalInfo.minutesRemainingUntilZawal <= 45
-              ? 'bg-amber-950/60 border-amber-600/80 shadow-amber-950/30'
-              : 'bg-stone-950/90 border-stone-800 shadow-black/40'
-          }`}
+          id="prayer-restrictions-section"
+          className="mb-6 rounded-3xl bg-gradient-to-b from-stone-900/90 via-stone-950 to-stone-950 border border-stone-800 p-4 sm:p-5 lg:p-6 shadow-xl space-y-4"
         >
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex items-start sm:items-center gap-3.5">
-              <div
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border shadow-inner ${
-                  zawalInfo.isInsideZawal
-                    ? 'bg-rose-900/80 border-rose-400 text-rose-200 animate-bounce'
-                    : zawalInfo.minutesRemainingUntilZawal > 0 && zawalInfo.minutesRemainingUntilZawal <= 45
-                    ? 'bg-amber-900/60 border-amber-500 text-amber-300'
-                    : 'bg-stone-900 border-stone-700 text-amber-400'
-                }`}
-              >
-                <AlertCircle className="w-6 h-6" />
+          {/* Header & Badges */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-800/80">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-950/80 border border-rose-700/60 text-rose-300 text-xs font-bold">
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                  <span>{isUrdu ? 'ممنوعہ اوقاتِ نماز (فقہ حنفی)' : 'Prohibited Prayer Times (Hanafi Fiqh)'}</span>
+                </span>
+                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-600/60 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{isUrdu ? 'روزانہ خودکار شمسی حساب برائے کراچی' : 'Daily Solar Calculation for Karachi'}</span>
+                </span>
               </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                    <span>{isUrdu ? 'روزانہ وقتِ زوال (استواء آفتاب و مکروہ وقت)' : 'Daily Zawal Time & Prohibited Window (وقتِ زوال)'}</span>
-                  </h4>
+              <h4 className="text-base sm:text-xl font-black text-white mt-1.5 flex items-center gap-2">
+                <span>{isUrdu ? 'طلوعِ آفتاب و وقتِ زوال کی شرعی پابندیاں' : 'Sunrise & Zawal Prayer Restrictions'}</span>
+              </h4>
+              <p className="text-xs text-stone-300 mt-0.5">
+                {isUrdu
+                  ? 'جامعہ دارالعلوم کراچی کے فقہی معیار کے مطابق: طلوعِ آفتاب (12 منٹ) اور استواء آفتاب تا آغازِ ظہر (15 منٹ) نماز، قضا اور سجدۂ تلاوت پڑھنا مکروہِ تحریمی ہے۔'
+                  : 'Hanafi standard (Jamia Darul Uloom Karachi): Offering Salah (Fard, Qada, Nafl) and Sajdah Tilawat is strictly prohibited during sunrise (~12m) and solar noon until Dhuhr (~15m).'}
+              </p>
+            </div>
 
-                  {/* Daily Dynamic Solar Recalculation Badge */}
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-500/70 text-emerald-300 text-[11px] font-bold flex items-center gap-1 shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>{isUrdu ? 'روزانہ خودکار تبدیلی بحسابِ آفتاب' : 'Daily Dynamic Solar Calculation'}</span>
-                  </span>
-                  
-                  {/* Real-time Status Badge */}
-                  {zawalInfo.isInsideZawal ? (
-                    <span className="px-2.5 py-0.5 rounded-full bg-rose-600 text-white font-extrabold text-[11px] animate-pulse uppercase tracking-wider shadow">
-                      {isUrdu
-                        ? `⚠️ وقتِ زوال جاری ہے (${zawalInfo.minutesRemainingInZawal} منٹ باقی) - نماز و سجدہ منع ہے`
-                        : `⚠️ Zawal Active (${zawalInfo.minutesRemainingInZawal}m left) - Salah Prohibited`}
+            {/* Overall Live Restriction Summary Badge */}
+            {restrictions.activeRestriction ? (
+              <div className="shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-600/90 border border-rose-400 text-white font-extrabold text-xs shadow-lg animate-pulse">
+                <AlertCircle className="w-4 h-4" />
+                <span>
+                  {isUrdu
+                    ? `⚠️ پابندی جاری ہے (${restrictions.activeRestriction.minutesRemaining} منٹ باقی)`
+                    : `⚠️ ${restrictions.activeRestriction.statusLabelEn} (${restrictions.activeRestriction.minutesRemaining}m left)`}
+                </span>
+              </div>
+            ) : restrictions.approachingRestriction ? (
+              <div className="shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/20 border border-amber-500 text-amber-300 font-bold text-xs">
+                <Hourglass className="w-4 h-4 text-amber-400 animate-spin" />
+                <span>
+                  {isUrdu
+                    ? `مکروہ وقت قریب ہے (${restrictions.approachingRestriction.minutesUntilStart} منٹ بعد)`
+                    : `${restrictions.approachingRestriction.statusLabelEn} in ${restrictions.approachingRestriction.minutesUntilStart}m`}
+                </span>
+              </div>
+            ) : (
+              <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-600/50 text-emerald-300 font-bold text-xs">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{isUrdu ? 'مباح وقت (نماز جائز ہے)' : 'Regular Time (Salah Permitted)'}</span>
+              </div>
+            )}
+          </div>
+
+          {/* ACTIVE RESTRICTION URGENT BANNER (Only shown when a restriction is active) */}
+          {restrictions.activeRestriction && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-rose-950/90 border-2 border-rose-500 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-rose-100 animate-pulse">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-900 border border-rose-400 flex items-center justify-center shrink-0">
+                  <AlertCircle className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <div className="text-sm sm:text-base font-black text-white">
+                    {isUrdu ? restrictions.activeRestriction.shortNoticeUr : restrictions.activeRestriction.shortNoticeEn}
+                  </div>
+                  <div className="text-xs text-rose-200 mt-0.5">
+                    {isUrdu
+                      ? `${restrictions.activeRestriction.timeWindowStr} کے دوران ہر قسم کی نماز اور سجدۂ تلاوت پڑھنا ممنوع ہے۔`
+                      : `Salah and Sajdah Tilawat are strictly prohibited during ${restrictions.activeRestriction.timeWindowStr}.`}
+                  </div>
+                </div>
+              </div>
+              <div className="shrink-0 text-right sm:text-center px-3 py-1 bg-rose-900/80 rounded-lg border border-rose-400/60">
+                <span className="block text-[10px] text-rose-200 uppercase tracking-wider font-bold">
+                  {restrictions.activeRestriction.statusLabelEn}
+                </span>
+                <span className="font-mono text-sm font-black text-white">
+                  {restrictions.activeRestriction.minutesRemaining} {isUrdu ? 'منٹ باقی' : 'mins left'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* SEPARATE NOTICES GRID: 1. SUNRISE RESTRICTION & 2. ZAWAL RESTRICTION */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            {/* 1. SUNRISE RESTRICTION CARD */}
+            <div
+              className={`rounded-2xl border p-3.5 sm:p-4.5 transition-all ${
+                restrictions.sunrise.isActive
+                  ? 'bg-rose-950/80 border-rose-500 ring-2 ring-rose-500/50 shadow-lg'
+                  : restrictions.sunrise.isApproaching
+                  ? 'bg-amber-950/50 border-amber-600/70'
+                  : 'bg-stone-900/60 border-stone-800 hover:border-stone-700'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                      restrictions.sunrise.isActive
+                        ? 'bg-rose-900 border-rose-400 text-rose-200 animate-pulse'
+                        : 'bg-stone-950 border-stone-800 text-amber-400'
+                    }`}
+                  >
+                    <Sunrise className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h5 className="font-black text-sm sm:text-base text-white">
+                      {isUrdu ? '1. طلوعِ آفتاب (Sunrise)' : '1. Sunrise (Tuloo-e-Aftab)'}
+                    </h5>
+                    <span className="text-[11px] text-stone-400 block font-mono">
+                      {isUrdu ? 'ایک نیزہ بلندی (~12 منٹ)' : 'Spear Height Ascend (~12 mins)'}
                     </span>
-                  ) : zawalInfo.minutesRemainingUntilZawal > 0 && zawalInfo.minutesRemainingUntilZawal <= 45 ? (
-                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500 text-amber-300 text-[11px] font-bold">
-                      {isUrdu
-                        ? `وقتِ زوال قریب ہے (${zawalInfo.minutesRemainingUntilZawal} منٹ بعد شروع)`
-                        : `Zawal approaching in ${zawalInfo.minutesRemainingUntilZawal} mins`}
+                  </div>
+                </div>
+
+                {/* Status Badge */}
+                <div>
+                  {restrictions.sunrise.isActive ? (
+                    <span className="px-2.5 py-1 rounded-full bg-rose-600 text-white font-extrabold text-[10px] uppercase tracking-wider shadow animate-pulse inline-block">
+                      Restriction Active
+                    </span>
+                  ) : restrictions.sunrise.hasEnded ? (
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-950/90 border border-emerald-600/70 text-emerald-300 font-bold text-[10px] inline-block">
+                      {isUrdu ? 'Restriction Ended (ختم)' : 'Restriction Ended'}
+                    </span>
+                  ) : restrictions.sunrise.isApproaching ? (
+                    <span className="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500 text-amber-300 font-bold text-[10px] inline-block">
+                      {isUrdu ? `قریب ہے (${restrictions.sunrise.minutesUntilStart}m)` : `Approaching in ${restrictions.sunrise.minutesUntilStart}m`}
                     </span>
                   ) : (
-                    <span className="px-2.5 py-0.5 rounded-full bg-stone-800/80 border border-stone-700 text-stone-300 text-[11px] font-medium">
-                      {isUrdu ? 'مباح وقت (نماز جائز ہے)' : 'Regular Time (Salah Permitted)'}
+                    <span className="px-2.5 py-1 rounded-full bg-stone-800 border border-stone-700 text-stone-300 font-bold text-[10px] inline-block">
+                      {isUrdu ? 'آئندہ کل' : 'Upcoming Tomorrow'}
                     </span>
                   )}
                 </div>
-
-                <p className="text-xs text-stone-300 mt-1">
-                  {isUrdu
-                    ? 'آفتاب کی روزانہ حرکت کے اعتبار سے وقتِ زوال ہر روز تبدیل ہوتا ہے۔ استواء آفتاب تا آغازِ ظہر نماز و سجدۂ تلاوت مکروہِ تحریمی ہے۔'
-                    : 'Calculated daily from astronomical solar coordinates. Offering Salah or Sajdah Tilawat is strictly prohibited during the solar zenith window.'}
-                </p>
               </div>
+
+              {/* Required Prominent Notice */}
+              <div className="mt-3 p-2.5 rounded-xl bg-stone-950/80 border border-stone-800/90 space-y-1">
+                <div className="text-xs sm:text-sm font-bold text-amber-300 flex items-center justify-between gap-2">
+                  <span>{isUrdu ? 'طلوعِ آفتاب: نماز پڑھنا منع ہے۔' : 'Sunrise: Namaz parhna  mana hai.'}</span>
+                  <span className="text-[10px] font-mono text-stone-400 bg-stone-900 px-1.5 py-0.5 rounded border border-stone-800 shrink-0">
+                    Hanafi
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-stone-800/70">
+                  <span className="text-stone-400">{isUrdu ? 'ممنوعہ وقفہ (PKT):' : 'Prohibited Window (PKT):'}</span>
+                  <span className="font-mono font-black text-rose-300 tracking-wide text-xs sm:text-sm">
+                    {restrictions.sunrise.timeWindowStr}
+                  </span>
+                </div>
+              </div>
+
+              {/* Fiqh Explanation & Ishraq Transition */}
+              <p className="text-[11px] text-stone-400 mt-2 leading-relaxed">
+                {isUrdu
+                  ? 'طلوع کے وقت سے 12 منٹ تک نماز و سجدہ مکروہِ تحریمی ہے۔ اس کے اختتام پر صلاۃ الاشراق جائز ہو جاتی ہے۔'
+                  : 'Salah is prohibited from the moment sunrise begins for 12 minutes until the sun rises a spear height. Ishraq Salah becomes permissible immediately after.'}
+              </p>
             </div>
 
-            {/* Timings Cards: Zawal Window + Dhuhr Entry */}
-            <div className="grid grid-cols-1 min-[500px]:grid-cols-2 gap-2 sm:gap-3 bg-stone-900/90 p-2.5 sm:p-3 rounded-xl border border-stone-700/80 w-full lg:w-auto">
-              {/* Zawal Prohibited Window */}
-              <div className={`text-center px-2 py-1.5 rounded-lg border ${
-                zawalInfo.isInsideZawal
-                  ? 'bg-rose-950 border-rose-700 text-rose-200 ring-1 ring-rose-500'
-                  : 'bg-stone-950/80 border-rose-900/60'
-              }`}>
-                <span className="block text-[10px] text-rose-400 font-semibold truncate">
-                  {isUrdu ? 'مکروہ وقتِ زوال' : 'Zawal Window'}
-                </span>
-                <span className="text-xs sm:text-sm md:text-base font-black text-amber-300 font-mono tracking-tight block">
-                  {zawalWindow}
-                </span>
-                <span className="block text-[9px] text-rose-400 truncate">
-                  {isUrdu ? 'نماز و سجدہ منع' : 'Salah Prohibited'}
-                </span>
+            {/* 2. ZAWAL RESTRICTION CARD */}
+            <div
+              className={`rounded-2xl border p-3.5 sm:p-4.5 transition-all ${
+                restrictions.zawal.isActive
+                  ? 'bg-rose-950/80 border-rose-500 ring-2 ring-rose-500/50 shadow-lg'
+                  : restrictions.zawal.isApproaching
+                  ? 'bg-amber-950/50 border-amber-600/70'
+                  : 'bg-stone-900/60 border-stone-800 hover:border-stone-700'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                      restrictions.zawal.isActive
+                        ? 'bg-rose-900 border-rose-400 text-rose-200 animate-pulse'
+                        : 'bg-stone-950 border-stone-800 text-amber-400'
+                    }`}
+                  >
+                    <Sun className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h5 className="font-black text-sm sm:text-base text-white">
+                      {isUrdu ? '2. وقتِ زوال (Istiwa-e-Shams)' : '2. Zawal (Solar Noon / Istiwa)'}
+                    </h5>
+                    <span className="text-[11px] text-stone-400 block font-mono">
+                      {isUrdu ? 'استواء تا آغازِ ظہر (~15 منٹ)' : 'Midday Zenith until Dhuhr (~15 mins)'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Status Badge */}
+                <div>
+                  {restrictions.zawal.isActive ? (
+                    <span className="px-2.5 py-1 rounded-full bg-rose-600 text-white font-extrabold text-[10px] uppercase tracking-wider shadow animate-pulse inline-block">
+                      Restriction Active
+                    </span>
+                  ) : restrictions.zawal.hasEnded ? (
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-950/90 border border-emerald-600/70 text-emerald-300 font-bold text-[10px] inline-block">
+                      {isUrdu ? 'Restriction Ended (ختم)' : 'Restriction Ended'}
+                    </span>
+                  ) : restrictions.zawal.isApproaching ? (
+                    <span className="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500 text-amber-300 font-bold text-[10px] inline-block">
+                      {isUrdu ? `قریب ہے (${restrictions.zawal.minutesUntilStart}m)` : `Approaching in ${restrictions.zawal.minutesUntilStart}m`}
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-1 rounded-full bg-stone-800 border border-stone-700 text-stone-300 font-bold text-[10px] inline-block">
+                      {isUrdu ? 'آئندہ وقت' : 'Upcoming'}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Dhuhr Begins */}
-              <div className="text-center px-2 py-1.5 bg-stone-950/80 rounded-lg border border-stone-800">
-                <span className="block text-[10px] text-stone-400 font-semibold truncate">
-                  {isUrdu ? 'ظہر کا وقت شروع' : 'Dhuhr Begins'}
-                </span>
-                <span className="text-xs sm:text-sm md:text-base font-black text-emerald-400 font-mono tracking-tight block">
-                  {formatTo12Hour(prayerData.dhuhr)}
-                </span>
-                <span className="block text-[9px] text-emerald-400 truncate">
-                  {isUrdu ? 'زوال ختم، نماز جائز' : 'Zawal Over'}
-                </span>
+              {/* Required Prominent Notice */}
+              <div className="mt-3 p-2.5 rounded-xl bg-stone-950/80 border border-stone-800/90 space-y-1">
+                <div className="text-xs sm:text-sm font-bold text-amber-300 flex items-center justify-between gap-2">
+                  <span>{isUrdu ? 'وقتِ زوال: نماز پڑھنا منع ہے۔' : 'Zawal: Namaz parhna  mana hai.'}</span>
+                  <span className="text-[10px] font-mono text-stone-400 bg-stone-900 px-1.5 py-0.5 rounded border border-stone-800 shrink-0">
+                    Hanafi
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-stone-800/70">
+                  <span className="text-stone-400">{isUrdu ? 'ممنوعہ وقفہ (PKT):' : 'Prohibited Window (PKT):'}</span>
+                  <span className="font-mono font-black text-rose-300 tracking-wide text-xs sm:text-sm">
+                    {restrictions.zawal.timeWindowStr}
+                  </span>
+                </div>
               </div>
+
+              {/* Fiqh Explanation & Dhuhr Entry */}
+              <p className="text-[11px] text-stone-400 mt-2 leading-relaxed">
+                {isUrdu
+                  ? 'استواء آفتاب کے وقت نماز مکروہِ تحریمی ہے۔ جیسے ہی وقتِ ظہر داخل ہوتا ہے، زوال ختم اور نمازِ ظہر جائز ہو جاتی ہے۔'
+                  : 'Calculated dynamically daily from Karachi solar coordinates. When Dhuhr begins, Zawal restriction ends and Zuhr Salah becomes valid.'}
+              </p>
             </div>
           </div>
         </div>

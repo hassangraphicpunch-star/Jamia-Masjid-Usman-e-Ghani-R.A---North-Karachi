@@ -8,6 +8,8 @@ import {
   MosqueVideoItem,
   IqamahCountdownState,
   PrayerCalculationMethod,
+  PrayerRestrictionStatus,
+  AllRestrictionsState,
 } from '../types';
 import {
   PRAYER_CALCULATION_METHODS,
@@ -909,7 +911,196 @@ export function calculateJamaatTimes(
   };
 }
 
-// Evaluate whether the current time is inside the prohibited Zawal window
+// Helper to obtain current minute of the day in Karachi local time (Asia/Karachi)
+export function getKarachiLocalMinutes(now = new Date()): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Karachi',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: false,
+  }).formatToParts(now);
+  let hour = 0;
+  let minute = 0;
+  let second = 0;
+  for (const p of parts) {
+    if (p.type === 'hour') hour = parseInt(p.value, 10);
+    if (p.type === 'minute') minute = parseInt(p.value, 10);
+    if (p.type === 'second') second = parseInt(p.value, 10);
+  }
+  return hour * 60 + minute + second / 60;
+}
+
+// Helper to format minutes into 12-hour AM/PM string
+export function formatMinutesTo12Hour(mins: number): string {
+  const normalized = (Math.floor(mins) + 1440) % 1440;
+  const h = Math.floor(normalized / 60) % 24;
+  const m = normalized % 60;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+}
+
+/**
+ * 1. Sunrise (Tuloo-e-Aftab) Namaz Restriction Evaluator
+ * 
+ * Fiqh Basis (Hanafi - Jamia Darul Uloom Karachi & Jamia Banuri Town):
+ * From the moment the sun begins to rise (Tuloo) until it ascends by a spear's height (رمح / ~12 mins in Karachi),
+ * offering Farz, Qaza, Nafl, and Sajdah Tilawat is strictly prohibited (مکروہِ تحریمی).
+ * Ishraq Salah becomes permissible immediately after this restriction ends.
+ */
+export function evaluateSunriseRestriction(
+  sunriseTimeStr: string,
+  offsetMinutes: number = 12,
+  now = new Date()
+): PrayerRestrictionStatus {
+  const currentMinutes = getKarachiLocalMinutes(now);
+
+  const startM = timeStringToMinutes(sunriseTimeStr || '06:26');
+  const start12h = formatMinutesTo12Hour(startM);
+  const endM = (startM + offsetMinutes) % 1440;
+  const end12h = formatMinutesTo12Hour(endM);
+
+  const isActive = currentMinutes >= startM && currentMinutes < endM;
+  const isApproaching = startM > currentMinutes && (startM - currentMinutes) <= 45;
+  const hasEnded = currentMinutes >= endM;
+  const minutesRemaining = isActive ? Math.ceil(endM - currentMinutes) : 0;
+  const minutesUntilStart = startM > currentMinutes ? Math.ceil(startM - currentMinutes) : 0;
+
+  let status: 'active' | 'approaching' | 'ended' | 'upcoming' = 'upcoming';
+  let statusLabelEn = 'Restriction Upcoming';
+  let statusLabelUr = 'آئندہ مکروہ وقت';
+
+  if (isActive) {
+    status = 'active';
+    statusLabelEn = 'Restriction Active';
+    statusLabelUr = 'مکروہ وقت جاری ہے';
+  } else if (isApproaching) {
+    status = 'approaching';
+    statusLabelEn = 'Restriction Approaching';
+    statusLabelUr = 'مکروہ وقت قریب ہے';
+  } else if (hasEnded) {
+    status = 'ended';
+    statusLabelEn = 'Restriction Ended';
+    statusLabelUr = 'مکروہ وقت ختم ہو چکا ہے';
+  }
+
+  return {
+    id: 'sunrise',
+    nameEn: 'Sunrise (Tuloo-e-Aftab)',
+    nameUr: 'طلوعِ آفتاب',
+    shortNoticeEn: 'Sunrise: Namaz parhna  mana hai.',
+    shortNoticeUr: 'طلوعِ آفتاب: نماز پڑھنا منع ہے۔',
+    status,
+    statusLabelEn,
+    statusLabelUr,
+    isActive,
+    isApproaching,
+    hasEnded,
+    startTime12h: start12h,
+    endTime12h: end12h,
+    timeWindowStr: `${start12h} - ${end12h} PKT`,
+    minutesRemaining,
+    minutesUntilStart,
+    fiqhNoteEn: 'According to Hanafi fiqh (Jamia Darul Uloom Karachi), offering Salah (Fard, Qada, Nafl) and Sajdah Tilawat is strictly prohibited from the moment sunrise begins until the sun has risen above the horizon to the height of a spear (~12 minutes). Ishraq Salah becomes permissible immediately after this restriction window ends.',
+    fiqhNoteUr: 'فقہ حنفی (جامعہ دارالعلوم کراچی و جامعہ بنوری ٹاؤن) کے مطابق طلوعِ آفتاب کے وقت سے لے کر ایک نیزہ بلند ہونے (تقریباً 12 منٹ) تک نماز، قضا اور سجدۂ تلاوت پڑھنا مکروہِ تحریمی و منع ہے۔ اس مکروہ وقت کے اختتام پر صلاۃ الاشراق کا وقت شروع ہوتا ہے۔',
+  };
+}
+
+/**
+ * 2. Zawal (Solar Noon / Istiwa) Namaz Restriction Evaluator
+ * 
+ * Fiqh Basis (Hanafi):
+ * At solar zenith (استواء الشمس) until the sun begins to decline (Dhuhr entry, ~15 mins),
+ * offering Salah and Sajdah Tilawat is strictly prohibited (مکروہِ تحریمی).
+ * Zuhr Salah starts immediately when this restriction ends.
+ */
+export function evaluateZawalRestriction(
+  zawalTimeStr: string,
+  dhuhrTimeStr: string,
+  now = new Date()
+): PrayerRestrictionStatus {
+  const currentMinutes = getKarachiLocalMinutes(now);
+
+  const parts = (zawalTimeStr || '').split('-').map((s) => s.trim());
+  const dhuhr12h = formatTo12Hour(dhuhrTimeStr || '12:12');
+  const dhuhrM = timeStringToMinutes(dhuhr12h);
+
+  const start12h = parts[0] || formatMinutesTo12Hour(Math.max(0, dhuhrM - 15));
+  const end12h = parts[1] || dhuhr12h;
+
+  const startM = timeStringToMinutes(start12h);
+  const endM = timeStringToMinutes(end12h);
+
+  const isActive = currentMinutes >= startM && currentMinutes < endM;
+  const isApproaching = startM > currentMinutes && (startM - currentMinutes) <= 45;
+  const hasEnded = currentMinutes >= endM;
+  const minutesRemaining = isActive ? Math.ceil(endM - currentMinutes) : 0;
+  const minutesUntilStart = startM > currentMinutes ? Math.ceil(startM - currentMinutes) : 0;
+
+  let status: 'active' | 'approaching' | 'ended' | 'upcoming' = 'upcoming';
+  let statusLabelEn = 'Restriction Upcoming';
+  let statusLabelUr = 'آئندہ مکروہ وقت';
+
+  if (isActive) {
+    status = 'active';
+    statusLabelEn = 'Restriction Active';
+    statusLabelUr = 'مکروہ وقت جاری ہے';
+  } else if (isApproaching) {
+    status = 'approaching';
+    statusLabelEn = 'Restriction Approaching';
+    statusLabelUr = 'مکروہ وقت قریب ہے';
+  } else if (hasEnded) {
+    status = 'ended';
+    statusLabelEn = 'Restriction Ended';
+    statusLabelUr = 'مکروہ وقت ختم ہو چکا ہے';
+  }
+
+  return {
+    id: 'zawal',
+    nameEn: 'Zawal (Solar Noon / Istiwa)',
+    nameUr: 'وقتِ زوال (استواءِ شمس)',
+    shortNoticeEn: 'Zawal: Namaz parhna  mana hai.',
+    shortNoticeUr: 'وقتِ زوال: نماز پڑھنا منع ہے۔',
+    status,
+    statusLabelEn,
+    statusLabelUr,
+    isActive,
+    isApproaching,
+    hasEnded,
+    startTime12h: start12h,
+    endTime12h: end12h,
+    timeWindowStr: `${start12h} - ${end12h} PKT`,
+    minutesRemaining,
+    minutesUntilStart,
+    fiqhNoteEn: 'Calculated dynamically daily from Karachi astronomical solar coordinates. During midday solar zenith (Istiwa-e-Shams) before Dhuhr (~15 minutes), offering Salah or Sajdah Tilawat is strictly prohibited. As soon as Dhuhr begins, Zawal restriction ends and Zuhr Salah becomes valid.',
+    fiqhNoteUr: 'فلکیاتی حسابی ماڈل کے تحت روزانہ استواء آفتاب تا آغازِ ظہر (تقریباً 15 منٹ) نماز اور سجدۂ تلاوت مکروہِ تحریمی ہے۔ جیسے ہی وقتِ ظہر داخل ہوتا ہے، زوال کا مکروہ وقت ختم ہو جاتا ہے اور نمازِ ظہر جائز ہو جاتی ہے۔',
+  };
+}
+
+/**
+ * 3. Combined Prayer Restrictions Evaluator
+ */
+export function getAllPrayerRestrictions(
+  athanTimes: { sunrise: string; dhuhr: string; fajr?: string; maghrib?: string },
+  customZawalSetting?: string,
+  now = new Date()
+): AllRestrictionsState {
+  const sunrise = evaluateSunriseRestriction(athanTimes.sunrise, 12, now);
+  const zawal = evaluateZawalRestriction(customZawalSetting || '', athanTimes.dhuhr, now);
+
+  const activeRestriction = sunrise.isActive ? sunrise : zawal.isActive ? zawal : null;
+  const approachingRestriction = sunrise.isApproaching ? sunrise : zawal.isApproaching ? zawal : null;
+
+  return {
+    sunrise,
+    zawal,
+    activeRestriction,
+    approachingRestriction,
+  };
+}
+
+// Evaluate whether the current time is inside the prohibited Zawal window (Retained for backwards compatibility)
 export function evaluateZawalStatus(zawalTimeStr: string, now = new Date()): {
   isInsideZawal: boolean;
   minutesRemainingUntilZawal: number;
@@ -917,7 +1108,7 @@ export function evaluateZawalStatus(zawalTimeStr: string, now = new Date()): {
   zawalStart12h: string;
   zawalEnd12h: string;
 } {
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentMinutes = getKarachiLocalMinutes(now);
   
   // parse "12:12 PM - 12:28 PM" or fallback "12:15 PM - 12:30 PM"
   const parts = (zawalTimeStr || '12:15 PM - 12:30 PM').split('-').map((s) => s.trim());
@@ -928,8 +1119,8 @@ export function evaluateZawalStatus(zawalTimeStr: string, now = new Date()): {
   const endM = timeStringToMinutes(endStr);
   
   const isInside = currentMinutes >= startM && currentMinutes < endM;
-  const minsUntil = startM > currentMinutes ? startM - currentMinutes : 0;
-  const minsInZawalLeft = isInside ? endM - currentMinutes : 0;
+  const minsUntil = startM > currentMinutes ? Math.ceil(startM - currentMinutes) : 0;
+  const minsInZawalLeft = isInside ? Math.ceil(endM - currentMinutes) : 0;
   
   return {
     isInsideZawal: isInside,

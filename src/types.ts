@@ -106,6 +106,34 @@ export interface NextPrayerState {
   iqamahCountdown: IqamahCountdownState | null;
 }
 
+export interface PrayerRestrictionStatus {
+  id: 'sunrise' | 'zawal';
+  nameEn: string;
+  nameUr: string;
+  shortNoticeEn: string; // e.g. "Sunrise: Namaz parhna  mana hai."
+  shortNoticeUr: string; // e.g. "طلوعِ آفتاب: نماز پڑھنا منع ہے۔"
+  status: 'active' | 'approaching' | 'ended' | 'upcoming';
+  statusLabelEn: string; // "Restriction Active", "Restriction Approaching", "Restriction Ended", "Next Restriction"
+  statusLabelUr: string; // "مکروہ وقت جاری ہے", "مکروہ وقت قریب ہے", "مکروہ وقت ختم ہو چکا ہے", "اگلا مکروہ وقت"
+  isActive: boolean;
+  isApproaching: boolean;
+  hasEnded: boolean;
+  startTime12h: string; // e.g. "06:26 AM"
+  endTime12h: string;   // e.g. "06:38 AM"
+  timeWindowStr: string; // e.g. "06:26 AM - 06:38 AM PKT"
+  minutesRemaining: number;
+  minutesUntilStart: number;
+  fiqhNoteEn: string;
+  fiqhNoteUr: string;
+}
+
+export interface AllRestrictionsState {
+  sunrise: PrayerRestrictionStatus;
+  zawal: PrayerRestrictionStatus;
+  activeRestriction: PrayerRestrictionStatus | null;
+  approachingRestriction: PrayerRestrictionStatus | null;
+}
+
 export interface AdminPrayerSettings {
   fajrJamaat: string;
   dhuhrJamaat: string;
