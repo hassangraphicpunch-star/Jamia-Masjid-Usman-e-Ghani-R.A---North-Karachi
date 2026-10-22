@@ -26,6 +26,7 @@ import { MOSQUE_INFO } from '../data/mockData';
 import { getStoredNotifications, getReadNotificationIds } from '../services/notificationService';
 import { KarachiWeatherData } from '../services/weatherService';
 import { calculateMoonPhase } from '../services/astronomyService';
+import { SkyAtmosphereIndicator } from './SkyAtmosphereIndicator';
 
 interface NavbarProps {
   language: Language;
@@ -244,6 +245,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               2. DESKTOP & TABLET NAVBAR ITEMS (>= 768px)
               ================================================== */}
           <div className="hidden md:flex items-center gap-1.5 lg:gap-2 xl:gap-2.5 2xl:gap-3 shrink-0">
+
+            {/* [Sky Atmosphere & Real-Time Karachi Indicator] */}
+            <SkyAtmosphereIndicator language={language} />
 
             {/* [Location / Prayer] - Tablet & Desktop (>= 768px) */}
             <button
@@ -779,6 +783,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             id="mobile-drawer-menu"
             className="fixed top-[58px] sm:top-[66px] left-0 right-0 max-h-[calc(100vh-58px)] sm:max-h-[calc(100vh-66px)] overflow-y-auto bg-stone-950/98 backdrop-blur-2xl border-b border-emerald-900/40 px-3.5 sm:px-6 py-4 space-y-3 z-50 md:hidden shadow-2xl animate-in slide-in-from-top-2 duration-200"
           >
+            {/* 0. 🌅 Sky Atmosphere & Karachi Real-Time Indicator */}
+            <div className="flex justify-center pb-1">
+              <SkyAtmosphereIndicator language={language} className="w-full" />
+            </div>
+
             {/* 1. 📍 Location / Prayer Card */}
             {nextPrayerInfo && (
               <div

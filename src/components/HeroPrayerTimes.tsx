@@ -69,6 +69,7 @@ import {
   isDateInRamadan2027,
   RamadanLocationConfig,
 } from '../data/ramadan2027Data';
+import { SkyAtmosphereIndicator } from './SkyAtmosphereIndicator';
 
 interface HeroPrayerTimesProps {
   language: Language;
@@ -692,6 +693,11 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
               </button>
             </div>
           )}
+
+          {/* Real-Time Sky Atmosphere & Karachi Indicator */}
+          <div className="mt-2.5 flex items-center justify-center">
+            <SkyAtmosphereIndicator language={language} isCompact={true} />
+          </div>
         </div>
 
         {/* HERO LIVE COUNTDOWN & NEXT PRAYER SPOTLIGHT CARD */}

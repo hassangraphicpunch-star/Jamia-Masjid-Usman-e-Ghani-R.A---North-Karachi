@@ -6,6 +6,11 @@
     --font-urdu: 'Noto Nastaliq Urdu', serif;
     --font-display: 'Cinzel', serif;
     --font-body: 'Plus Jakarta Sans', sans-serif;
+    --theme-transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1),
+                        background-color 1.5s cubic-bezier(0.4, 0, 0.2, 1),
+                        color 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+                        border-color 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+                        box-shadow 1.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   body {
@@ -20,6 +25,469 @@
     overflow-x: hidden;
     max-width: 100vw;
   }
+}
+
+/* ==========================================================================
+   SKY ATMOSPHERE THEME TOKENS & TIME-OF-DAY SYSTEM (Asia/Karachi)
+   Smooth 1.5s transitions between natural atmospheres
+   ========================================================================== */
+
+html, body, #root,
+[data-theme],
+[data-theme] main,
+[data-theme] nav,
+[data-theme] footer,
+[data-theme] section,
+[data-theme] header,
+[data-theme] .theme-surface {
+  transition: var(--theme-transition);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html, body, #root,
+  [data-theme],
+  [data-theme] * {
+    transition: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   1. 🌅 MORNING — Soft Sunrise (5:00 AM – 10:59 AM PKT)
+   Warm sunrise gradients, soft golden dawn, light cream backgrounds
+   -------------------------------------------------------------------------- */
+[data-theme="morning"] {
+  --theme-bg-base: #fbf5ed;
+  --theme-bg-gradient: linear-gradient(180deg, #fef4e8 0%, #fff8f0 25%, #f6f8fb 65%, #ebf1f8 100%);
+  --theme-card-bg: #ffffff;
+  --theme-card-elevated: #fffcf8;
+  --theme-card-subtle: #f8f2e9;
+  --theme-card-border: #eddcc8;
+  --theme-text-main: #231b14;
+  --theme-text-sub: #57483a;
+  --theme-text-muted: #786756;
+  --theme-accent-gold: #b45309;
+  --theme-nav-bg: rgba(255, 252, 248, 0.94);
+  --theme-nav-border: #eddcc8;
+}
+
+[data-theme="morning"] body {
+  background: var(--theme-bg-gradient) !important;
+  background-color: var(--theme-bg-base) !important;
+  color: var(--theme-text-main) !important;
+}
+
+[data-theme="morning"] .bg-islamic-pattern {
+  background-color: #fbf5ed !important;
+  background-image: radial-gradient(rgba(180, 83, 9, 0.08) 1px, transparent 1px), radial-gradient(rgba(4, 120, 87, 0.06) 1px, #fbf5ed 1px) !important;
+}
+
+[data-theme="morning"] .bg-stone-950 {
+  background-color: var(--theme-card-subtle) !important;
+}
+[data-theme="morning"] .bg-stone-900 {
+  background-color: var(--theme-card-bg) !important;
+  box-shadow: 0 4px 20px -2px rgba(180, 83, 9, 0.06);
+}
+[data-theme="morning"] .bg-stone-900\/90,
+[data-theme="morning"] .bg-stone-900\/80,
+[data-theme="morning"] .bg-stone-900\/60 {
+  background-color: var(--theme-card-bg) !important;
+}
+[data-theme="morning"] .bg-stone-950\/90,
+[data-theme="morning"] .bg-stone-950\/80,
+[data-theme="morning"] .bg-stone-950\/70 {
+  background-color: var(--theme-card-subtle) !important;
+}
+[data-theme="morning"] .bg-stone-800 {
+  background-color: #f1e4d4 !important;
+}
+[data-theme="morning"] .border-stone-800,
+[data-theme="morning"] .border-stone-700 {
+  border-color: var(--theme-card-border) !important;
+}
+
+[data-theme="morning"] h1,
+[data-theme="morning"] h2,
+[data-theme="morning"] h3,
+[data-theme="morning"] h4,
+[data-theme="morning"] h5,
+[data-theme="morning"] h6 {
+  color: var(--theme-text-main);
+}
+[data-theme="morning"] .text-white {
+  color: var(--theme-text-main) !important;
+}
+[data-theme="morning"] .text-stone-100 {
+  color: #241c15 !important;
+}
+[data-theme="morning"] .text-stone-200 {
+  color: var(--theme-text-sub) !important;
+}
+[data-theme="morning"] .text-stone-300 {
+  color: var(--theme-text-sub) !important;
+}
+[data-theme="morning"] .text-stone-400 {
+  color: var(--theme-text-muted) !important;
+}
+[data-theme="morning"] nav {
+  background-color: var(--theme-nav-bg) !important;
+  border-color: var(--theme-nav-border) !important;
+}
+
+[data-theme="morning"] .bg-emerald-950,
+[data-theme="morning"] .bg-emerald-950\/80,
+[data-theme="morning"] .bg-emerald-950\/70 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+}
+[data-theme="morning"] .text-emerald-400,
+[data-theme="morning"] .text-emerald-300 {
+  color: #047857 !important;
+}
+[data-theme="morning"] .bg-amber-950,
+[data-theme="morning"] .bg-amber-950\/60 {
+  background-color: #fef3c7 !important;
+  border-color: #fde68a !important;
+}
+[data-theme="morning"] .text-amber-400,
+[data-theme="morning"] .text-amber-300 {
+  color: #b45309 !important;
+}
+
+/* --------------------------------------------------------------------------
+   2. ☀️ AFTERNOON — Natural Daylight (11:00 AM – 3:59 PM PKT)
+   Clean sky blue, soft white, fresh neutral backgrounds & emerald accents
+   -------------------------------------------------------------------------- */
+[data-theme="afternoon"] {
+  --theme-bg-base: #f0f6fa;
+  --theme-bg-gradient: linear-gradient(180deg, #e5f0fa 0%, #eef5fc 20%, #f8fafc 55%, #edf3f9 100%);
+  --theme-card-bg: #ffffff;
+  --theme-card-elevated: #f8fbfe;
+  --theme-card-subtle: #edf2f7;
+  --theme-card-border: #dbe4ee;
+  --theme-text-main: #0f172a;
+  --theme-text-sub: #334155;
+  --theme-text-muted: #64748b;
+  --theme-accent-emerald: #059669;
+  --theme-nav-bg: rgba(255, 255, 255, 0.95);
+  --theme-nav-border: #dbe4ee;
+}
+
+[data-theme="afternoon"] body {
+  background: var(--theme-bg-gradient) !important;
+  background-color: var(--theme-bg-base) !important;
+  color: var(--theme-text-main) !important;
+}
+
+[data-theme="afternoon"] .bg-islamic-pattern {
+  background-color: #f0f6fa !important;
+  background-image: radial-gradient(rgba(4, 120, 87, 0.07) 1px, transparent 1px), radial-gradient(rgba(2, 132, 199, 0.05) 1px, #f0f6fa 1px) !important;
+}
+
+[data-theme="afternoon"] .bg-stone-950 {
+  background-color: var(--theme-card-subtle) !important;
+}
+[data-theme="afternoon"] .bg-stone-900 {
+  background-color: var(--theme-card-bg) !important;
+  box-shadow: 0 4px 24px -2px rgba(15, 23, 42, 0.05);
+}
+[data-theme="afternoon"] .bg-stone-900\/90,
+[data-theme="afternoon"] .bg-stone-900\/80,
+[data-theme="afternoon"] .bg-stone-900\/60 {
+  background-color: var(--theme-card-bg) !important;
+}
+[data-theme="afternoon"] .bg-stone-950\/90,
+[data-theme="afternoon"] .bg-stone-950\/80,
+[data-theme="afternoon"] .bg-stone-950\/70 {
+  background-color: var(--theme-card-subtle) !important;
+}
+[data-theme="afternoon"] .bg-stone-800 {
+  background-color: #e2e8f0 !important;
+}
+[data-theme="afternoon"] .border-stone-800,
+[data-theme="afternoon"] .border-stone-700 {
+  border-color: var(--theme-card-border) !important;
+}
+
+[data-theme="afternoon"] h1,
+[data-theme="afternoon"] h2,
+[data-theme="afternoon"] h3,
+[data-theme="afternoon"] h4,
+[data-theme="afternoon"] h5,
+[data-theme="afternoon"] h6 {
+  color: var(--theme-text-main);
+}
+[data-theme="afternoon"] .text-white {
+  color: var(--theme-text-main) !important;
+}
+[data-theme="afternoon"] .text-stone-100 {
+  color: #1e293b !important;
+}
+[data-theme="afternoon"] .text-stone-200 {
+  color: var(--theme-text-sub) !important;
+}
+[data-theme="afternoon"] .text-stone-300 {
+  color: var(--theme-text-sub) !important;
+}
+[data-theme="afternoon"] .text-stone-400 {
+  color: var(--theme-text-muted) !important;
+}
+[data-theme="afternoon"] nav {
+  background-color: var(--theme-nav-bg) !important;
+  border-color: var(--theme-nav-border) !important;
+}
+
+[data-theme="afternoon"] .bg-emerald-950,
+[data-theme="afternoon"] .bg-emerald-950\/80,
+[data-theme="afternoon"] .bg-emerald-950\/70 {
+  background-color: #ecfdf5 !important;
+  border-color: #6ee7b7 !important;
+}
+[data-theme="afternoon"] .text-emerald-400,
+[data-theme="afternoon"] .text-emerald-300 {
+  color: #059669 !important;
+}
+[data-theme="afternoon"] .bg-amber-950 {
+  background-color: #fef9c3 !important;
+  border-color: #fde047 !important;
+}
+[data-theme="afternoon"] .text-amber-400,
+[data-theme="afternoon"] .text-amber-300 {
+  color: #d97706 !important;
+}
+
+/* --------------------------------------------------------------------------
+   3. 🌇 EVENING — Sunset and Maghrib (4:00 PM – 6:59 PM PKT)
+   Warm amber, orange, muted coral and twilight deep blue gradients
+   -------------------------------------------------------------------------- */
+[data-theme="evening"] {
+  --theme-bg-base: #171122;
+  --theme-bg-gradient: linear-gradient(180deg, #1b1226 0%, #22142d 20%, #1e1730 50%, #121024 100%);
+  --theme-card-bg: #211832;
+  --theme-card-elevated: #291e3e;
+  --theme-card-subtle: #191225;
+  --theme-card-border: #523146;
+  --theme-text-main: #fff7ed;
+  --theme-text-sub: #fce7db;
+  --theme-text-muted: #c4b5c7;
+  --theme-accent-amber: #f97316;
+  --theme-nav-bg: rgba(27, 18, 38, 0.93);
+  --theme-nav-border: #523146;
+}
+
+[data-theme="evening"] body {
+  background: var(--theme-bg-gradient) !important;
+  background-color: var(--theme-bg-base) !important;
+  color: var(--theme-text-main) !important;
+}
+
+[data-theme="evening"] .bg-islamic-pattern {
+  background-color: #171122 !important;
+  background-image: radial-gradient(rgba(249, 115, 22, 0.08) 1px, transparent 1px), radial-gradient(rgba(244, 63, 94, 0.06) 1px, #171122 1px) !important;
+}
+
+[data-theme="evening"] .bg-stone-950 {
+  background-color: #150f20 !important;
+}
+[data-theme="evening"] .bg-stone-900 {
+  background-color: var(--theme-card-bg) !important;
+  box-shadow: 0 4px 28px -2px rgba(244, 63, 94, 0.12);
+}
+[data-theme="evening"] .bg-stone-900\/90,
+[data-theme="evening"] .bg-stone-900\/80,
+[data-theme="evening"] .bg-stone-900\/60 {
+  background-color: var(--theme-card-bg) !important;
+}
+[data-theme="evening"] .bg-stone-950\/90,
+[data-theme="evening"] .bg-stone-950\/80,
+[data-theme="evening"] .bg-stone-950\/70 {
+  background-color: #191225 !important;
+}
+[data-theme="evening"] .bg-stone-800 {
+  background-color: #2c1e40 !important;
+}
+[data-theme="evening"] .border-stone-800 {
+  border-color: #523146 !important;
+}
+[data-theme="evening"] .border-stone-700 {
+  border-color: #6a3e5c !important;
+}
+[data-theme="evening"] nav {
+  background-color: var(--theme-nav-bg) !important;
+  border-color: var(--theme-nav-border) !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. 🌙 NIGHT — Peaceful Islamic Night (7:00 PM – 4:59 AM PKT)
+   Deep midnight blue, navy, indigo, soft moonlight silver & restrained gold
+   -------------------------------------------------------------------------- */
+[data-theme="night"] {
+  --theme-bg-base: #060913;
+  --theme-bg-gradient: linear-gradient(180deg, #060913 0%, #080e1e 25%, #0b1328 65%, #070b16 100%);
+  --theme-card-bg: #0c1427;
+  --theme-card-elevated: #111d38;
+  --theme-card-subtle: #080e1b;
+  --theme-card-border: #1e293b;
+  --theme-text-main: #f8fafc;
+  --theme-text-sub: #cbd5e1;
+  --theme-text-muted: #7888a3;
+  --theme-accent-silver: #cbd5e1;
+  --theme-nav-bg: rgba(6, 9, 19, 0.94);
+  --theme-nav-border: #1e293b;
+}
+
+[data-theme="night"] body {
+  background: var(--theme-bg-gradient) !important;
+  background-color: var(--theme-bg-base) !important;
+  color: var(--theme-text-main) !important;
+}
+
+[data-theme="night"] .bg-islamic-pattern {
+  background-color: #060913 !important;
+  background-image: radial-gradient(rgba(56, 189, 248, 0.07) 1px, transparent 1px), radial-gradient(rgba(234, 179, 8, 0.05) 1px, #060913 1px) !important;
+}
+
+[data-theme="night"] .bg-stone-950 {
+  background-color: #060913 !important;
+}
+[data-theme="night"] .bg-stone-900 {
+  background-color: var(--theme-card-bg) !important;
+  box-shadow: 0 4px 28px -2px rgba(14, 165, 233, 0.08);
+}
+[data-theme="night"] .bg-stone-900\/90,
+[data-theme="night"] .bg-stone-900\/80,
+[data-theme="night"] .bg-stone-900\/60 {
+  background-color: var(--theme-card-bg) !important;
+}
+[data-theme="night"] .bg-stone-950\/90,
+[data-theme="night"] .bg-stone-950\/80,
+[data-theme="night"] .bg-stone-950\/70 {
+  background-color: #080e1b !important;
+}
+[data-theme="night"] .bg-stone-800 {
+  background-color: #131d38 !important;
+}
+[data-theme="night"] .border-stone-800 {
+  border-color: #1e293b !important;
+}
+[data-theme="night"] .border-stone-700 {
+  border-color: #25344f !important;
+}
+[data-theme="night"] nav {
+  background-color: var(--theme-nav-bg) !important;
+  border-color: var(--theme-nav-border) !important;
+}
+
+/* Forms & inputs */
+[data-theme="morning"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="morning"] select,
+[data-theme="morning"] textarea,
+[data-theme="afternoon"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="afternoon"] select,
+[data-theme="afternoon"] textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-theme="evening"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="evening"] select,
+[data-theme="evening"] textarea {
+  background-color: #1c142b !important;
+  color: #fff7ed !important;
+  border-color: #523146 !important;
+}
+
+[data-theme="night"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="night"] select,
+[data-theme="night"] textarea {
+  background-color: #080e1b !important;
+  color: #f8fafc !important;
+  border-color: #1e293b !important;
+}
+
+/* Gradient Stop Overrides for Sections */
+[data-theme="morning"] .from-stone-950,
+[data-theme="morning"] .from-stone-900 {
+  --tw-gradient-from: #ffffff !important;
+  --tw-gradient-to: #fbf5ed !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #fcf7f0, var(--tw-gradient-to) !important;
+}
+[data-theme="morning"] .via-stone-900 {
+  --tw-gradient-via: #fdfaf6 !important;
+}
+[data-theme="morning"] .to-stone-950,
+[data-theme="morning"] .to-stone-900 {
+  --tw-gradient-to: #f7f0e6 !important;
+}
+
+[data-theme="afternoon"] .from-stone-950,
+[data-theme="afternoon"] .from-stone-900 {
+  --tw-gradient-from: #ffffff !important;
+  --tw-gradient-to: #f0f6fa !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #f8fbfe, var(--tw-gradient-to) !important;
+}
+[data-theme="afternoon"] .via-stone-900 {
+  --tw-gradient-via: #f5f9fc !important;
+}
+[data-theme="afternoon"] .to-stone-950,
+[data-theme="afternoon"] .to-stone-900 {
+  --tw-gradient-to: #edf3f9 !important;
+}
+
+[data-theme="evening"] .from-stone-950,
+[data-theme="evening"] .from-stone-900 {
+  --tw-gradient-from: #211832 !important;
+  --tw-gradient-to: #171122 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #1d142b, var(--tw-gradient-to) !important;
+}
+[data-theme="evening"] .via-stone-900 {
+  --tw-gradient-via: #1f1630 !important;
+}
+[data-theme="evening"] .to-stone-950,
+[data-theme="evening"] .to-stone-900 {
+  --tw-gradient-to: #150f20 !important;
+}
+
+[data-theme="night"] .from-stone-950,
+[data-theme="night"] .from-stone-900 {
+  --tw-gradient-from: #0c1427 !important;
+  --tw-gradient-to: #060913 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #091020, var(--tw-gradient-to) !important;
+}
+[data-theme="night"] .via-stone-900 {
+  --tw-gradient-via: #0a1122 !important;
+}
+[data-theme="night"] .to-stone-950,
+[data-theme="night"] .to-stone-900 {
+  --tw-gradient-to: #050811 !important;
+}
+
+/* Button & Badge Contrast Protections in Light Themes */
+[data-theme="morning"] .bg-emerald-600,
+[data-theme="morning"] .bg-emerald-500,
+[data-theme="afternoon"] .bg-emerald-600,
+[data-theme="afternoon"] .bg-emerald-500 {
+  color: #0c120c !important;
+}
+[data-theme="morning"] .bg-emerald-600 *,
+[data-theme="morning"] .bg-emerald-500 *,
+[data-theme="afternoon"] .bg-emerald-600 *,
+[data-theme="afternoon"] .bg-emerald-500 * {
+  color: #0c120c !important;
+}
+
+[data-theme="morning"] .bg-rose-600,
+[data-theme="morning"] .bg-rose-500,
+[data-theme="afternoon"] .bg-rose-600,
+[data-theme="afternoon"] .bg-rose-500 {
+  color: #ffffff !important;
+}
+[data-theme="morning"] .bg-rose-600 *,
+[data-theme="morning"] .bg-rose-500 *,
+[data-theme="afternoon"] .bg-rose-600 *,
+[data-theme="afternoon"] .bg-rose-500 * {
+  color: #ffffff !important;
 }
 
 .font-arabic {
