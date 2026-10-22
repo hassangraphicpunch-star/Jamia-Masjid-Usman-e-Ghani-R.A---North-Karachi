@@ -37,7 +37,7 @@ import { PrayerMethodsModal } from './components/PrayerMethodsModal';
 import { KarachiWeatherModal } from './components/KarachiWeatherModal';
 import { MosqueChatbot } from './components/MosqueChatbot';
 import { fetchKarachiWeather, KarachiWeatherData, getFallbackKarachiWeather } from './services/weatherService';
-import { applySkyThemeToDOM } from './services/skyThemeService';
+import { initPermanentDarkTheme } from './services/skyThemeService';
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('ur');
@@ -126,13 +126,9 @@ export default function App() {
     loadTimings();
   }, [loadTimings]);
 
-  // Initialize and synchronize Sky Atmosphere Theme based on Karachi local time
+  // Initialize and lock permanent Dark Theme
   useEffect(() => {
-    applySkyThemeToDOM();
-    const skyInterval = setInterval(() => {
-      applySkyThemeToDOM();
-    }, 30000); // Check every 30 seconds for automatic time-of-day boundary crossing
-    return () => clearInterval(skyInterval);
+    initPermanentDarkTheme();
   }, []);
 
   // Synchronize live admin portal updates across tabs, internal events, and server backend

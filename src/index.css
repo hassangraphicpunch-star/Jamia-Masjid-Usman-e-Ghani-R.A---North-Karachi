@@ -51,209 +51,691 @@ html, body, #root,
   }
 }
 
-/* --------------------------------------------------------------------------
-   1. 🌅 MORNING — Soft Sunrise (5:00 AM – 10:59 AM PKT)
-   Warm sunrise gradients, soft golden dawn, light cream backgrounds
-   -------------------------------------------------------------------------- */
-[data-theme="morning"] {
-  --theme-bg-base: #fbf5ed;
-  --theme-bg-gradient: linear-gradient(180deg, #fef4e8 0%, #fff8f0 25%, #f6f8fb 65%, #ebf1f8 100%);
+/* ==========================================================================
+   1. 🏛️ PREMIUM ISLAMIC LIGHT THEME (Warm Ivory & Mosque Emerald)
+   Active for [data-theme="light"], [data-theme="morning"], [data-theme="afternoon"],
+   [data-theme-family="light"], and .theme-light
+   ========================================================================== */
+[data-theme="light"],
+[data-theme="morning"],
+[data-theme="afternoon"],
+[data-theme-family="light"],
+.theme-light {
+  --theme-bg-base: #fcf9f2;
+  --theme-bg-gradient: linear-gradient(180deg, #faf6ef 0%, #fcf9f2 35%, #f9f5ec 100%);
   --theme-card-bg: #ffffff;
-  --theme-card-elevated: #fffcf8;
-  --theme-card-subtle: #f8f2e9;
-  --theme-card-border: #eddcc8;
-  --theme-text-main: #231b14;
-  --theme-text-sub: #57483a;
-  --theme-text-muted: #786756;
+  --theme-card-elevated: #fffdfa;
+  --theme-card-subtle: #faf6ef;
+  --theme-card-border: #e8dfd3;
+  --theme-text-main: #0f291e;
+  --theme-text-sub: #334155;
+  --theme-text-muted: #64748b;
+  --theme-accent-emerald: #047857;
   --theme-accent-gold: #b45309;
-  --theme-nav-bg: rgba(255, 252, 248, 0.94);
-  --theme-nav-border: #eddcc8;
+  --theme-nav-bg: rgba(252, 249, 242, 0.96);
+  --theme-nav-border: #e8dfd3;
 }
 
-[data-theme="morning"] body {
+[data-theme="light"] body,
+[data-theme="morning"] body,
+[data-theme="afternoon"] body,
+[data-theme-family="light"] body,
+.theme-light body {
   background: var(--theme-bg-gradient) !important;
   background-color: var(--theme-bg-base) !important;
-  color: var(--theme-text-main) !important;
+  color: var(--theme-text-sub) !important;
 }
 
-[data-theme="morning"] .bg-islamic-pattern {
-  background-color: #fbf5ed !important;
-  background-image: radial-gradient(rgba(180, 83, 9, 0.08) 1px, transparent 1px), radial-gradient(rgba(4, 120, 87, 0.06) 1px, #fbf5ed 1px) !important;
+/* Islamic Geometric Background subtle pattern in Light Theme */
+[data-theme="light"] .bg-islamic-pattern,
+[data-theme="morning"] .bg-islamic-pattern,
+[data-theme="afternoon"] .bg-islamic-pattern,
+[data-theme-family="light"] .bg-islamic-pattern,
+.theme-light .bg-islamic-pattern {
+  background-color: #fcf9f2 !important;
+  background-image: radial-gradient(rgba(180, 83, 9, 0.09) 1px, transparent 1px),
+                    radial-gradient(rgba(4, 120, 87, 0.08) 1px, #fcf9f2 1px) !important;
 }
 
-[data-theme="morning"] .bg-stone-950 {
-  background-color: var(--theme-card-subtle) !important;
-}
-[data-theme="morning"] .bg-stone-900 {
+/* Cards & Surface Elevating Tokens */
+[data-theme="light"] .bg-stone-900,
+[data-theme="morning"] .bg-stone-900,
+[data-theme="afternoon"] .bg-stone-900,
+[data-theme-family="light"] .bg-stone-900,
+.theme-light .bg-stone-900,
+[data-theme="light"] .bg-stone-950,
+[data-theme="morning"] .bg-stone-950,
+[data-theme="afternoon"] .bg-stone-950,
+[data-theme-family="light"] .bg-stone-950,
+.theme-light .bg-stone-950 {
   background-color: var(--theme-card-bg) !important;
-  box-shadow: 0 4px 20px -2px rgba(180, 83, 9, 0.06);
+  border-color: var(--theme-card-border) !important;
+  box-shadow: 0 3px 16px -2px rgba(44, 33, 20, 0.05), 0 1px 3px 0 rgba(44, 33, 20, 0.03);
 }
+
+[data-theme="light"] .bg-stone-900\/90,
+[data-theme="light"] .bg-stone-900\/80,
+[data-theme="light"] .bg-stone-900\/70,
+[data-theme="light"] .bg-stone-900\/60,
+[data-theme="light"] .bg-stone-950\/90,
+[data-theme="light"] .bg-stone-950\/80,
+[data-theme="light"] .bg-stone-950\/70,
 [data-theme="morning"] .bg-stone-900\/90,
 [data-theme="morning"] .bg-stone-900\/80,
-[data-theme="morning"] .bg-stone-900\/60 {
-  background-color: var(--theme-card-bg) !important;
-}
+[data-theme="morning"] .bg-stone-900\/60,
 [data-theme="morning"] .bg-stone-950\/90,
 [data-theme="morning"] .bg-stone-950\/80,
-[data-theme="morning"] .bg-stone-950\/70 {
-  background-color: var(--theme-card-subtle) !important;
-}
-[data-theme="morning"] .bg-stone-800 {
-  background-color: #f1e4d4 !important;
-}
-[data-theme="morning"] .border-stone-800,
-[data-theme="morning"] .border-stone-700 {
+[data-theme="morning"] .bg-stone-950\/70,
+[data-theme="afternoon"] .bg-stone-900\/90,
+[data-theme="afternoon"] .bg-stone-900\/80,
+[data-theme="afternoon"] .bg-stone-900\/60,
+[data-theme="afternoon"] .bg-stone-950\/90,
+[data-theme="afternoon"] .bg-stone-950\/80,
+[data-theme="afternoon"] .bg-stone-950\/70,
+[data-theme-family="light"] .bg-stone-900\/90,
+[data-theme-family="light"] .bg-stone-950\/90,
+.theme-light .bg-stone-900\/90,
+.theme-light .bg-stone-950\/90 {
+  background-color: var(--theme-card-bg) !important;
   border-color: var(--theme-card-border) !important;
 }
 
+/* Inner subtle info boxes inside cards (e.g. speaker note, dates, account details) */
+[data-theme="light"] .bg-stone-950\/60,
+[data-theme="morning"] .bg-stone-950\/60,
+[data-theme="afternoon"] .bg-stone-950\/60,
+[data-theme-family="light"] .bg-stone-950\/60,
+.theme-light .bg-stone-950\/60 {
+  background-color: #faf6ef !important;
+  border-color: #eddcc8 !important;
+}
+
+[data-theme="light"] .bg-stone-800,
+[data-theme="morning"] .bg-stone-800,
+[data-theme="afternoon"] .bg-stone-800,
+[data-theme-family="light"] .bg-stone-800,
+.theme-light .bg-stone-800 {
+  background-color: #f4eee2 !important;
+  border-color: #e2d7c5 !important;
+}
+
+[data-theme="light"] .border-stone-800,
+[data-theme="light"] .border-stone-700,
+[data-theme="morning"] .border-stone-800,
+[data-theme="morning"] .border-stone-700,
+[data-theme="afternoon"] .border-stone-800,
+[data-theme="afternoon"] .border-stone-700,
+[data-theme-family="light"] .border-stone-800,
+[data-theme-family="light"] .border-stone-700,
+.theme-light .border-stone-800,
+.theme-light .border-stone-700 {
+  border-color: var(--theme-card-border) !important;
+}
+
+/* Headings & High-Readability Islamic Typography */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6,
 [data-theme="morning"] h1,
 [data-theme="morning"] h2,
 [data-theme="morning"] h3,
 [data-theme="morning"] h4,
 [data-theme="morning"] h5,
-[data-theme="morning"] h6 {
-  color: var(--theme-text-main);
-}
-[data-theme="morning"] .text-white {
-  color: var(--theme-text-main) !important;
-}
-[data-theme="morning"] .text-stone-100 {
-  color: #241c15 !important;
-}
-[data-theme="morning"] .text-stone-200 {
-  color: var(--theme-text-sub) !important;
-}
-[data-theme="morning"] .text-stone-300 {
-  color: var(--theme-text-sub) !important;
-}
-[data-theme="morning"] .text-stone-400 {
-  color: var(--theme-text-muted) !important;
-}
-[data-theme="morning"] nav {
-  background-color: var(--theme-nav-bg) !important;
-  border-color: var(--theme-nav-border) !important;
-}
-
-[data-theme="morning"] .bg-emerald-950,
-[data-theme="morning"] .bg-emerald-950\/80,
-[data-theme="morning"] .bg-emerald-950\/70 {
-  background-color: #ecfdf5 !important;
-  border-color: #a7f3d0 !important;
-}
-[data-theme="morning"] .text-emerald-400,
-[data-theme="morning"] .text-emerald-300 {
-  color: #047857 !important;
-}
-[data-theme="morning"] .bg-amber-950,
-[data-theme="morning"] .bg-amber-950\/60 {
-  background-color: #fef3c7 !important;
-  border-color: #fde68a !important;
-}
-[data-theme="morning"] .text-amber-400,
-[data-theme="morning"] .text-amber-300 {
-  color: #b45309 !important;
-}
-
-/* --------------------------------------------------------------------------
-   2. ☀️ AFTERNOON — Natural Daylight (11:00 AM – 3:59 PM PKT)
-   Clean sky blue, soft white, fresh neutral backgrounds & emerald accents
-   -------------------------------------------------------------------------- */
-[data-theme="afternoon"] {
-  --theme-bg-base: #f0f6fa;
-  --theme-bg-gradient: linear-gradient(180deg, #e5f0fa 0%, #eef5fc 20%, #f8fafc 55%, #edf3f9 100%);
-  --theme-card-bg: #ffffff;
-  --theme-card-elevated: #f8fbfe;
-  --theme-card-subtle: #edf2f7;
-  --theme-card-border: #dbe4ee;
-  --theme-text-main: #0f172a;
-  --theme-text-sub: #334155;
-  --theme-text-muted: #64748b;
-  --theme-accent-emerald: #059669;
-  --theme-nav-bg: rgba(255, 255, 255, 0.95);
-  --theme-nav-border: #dbe4ee;
-}
-
-[data-theme="afternoon"] body {
-  background: var(--theme-bg-gradient) !important;
-  background-color: var(--theme-bg-base) !important;
-  color: var(--theme-text-main) !important;
-}
-
-[data-theme="afternoon"] .bg-islamic-pattern {
-  background-color: #f0f6fa !important;
-  background-image: radial-gradient(rgba(4, 120, 87, 0.07) 1px, transparent 1px), radial-gradient(rgba(2, 132, 199, 0.05) 1px, #f0f6fa 1px) !important;
-}
-
-[data-theme="afternoon"] .bg-stone-950 {
-  background-color: var(--theme-card-subtle) !important;
-}
-[data-theme="afternoon"] .bg-stone-900 {
-  background-color: var(--theme-card-bg) !important;
-  box-shadow: 0 4px 24px -2px rgba(15, 23, 42, 0.05);
-}
-[data-theme="afternoon"] .bg-stone-900\/90,
-[data-theme="afternoon"] .bg-stone-900\/80,
-[data-theme="afternoon"] .bg-stone-900\/60 {
-  background-color: var(--theme-card-bg) !important;
-}
-[data-theme="afternoon"] .bg-stone-950\/90,
-[data-theme="afternoon"] .bg-stone-950\/80,
-[data-theme="afternoon"] .bg-stone-950\/70 {
-  background-color: var(--theme-card-subtle) !important;
-}
-[data-theme="afternoon"] .bg-stone-800 {
-  background-color: #e2e8f0 !important;
-}
-[data-theme="afternoon"] .border-stone-800,
-[data-theme="afternoon"] .border-stone-700 {
-  border-color: var(--theme-card-border) !important;
-}
-
+[data-theme="morning"] h6,
 [data-theme="afternoon"] h1,
 [data-theme="afternoon"] h2,
 [data-theme="afternoon"] h3,
 [data-theme="afternoon"] h4,
 [data-theme="afternoon"] h5,
-[data-theme="afternoon"] h6 {
-  color: var(--theme-text-main);
-}
-[data-theme="afternoon"] .text-white {
+[data-theme="afternoon"] h6,
+[data-theme-family="light"] h1,
+[data-theme-family="light"] h2,
+[data-theme-family="light"] h3,
+[data-theme-family="light"] h4,
+[data-theme-family="light"] h5,
+[data-theme-family="light"] h6,
+.theme-light h1,
+.theme-light h2,
+.theme-light h3,
+.theme-light h4,
+.theme-light h5,
+.theme-light h6 {
   color: var(--theme-text-main) !important;
 }
-[data-theme="afternoon"] .text-stone-100 {
+
+/* White text adaptation for light surfaces (excluding solid button children) */
+[data-theme="light"] .text-white:not(.btn-text):not(button *),
+[data-theme="morning"] .text-white:not(.btn-text):not(button *),
+[data-theme="afternoon"] .text-white:not(.btn-text):not(button *),
+[data-theme-family="light"] .text-white:not(.btn-text):not(button *),
+.theme-light .text-white:not(.btn-text):not(button *) {
+  color: #0f291e !important;
+}
+
+[data-theme="light"] .text-stone-100,
+[data-theme="morning"] .text-stone-100,
+[data-theme="afternoon"] .text-stone-100,
+[data-theme-family="light"] .text-stone-100,
+.theme-light .text-stone-100 {
   color: #1e293b !important;
 }
-[data-theme="afternoon"] .text-stone-200 {
+
+[data-theme="light"] .text-stone-200,
+[data-theme="morning"] .text-stone-200,
+[data-theme="afternoon"] .text-stone-200,
+[data-theme-family="light"] .text-stone-200,
+.theme-light .text-stone-200 {
   color: var(--theme-text-sub) !important;
 }
-[data-theme="afternoon"] .text-stone-300 {
-  color: var(--theme-text-sub) !important;
+
+[data-theme="light"] .text-stone-300,
+[data-theme="morning"] .text-stone-300,
+[data-theme="afternoon"] .text-stone-300,
+[data-theme-family="light"] .text-stone-300,
+.theme-light .text-stone-300 {
+  color: #475569 !important;
 }
-[data-theme="afternoon"] .text-stone-400 {
+
+[data-theme="light"] .text-stone-400,
+[data-theme="morning"] .text-stone-400,
+[data-theme="afternoon"] .text-stone-400,
+[data-theme-family="light"] .text-stone-400,
+.theme-light .text-stone-400 {
   color: var(--theme-text-muted) !important;
 }
-[data-theme="afternoon"] nav {
+
+/* Accent Colors with WCAG High Contrast in Light Theme */
+[data-theme="light"] .text-emerald-400,
+[data-theme="light"] .text-emerald-300,
+[data-theme="morning"] .text-emerald-400,
+[data-theme="morning"] .text-emerald-300,
+[data-theme="afternoon"] .text-emerald-400,
+[data-theme="afternoon"] .text-emerald-300,
+[data-theme-family="light"] .text-emerald-400,
+[data-theme-family="light"] .text-emerald-300,
+.theme-light .text-emerald-400,
+.theme-light .text-emerald-300 {
+  color: #047857 !important;
+}
+
+[data-theme="light"] .text-amber-400,
+[data-theme="light"] .text-amber-300,
+[data-theme="light"] .text-amber-200,
+[data-theme="morning"] .text-amber-400,
+[data-theme="morning"] .text-amber-300,
+[data-theme="morning"] .text-amber-200,
+[data-theme="afternoon"] .text-amber-400,
+[data-theme="afternoon"] .text-amber-300,
+[data-theme="afternoon"] .text-amber-200,
+[data-theme-family="light"] .text-amber-400,
+[data-theme-family="light"] .text-amber-300,
+.theme-light .text-amber-400,
+.theme-light .text-amber-300 {
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .text-teal-400,
+[data-theme="light"] .text-teal-300,
+[data-theme="morning"] .text-teal-400,
+[data-theme="morning"] .text-teal-300,
+[data-theme="afternoon"] .text-teal-400,
+[data-theme="afternoon"] .text-teal-300,
+[data-theme-family="light"] .text-teal-400,
+.theme-light .text-teal-400 {
+  color: #0f766e !important;
+}
+
+[data-theme="light"] .text-sky-400,
+[data-theme="light"] .text-sky-300,
+[data-theme="morning"] .text-sky-400,
+[data-theme="morning"] .text-sky-300,
+[data-theme="afternoon"] .text-sky-400,
+[data-theme="afternoon"] .text-sky-300,
+[data-theme-family="light"] .text-sky-400,
+.theme-light .text-sky-400 {
+  color: #0369a1 !important;
+}
+
+/* Refined Pastel Badges & Status Chips in Light Mode */
+[data-theme="light"] .bg-emerald-950,
+[data-theme="light"] .bg-emerald-950\/90,
+[data-theme="light"] .bg-emerald-950\/80,
+[data-theme="light"] .bg-emerald-950\/70,
+[data-theme="light"] .bg-emerald-950\/60,
+[data-theme="light"] .bg-emerald-950\/50,
+[data-theme="light"] .bg-emerald-900\/60,
+[data-theme="morning"] .bg-emerald-950,
+[data-theme="morning"] .bg-emerald-950\/80,
+[data-theme="afternoon"] .bg-emerald-950,
+[data-theme="afternoon"] .bg-emerald-950\/80,
+[data-theme-family="light"] .bg-emerald-950,
+.theme-light .bg-emerald-950 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #065f46 !important;
+}
+
+[data-theme="light"] .bg-amber-950,
+[data-theme="light"] .bg-amber-950\/90,
+[data-theme="light"] .bg-amber-950\/80,
+[data-theme="light"] .bg-amber-950\/70,
+[data-theme="light"] .bg-amber-950\/60,
+[data-theme="light"] .bg-amber-950\/50,
+[data-theme="light"] .bg-amber-950\/40,
+[data-theme="morning"] .bg-amber-950,
+[data-theme="morning"] .bg-amber-950\/60,
+[data-theme="afternoon"] .bg-amber-950,
+[data-theme-family="light"] .bg-amber-950,
+.theme-light .bg-amber-950 {
+  background-color: #fef3c7 !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+
+[data-theme="light"] .bg-teal-950,
+[data-theme="morning"] .bg-teal-950,
+[data-theme="afternoon"] .bg-teal-950,
+[data-theme-family="light"] .bg-teal-950,
+.theme-light .bg-teal-950 {
+  background-color: #f0fdfa !important;
+  border-color: #99f6e4 !important;
+  color: #115e59 !important;
+}
+
+[data-theme="light"] .bg-sky-950,
+[data-theme="morning"] .bg-sky-950,
+[data-theme="afternoon"] .bg-sky-950,
+[data-theme-family="light"] .bg-sky-950,
+.theme-light .bg-sky-950 {
+  background-color: #f0f9ff !important;
+  border-color: #bae6fd !important;
+  color: #0369a1 !important;
+}
+
+[data-theme="light"] .bg-blue-950,
+[data-theme="morning"] .bg-blue-950,
+[data-theme="afternoon"] .bg-blue-950,
+[data-theme-family="light"] .bg-blue-950,
+.theme-light .bg-blue-950 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1e40af !important;
+}
+
+/* ==========================================================================
+   PRIMARY TIMETABLE 7-CARD GRID IN LIGHT THEME
+   Crisp ivory-white cards, dark legible titles, emerald/champagne highlights
+   ========================================================================== */
+[data-theme="light"] [id^="prayer-card-"],
+[data-theme="morning"] [id^="prayer-card-"],
+[data-theme="afternoon"] [id^="prayer-card-"],
+[data-theme-family="light"] [id^="prayer-card-"],
+.theme-light [id^="prayer-card-"] {
+  background-image: none !important;
+  background-color: #ffffff !important;
+  border-color: #e8dfd3 !important;
+  box-shadow: 0 4px 16px -2px rgba(44, 33, 20, 0.05), 0 1px 3px 0 rgba(44, 33, 20, 0.03) !important;
+}
+
+[data-theme="light"] [id^="prayer-card-"] h4,
+[data-theme="morning"] [id^="prayer-card-"] h4,
+[data-theme="afternoon"] [id^="prayer-card-"] h4,
+[data-theme-family="light"] [id^="prayer-card-"] h4,
+.theme-light [id^="prayer-card-"] h4 {
+  color: #0f291e !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="light"] [id^="prayer-card-"] .font-arabic,
+[data-theme="morning"] [id^="prayer-card-"] .font-arabic,
+[data-theme="afternoon"] [id^="prayer-card-"] .font-arabic,
+[data-theme-family="light"] [id^="prayer-card-"] .font-arabic,
+.theme-light [id^="prayer-card-"] .font-arabic {
+  color: #047857 !important;
+}
+
+[data-theme="light"] [id^="prayer-card-"] .w-9.h-9,
+[data-theme="morning"] [id^="prayer-card-"] .w-9.h-9,
+[data-theme="afternoon"] [id^="prayer-card-"] .w-9.h-9,
+[data-theme-family="light"] [id^="prayer-card-"] .w-9.h-9,
+.theme-light [id^="prayer-card-"] .w-9.h-9 {
+  background-color: #faf6ef !important;
+  border-color: #eddcc8 !important;
+}
+
+[data-theme="light"] [id^="prayer-card-"] .w-9.h-9 svg,
+[data-theme="morning"] [id^="prayer-card-"] .w-9.h-9 svg,
+[data-theme="afternoon"] [id^="prayer-card-"] .w-9.h-9 svg,
+[data-theme-family="light"] [id^="prayer-card-"] .w-9.h-9 svg,
+.theme-light [id^="prayer-card-"] .w-9.h-9 svg {
+  color: #b45309 !important;
+}
+
+/* Prayer Card Time Separators & Athan/Jamaat Rows */
+[data-theme="light"] [id^="prayer-card-"] .border-t,
+[data-theme="morning"] [id^="prayer-card-"] .border-t,
+[data-theme="afternoon"] [id^="prayer-card-"] .border-t,
+[data-theme-family="light"] [id^="prayer-card-"] .border-t,
+.theme-light [id^="prayer-card-"] .border-t {
+  border-color: #f0e8dc !important;
+}
+
+[data-theme="light"] [id^="prayer-card-"] .font-mono.text-white,
+[data-theme="morning"] [id^="prayer-card-"] .font-mono.text-white,
+[data-theme="afternoon"] [id^="prayer-card-"] .font-mono.text-white,
+[data-theme-family="light"] [id^="prayer-card-"] .font-mono.text-white,
+.theme-light [id^="prayer-card-"] .font-mono.text-white {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+/* Jamaat Time Pill in Card */
+[data-theme="light"] [id^="prayer-card-"] .bg-stone-950\/60,
+[data-theme="morning"] [id^="prayer-card-"] .bg-stone-950\/60,
+[data-theme="afternoon"] [id^="prayer-card-"] .bg-stone-950\/60,
+[data-theme-family="light"] [id^="prayer-card-"] .bg-stone-950\/60,
+.theme-light [id^="prayer-card-"] .bg-stone-950\/60 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #065f46 !important;
+  font-weight: 800 !important;
+}
+
+/* Next Prayer Card Highlight in Light Theme */
+[data-theme="light"] [id^="prayer-card-"].border-amber-400,
+[data-theme="morning"] [id^="prayer-card-"].border-amber-400,
+[data-theme="afternoon"] [id^="prayer-card-"].border-amber-400,
+[data-theme-family="light"] [id^="prayer-card-"].border-amber-400,
+.theme-light [id^="prayer-card-"].border-amber-400 {
+  background-color: #fffdf5 !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 6px 24px -2px rgba(217, 119, 6, 0.16) !important;
+}
+
+/* ==========================================================================
+   SUNRISE & ZAWAL RESTRICTION CARDS & PROMINENT NOTICES IN LIGHT THEME
+   ========================================================================== */
+[data-theme="light"] .bg-rose-950\/80,
+[data-theme="morning"] .bg-rose-950\/80,
+[data-theme="afternoon"] .bg-rose-950\/80,
+[data-theme-family="light"] .bg-rose-950\/80,
+.theme-light .bg-rose-950\/80 {
+  background-color: #fff1f2 !important;
+  border-color: #f43f5e !important;
+}
+
+[data-theme="light"] .bg-rose-950\/80 h5,
+[data-theme="morning"] .bg-rose-950\/80 h5,
+[data-theme="afternoon"] .bg-rose-950\/80 h5,
+[data-theme-family="light"] .bg-rose-950\/80 h5,
+.theme-light .bg-rose-950\/80 h5 {
+  color: #9f1239 !important;
+}
+
+/* Prominent Prohibited Notice Inner Box */
+[data-theme="light"] [id^="prayer-times"] .mt-3.p-2\.5.rounded-xl.bg-stone-950\/80,
+[data-theme="morning"] [id^="prayer-times"] .mt-3.p-2\.5.rounded-xl.bg-stone-950\/80,
+[data-theme="afternoon"] [id^="prayer-times"] .mt-3.p-2\.5.rounded-xl.bg-stone-950\/80,
+[data-theme-family="light"] [id^="prayer-times"] .mt-3.p-2\.5.rounded-xl.bg-stone-950\/80,
+.theme-light [id^="prayer-times"] .mt-3.p-2\.5.rounded-xl.bg-stone-950\/80 {
+  background-color: #faf6ef !important;
+  border-color: #e8dfd3 !important;
+}
+
+[data-theme="light"] [id^="prayer-times"] .mt-3.p-2\.5.rounded-xl.bg-stone-950\/80 .text-amber-300,
+[data-theme="morning"] [id^="prayer-times"] .mt-3.p-2\.5.rounded-xl.bg-stone-950\/80 .text-amber-300,
+[data-theme="afternoon"] [id^="prayer-times"] .mt-3.p-2\.5.rounded-xl.bg-stone-950\/80 .text-amber-300,
+[data-theme-family="light"] [id^="prayer-times"] .mt-3.p-2\.5.rounded-xl.bg-stone-950\/80 .text-amber-300,
+.theme-light [id^="prayer-times"] .mt-3.p-2\.5.rounded-xl.bg-stone-950\/80 .text-amber-300 {
+  color: #991b1b !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="light"] [id^="prayer-times"] .text-rose-300,
+[data-theme="morning"] [id^="prayer-times"] .text-rose-300,
+[data-theme="afternoon"] [id^="prayer-times"] .text-rose-300,
+[data-theme-family="light"] [id^="prayer-times"] .text-rose-300,
+.theme-light [id^="prayer-times"] .text-rose-300 {
+  color: #be123c !important;
+  font-weight: 900 !important;
+}
+
+/* ==========================================================================
+   HERO COUNTDOWN DIGITS & PROGRESS TRACK
+   ========================================================================== */
+[data-theme="light"] [id="hero-prayer-progress-track"],
+[data-theme="morning"] [id="hero-prayer-progress-track"],
+[data-theme="afternoon"] [id="hero-prayer-progress-track"],
+[data-theme-family="light"] [id="hero-prayer-progress-track"],
+.theme-light [id="hero-prayer-progress-track"] {
+  background-color: #ffffff !important;
+  border-color: #e8dfd3 !important;
+  box-shadow: 0 4px 20px -2px rgba(44, 33, 20, 0.05) !important;
+}
+
+/* Countdown Digits in Hero */
+[data-theme="light"] .w-12.h-12.rounded-xl.bg-stone-950\/90,
+[data-theme="light"] .w-14.h-14.rounded-xl.bg-stone-950\/90,
+[data-theme="morning"] .w-12.h-12.rounded-xl.bg-stone-950\/90,
+[data-theme="morning"] .w-14.h-14.rounded-xl.bg-stone-950\/90,
+[data-theme="afternoon"] .w-12.h-12.rounded-xl.bg-stone-950\/90,
+[data-theme="afternoon"] .w-14.h-14.rounded-xl.bg-stone-950\/90,
+[data-theme-family="light"] .w-12.h-12.rounded-xl.bg-stone-950\/90,
+.theme-light .w-12.h-12.rounded-xl.bg-stone-950\/90 {
+  background-color: #ffffff !important;
+  border-color: #e8dfd3 !important;
+  color: #065f46 !important;
+  box-shadow: 0 2px 8px -1px rgba(6, 95, 70, 0.1) !important;
+}
+
+/* Colon animation in Countdown */
+[data-theme="light"] .text-emerald-500.animate-pulse,
+[data-theme="morning"] .text-emerald-500.animate-pulse,
+[data-theme="afternoon"] .text-emerald-500.animate-pulse,
+[data-theme-family="light"] .text-emerald-500.animate-pulse,
+.theme-light .text-emerald-500.animate-pulse {
+  color: #047857 !important;
+}
+
+/* ==========================================================================
+   FRIDAY JUMMA CONGREGATION SPECIAL BANNER
+   ========================================================================== */
+[data-theme="light"] [id="jumma-special-schedule"],
+[data-theme="morning"] [id="jumma-special-schedule"],
+[data-theme="afternoon"] [id="jumma-special-schedule"],
+[data-theme-family="light"] [id="jumma-special-schedule"],
+.theme-light [id="jumma-special-schedule"] {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 50%, #fef3c7 100%) !important;
+  border-color: #a7f3d0 !important;
+  box-shadow: 0 4px 20px -2px rgba(4, 120, 87, 0.08) !important;
+}
+
+[data-theme="light"] [id="jumma-special-schedule"] h4,
+[data-theme="morning"] [id="jumma-special-schedule"] h4,
+[data-theme="afternoon"] [id="jumma-special-schedule"] h4,
+[data-theme-family="light"] [id="jumma-special-schedule"] h4,
+.theme-light [id="jumma-special-schedule"] h4 {
+  color: #065f46 !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="light"] [id="jumma-special-schedule"] p,
+[data-theme="morning"] [id="jumma-special-schedule"] p,
+[data-theme="afternoon"] [id="jumma-special-schedule"] p,
+[data-theme-family="light"] [id="jumma-special-schedule"] p,
+.theme-light [id="jumma-special-schedule"] p {
+  color: #334155 !important;
+}
+
+/* ==========================================================================
+   ANNOUNCEMENTS, DARS & DONATION CARDS
+   ========================================================================== */
+[data-theme="light"] [id^="dars-card-"],
+[data-theme="morning"] [id^="dars-card-"],
+[data-theme="afternoon"] [id^="dars-card-"],
+[data-theme-family="light"] [id^="dars-card-"],
+.theme-light [id^="dars-card-"] {
+  background: #ffffff !important;
+  border-color: #e8dfd3 !important;
+  box-shadow: 0 4px 20px -2px rgba(44, 33, 20, 0.06) !important;
+}
+
+[data-theme="light"] [id^="dars-card-"] h3,
+[data-theme="morning"] [id^="dars-card-"] h3,
+[data-theme="afternoon"] [id^="dars-card-"] h3,
+[data-theme-family="light"] [id^="dars-card-"] h3,
+.theme-light [id^="dars-card-"] h3 {
+  color: #0f172a !important;
+}
+
+/* Speaker info container inside Dars card */
+[data-theme="light"] [id^="dars-card-"] .bg-stone-950\/70,
+[data-theme="morning"] [id^="dars-card-"] .bg-stone-950\/70,
+[data-theme="afternoon"] [id^="dars-card-"] .bg-stone-950\/70,
+[data-theme-family="light"] [id^="dars-card-"] .bg-stone-950\/70,
+.theme-light [id^="dars-card-"] .bg-stone-950\/70 {
+  background-color: #faf6ef !important;
+  border-color: #e8dfd3 !important;
+}
+
+/* ==========================================================================
+   MODALS, DIALOGS, TABLES & FORM INPUTS
+   ========================================================================== */
+[data-theme="light"] [role="dialog"],
+[data-theme="light"] .modal-dialog,
+[data-theme="light"] .bg-stone-900\/98,
+[data-theme="light"] .bg-stone-950\/98,
+[data-theme="morning"] [role="dialog"],
+[data-theme="morning"] .modal-dialog,
+[data-theme="morning"] .bg-stone-900\/98,
+[data-theme="morning"] .bg-stone-950\/98,
+[data-theme="afternoon"] [role="dialog"],
+[data-theme="afternoon"] .modal-dialog,
+[data-theme="afternoon"] .bg-stone-900\/98,
+[data-theme="afternoon"] .bg-stone-950\/98,
+[data-theme-family="light"] [role="dialog"],
+.theme-light [role="dialog"] {
+  background-color: #ffffff !important;
+  border-color: #e8dfd3 !important;
+  color: #1e293b !important;
+  box-shadow: 0 20px 45px -4px rgba(44, 33, 20, 0.16) !important;
+}
+
+/* Modal Headers */
+[data-theme="light"] [role="dialog"] .border-b,
+[data-theme="morning"] [role="dialog"] .border-b,
+[data-theme="afternoon"] [role="dialog"] .border-b,
+[data-theme-family="light"] [role="dialog"] .border-b,
+.theme-light [role="dialog"] .border-b {
+  border-color: #e8dfd3 !important;
+}
+
+/* Tables (Monthly Timetable, Ramadan Table, etc.) */
+[data-theme="light"] table,
+[data-theme="morning"] table,
+[data-theme="afternoon"] table,
+[data-theme-family="light"] table,
+.theme-light table {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+}
+
+[data-theme="light"] th,
+[data-theme="morning"] th,
+[data-theme="afternoon"] th,
+[data-theme-family="light"] th,
+.theme-light th {
+  background-color: #f4eee2 !important;
+  color: #0f291e !important;
+  border-color: #e8dfd3 !important;
+}
+
+[data-theme="light"] td,
+[data-theme="morning"] td,
+[data-theme="afternoon"] td,
+[data-theme-family="light"] td,
+.theme-light td {
+  border-color: #f0e8dc !important;
+  color: #334155 !important;
+}
+
+[data-theme="light"] tr:nth-child(even),
+[data-theme="morning"] tr:nth-child(even),
+[data-theme="afternoon"] tr:nth-child(even),
+[data-theme-family="light"] tr:nth-child(even),
+.theme-light tr:nth-child(even) {
+  background-color: #fcf9f2 !important;
+}
+
+/* Inputs, Selects, and Textareas */
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="light"] select,
+[data-theme="light"] textarea,
+[data-theme="morning"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="morning"] select,
+[data-theme="morning"] textarea,
+[data-theme="afternoon"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="afternoon"] select,
+[data-theme="afternoon"] textarea,
+[data-theme-family="light"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme-family="light"] select,
+[data-theme-family="light"] textarea,
+.theme-light input:not([type="checkbox"]):not([type="radio"]),
+.theme-light select,
+.theme-light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] input:focus,
+[data-theme="light"] select:focus,
+[data-theme="light"] textarea:focus,
+[data-theme="morning"] input:focus,
+[data-theme="morning"] select:focus,
+[data-theme="morning"] textarea:focus,
+[data-theme="afternoon"] input:focus,
+[data-theme="afternoon"] select:focus,
+[data-theme="afternoon"] textarea:focus,
+[data-theme-family="light"] input:focus,
+.theme-light input:focus {
+  border-color: #047857 !important;
+  outline: 2px solid rgba(4, 120, 87, 0.2) !important;
+}
+
+/* Navbar in Light Theme */
+[data-theme="light"] nav,
+[data-theme="morning"] nav,
+[data-theme="afternoon"] nav,
+[data-theme-family="light"] nav,
+.theme-light nav {
   background-color: var(--theme-nav-bg) !important;
   border-color: var(--theme-nav-border) !important;
 }
 
-[data-theme="afternoon"] .bg-emerald-950,
-[data-theme="afternoon"] .bg-emerald-950\/80,
-[data-theme="afternoon"] .bg-emerald-950\/70 {
-  background-color: #ecfdf5 !important;
-  border-color: #6ee7b7 !important;
+/* Footer in Light Theme */
+[data-theme="light"] footer,
+[data-theme="morning"] footer,
+[data-theme="afternoon"] footer,
+[data-theme-family="light"] footer,
+.theme-light footer {
+  background-color: #f5efe6 !important;
+  border-color: #e8dfd3 !important;
+  color: #334155 !important;
 }
-[data-theme="afternoon"] .text-emerald-400,
-[data-theme="afternoon"] .text-emerald-300 {
-  color: #059669 !important;
-}
-[data-theme="afternoon"] .bg-amber-950 {
-  background-color: #fef9c3 !important;
-  border-color: #fde047 !important;
-}
-[data-theme="afternoon"] .text-amber-400,
-[data-theme="afternoon"] .text-amber-300 {
-  color: #d97706 !important;
+
+[data-theme="light"] footer h3,
+[data-theme="light"] footer h4,
+[data-theme="morning"] footer h3,
+[data-theme="morning"] footer h4,
+[data-theme="afternoon"] footer h3,
+[data-theme="afternoon"] footer h4,
+[data-theme-family="light"] footer h3,
+.theme-light footer h3 {
+  color: #0f291e !important;
 }
 
 /* --------------------------------------------------------------------------
@@ -407,32 +889,38 @@ html, body, #root,
 }
 
 /* Gradient Stop Overrides for Sections */
+[data-theme="light"] .from-stone-950,
+[data-theme="light"] .from-stone-900,
 [data-theme="morning"] .from-stone-950,
-[data-theme="morning"] .from-stone-900 {
-  --tw-gradient-from: #ffffff !important;
-  --tw-gradient-to: #fbf5ed !important;
-  --tw-gradient-stops: var(--tw-gradient-from), #fcf7f0, var(--tw-gradient-to) !important;
-}
-[data-theme="morning"] .via-stone-900 {
-  --tw-gradient-via: #fdfaf6 !important;
-}
-[data-theme="morning"] .to-stone-950,
-[data-theme="morning"] .to-stone-900 {
-  --tw-gradient-to: #f7f0e6 !important;
-}
-
+[data-theme="morning"] .from-stone-900,
 [data-theme="afternoon"] .from-stone-950,
-[data-theme="afternoon"] .from-stone-900 {
+[data-theme="afternoon"] .from-stone-900,
+[data-theme-family="light"] .from-stone-950,
+[data-theme-family="light"] .from-stone-900,
+.theme-light .from-stone-950,
+.theme-light .from-stone-900 {
   --tw-gradient-from: #ffffff !important;
-  --tw-gradient-to: #f0f6fa !important;
-  --tw-gradient-stops: var(--tw-gradient-from), #f8fbfe, var(--tw-gradient-to) !important;
+  --tw-gradient-to: #faf6ef !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #fcf9f2, var(--tw-gradient-to) !important;
 }
-[data-theme="afternoon"] .via-stone-900 {
-  --tw-gradient-via: #f5f9fc !important;
+[data-theme="light"] .via-stone-900,
+[data-theme="morning"] .via-stone-900,
+[data-theme="afternoon"] .via-stone-900,
+[data-theme-family="light"] .via-stone-900,
+.theme-light .via-stone-900 {
+  --tw-gradient-via: #faf6ef !important;
 }
+[data-theme="light"] .to-stone-950,
+[data-theme="light"] .to-stone-900,
+[data-theme="morning"] .to-stone-950,
+[data-theme="morning"] .to-stone-900,
 [data-theme="afternoon"] .to-stone-950,
-[data-theme="afternoon"] .to-stone-900 {
-  --tw-gradient-to: #edf3f9 !important;
+[data-theme="afternoon"] .to-stone-900,
+[data-theme-family="light"] .to-stone-950,
+[data-theme-family="light"] .to-stone-900,
+.theme-light .to-stone-950,
+.theme-light .to-stone-900 {
+  --tw-gradient-to: #f4eee2 !important;
 }
 
 [data-theme="evening"] .from-stone-950,
@@ -463,31 +951,91 @@ html, body, #root,
   --tw-gradient-to: #050811 !important;
 }
 
-/* Button & Badge Contrast Protections in Light Themes */
+/* Button & Badge Contrast Protections in Light Themes - Crisp White Text on Primary Buttons */
+[data-theme="light"] .bg-emerald-600,
+[data-theme="light"] .bg-emerald-500,
+[data-theme="light"] .bg-emerald-700,
 [data-theme="morning"] .bg-emerald-600,
 [data-theme="morning"] .bg-emerald-500,
+[data-theme="morning"] .bg-emerald-700,
 [data-theme="afternoon"] .bg-emerald-600,
-[data-theme="afternoon"] .bg-emerald-500 {
-  color: #0c120c !important;
+[data-theme="afternoon"] .bg-emerald-500,
+[data-theme="afternoon"] .bg-emerald-700,
+[data-theme-family="light"] .bg-emerald-600,
+[data-theme-family="light"] .bg-emerald-500,
+[data-theme-family="light"] .bg-emerald-700,
+.theme-light .bg-emerald-600,
+.theme-light .bg-emerald-500,
+.theme-light .bg-emerald-700 {
+  background-color: #047857 !important;
+  color: #ffffff !important;
 }
+[data-theme="light"] .bg-emerald-600 *,
+[data-theme="light"] .bg-emerald-500 *,
+[data-theme="light"] .bg-emerald-700 *,
 [data-theme="morning"] .bg-emerald-600 *,
 [data-theme="morning"] .bg-emerald-500 *,
+[data-theme="morning"] .bg-emerald-700 *,
 [data-theme="afternoon"] .bg-emerald-600 *,
-[data-theme="afternoon"] .bg-emerald-500 * {
-  color: #0c120c !important;
+[data-theme="afternoon"] .bg-emerald-500 *,
+[data-theme="afternoon"] .bg-emerald-700 *,
+[data-theme-family="light"] .bg-emerald-600 *,
+[data-theme-family="light"] .bg-emerald-500 *,
+[data-theme-family="light"] .bg-emerald-700 *,
+.theme-light .bg-emerald-600 *,
+.theme-light .bg-emerald-500 *,
+.theme-light .bg-emerald-700 * {
+  color: #ffffff !important;
 }
 
+[data-theme="light"] .bg-rose-600,
+[data-theme="light"] .bg-rose-500,
 [data-theme="morning"] .bg-rose-600,
 [data-theme="morning"] .bg-rose-500,
 [data-theme="afternoon"] .bg-rose-600,
-[data-theme="afternoon"] .bg-rose-500 {
+[data-theme="afternoon"] .bg-rose-500,
+[data-theme-family="light"] .bg-rose-600,
+[data-theme-family="light"] .bg-rose-500,
+.theme-light .bg-rose-600,
+.theme-light .bg-rose-500 {
+  background-color: #be123c !important;
   color: #ffffff !important;
 }
+[data-theme="light"] .bg-rose-600 *,
+[data-theme="light"] .bg-rose-500 *,
 [data-theme="morning"] .bg-rose-600 *,
 [data-theme="morning"] .bg-rose-500 *,
 [data-theme="afternoon"] .bg-rose-600 *,
-[data-theme="afternoon"] .bg-rose-500 * {
+[data-theme="afternoon"] .bg-rose-500 *,
+[data-theme-family="light"] .bg-rose-600 *,
+[data-theme-family="light"] .bg-rose-500 *,
+.theme-light .bg-rose-600 *,
+.theme-light .bg-rose-500 * {
   color: #ffffff !important;
+}
+
+/* Light Theme Scrollbar */
+[data-theme="light"] ::-webkit-scrollbar-track,
+[data-theme="morning"] ::-webkit-scrollbar-track,
+[data-theme="afternoon"] ::-webkit-scrollbar-track,
+[data-theme-family="light"] ::-webkit-scrollbar-track,
+.theme-light ::-webkit-scrollbar-track {
+  background: #faf6ef !important;
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb,
+[data-theme="morning"] ::-webkit-scrollbar-thumb,
+[data-theme="afternoon"] ::-webkit-scrollbar-thumb,
+[data-theme-family="light"] ::-webkit-scrollbar-thumb,
+.theme-light ::-webkit-scrollbar-thumb {
+  background: #d8cdbe !important;
+  border-radius: 4px;
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover,
+[data-theme="morning"] ::-webkit-scrollbar-thumb:hover,
+[data-theme="afternoon"] ::-webkit-scrollbar-thumb:hover,
+[data-theme-family="light"] ::-webkit-scrollbar-thumb:hover,
+.theme-light ::-webkit-scrollbar-thumb:hover {
+  background: #047857 !important;
 }
 
 .font-arabic {
