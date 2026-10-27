@@ -73,7 +73,7 @@ export const MonthlyTimetableModal: React.FC<MonthlyTimetableModalProps> = ({
       };
 
       // Determine Fajr Jamaat
-      let fajrJamaatStr = adminSettings?.fajrJamaat || '06:00 AM';
+      let fajrJamaatStr = adminSettings?.fajrJamaat || '06:05 AM';
       if (fajrJamaatStr.startsWith('+')) {
         const mins = parseInt(fajrJamaatStr.replace(/[^0-9]/g, ''), 10) || 30;
         fajrJamaatStr = formatMin(fajrM + mins);
