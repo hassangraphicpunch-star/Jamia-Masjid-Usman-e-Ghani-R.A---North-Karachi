@@ -185,6 +185,8 @@ export interface AdminPrayerSettings {
   // Prayer Calculation Method (e.g. 'Karachi', 'MuslimWorldLeague', 'UmmAlQura', 'Egyptian')
   calculationMethod?: string;
   madhab?: 'Hanafi' | 'Shafi';
+  // Hijri Date adjustment for local moon-sighting authority announcements (-1, 0, +1 day)
+  hijriDateAdjustment?: number;
 }
 
 export interface PrayerCalculationMethod {

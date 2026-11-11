@@ -175,69 +175,12 @@ export const KARACHI_MONTHLY_MAGHRIB: Record<number, { h: number; m: number }> =
 
 /**
  * Checks whether the target time in Karachi has passed Maghrib (sunset).
+ * Dynamically computes solar sunset for Karachi (Lat 24.9961° N, Lng 67.0673° E).
  */
 export function isAfterKarachiMaghrib(targetDate: Date = new Date()): {
   isPostMaghrib: boolean;
   maghribTimeStr: string;
 } {
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Karachi',
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: false,
-    month: 'numeric',
-  });
-  const parts = formatter.formatToParts(targetDate);
-  let hour = targetDate.getHours();
-  let minute = targetDate.getMinutes();
-  let month = targetDate.getMonth() + 1;
-  for (const p of parts) {
-    if (p.type === 'hour') hour = parseInt(p.value, 10);
-    if (p.type === 'minute') minute = parseInt(p.value, 10);
-    if (p.type === 'month') month = parseInt(p.value, 10);
-  }
-
-  const maghrib = KARACHI_MONTHLY_MAGHRIB[month] || { h: 18, m: 15 };
-  const currentMins = hour * 60 + minute;
-  const maghribMins = maghrib.h * 60 + maghrib.m;
-  const isPostMaghrib = currentMins >= maghribMins;
-  const maghribTimeStr = `${String(maghrib.h).padStart(2, '0')}:${String(maghrib.m).padStart(2, '0')}`;
-
-  return { isPostMaghrib, maghribTimeStr };
-}
-
-/**
- * Accurately calculate Islamic / Hijri date for Pakistan & Karachi.
- * Changes daily at Maghrib (sunset) as required by Shariah.
- */
-export const PAKISTAN_RUET_MONTH_STARTS = [
-  { year: 1447, month: 9, startCivilDate: '2026-02-19' }, // Ramadan 1447
-  { year: 1447, month: 10, startCivilDate: '2026-03-21' }, // Shawwal 1447
-  { year: 1447, month: 11, startCivilDate: '2026-04-19' }, // Dhu al-Qadah 1447
-  { year: 1447, month: 12, startCivilDate: '2026-05-19' }, // Dhu al-Hijjah 1447
-  { year: 1448, month: 1, startCivilDate: '2026-06-17' }, // Muharram 1448
-  { year: 1448, month: 2, startCivilDate: '2026-07-16' }, // Safar 1448
-  { year: 1448, month: 3, startCivilDate: '2026-08-15' }, // Rabi al-Awwal 1448
-  { year: 1448, month: 4, startCivilDate: '2026-09-13' }, // Rabi al-Thani 1448
-  { year: 1448, month: 5, startCivilDate: '2026-10-13' }, // Jumada al-Awwal 1448 (Central Ruet-e-Hilal confirmed)
-  { year: 1448, month: 6, startCivilDate: '2026-11-11' }, // Jumada al-Thani 1448
-  { year: 1448, month: 7, startCivilDate: '2026-12-11' }, // Rajab 1448
-  { year: 1448, month: 8, startCivilDate: '2027-01-10' }, // Shaban 1448
-  { year: 1448, month: 9, startCivilDate: '2027-02-08' }, // Ramadan 1448
-  { year: 1448, month: 10, startCivilDate: '2027-03-10' }, // Shawwal 1448
-  { year: 1448, month: 11, startCivilDate: '2027-04-08' }, // Dhu al-Qadah 1448
-  { year: 1448, month: 12, startCivilDate: '2027-05-08' }, // Dhu al-Hijjah 1448
-];
-
-/**
- * Accurately calculate Islamic / Hijri date for Pakistan & Karachi.
- * Prioritizes Central Ruet-e-Hilal Committee (مرکزی رویتِ ہلال کمیٹی پاکستان) official sightings.
- * Changes daily at Maghrib (sunset in Karachi) as required by Islamic jurisprudence.
- */
-export function getAccurateHijriDate(
-  targetDate: Date = new Date(),
-  offsetDays: number = 0
-): AccurateHijriDate {
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Karachi',
     year: 'numeric',
@@ -262,68 +205,144 @@ export function getAccurateHijriDate(
     if (p.type === 'minute') minute = parseInt(p.value, 10);
   }
 
-  const maghrib = KARACHI_MONTHLY_MAGHRIB[month] || { h: 18, m: 15 };
+  const fallbackMaghrib = KARACHI_MONTHLY_MAGHRIB[month] || { h: 17, m: 50 };
+  let maghribHour = fallbackMaghrib.h;
+  let maghribMin = fallbackMaghrib.m;
+
+  try {
+    const observer = new Astronomy.Observer(24.9961, 67.0673, 20);
+    const dtUtc = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
+    const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, -1, dtUtc, 1);
+    if (sunset && sunset.date) {
+      const sParts = formatter.formatToParts(sunset.date);
+      for (const p of sParts) {
+        if (p.type === 'hour') maghribHour = parseInt(p.value, 10);
+        if (p.type === 'minute') maghribMin = parseInt(p.value, 10);
+      }
+    }
+  } catch (_) {}
+
   const currentMins = hour * 60 + minute;
-  const maghribMins = maghrib.h * 60 + maghrib.m;
+  const maghribMins = maghribHour * 60 + maghribMin;
+  const isPostMaghrib = currentMins >= maghribMins;
+  const maghribTimeStr = `${String(maghribHour).padStart(2, '0')}:${String(maghribMin).padStart(2, '0')}`;
+
+  return { isPostMaghrib, maghribTimeStr };
+}
+
+/**
+ * Reads any active administrative Hijri date adjustment (-1, 0, +1 day)
+ * from persistent local storage for seamless cross-component synchronization.
+ */
+export function getActiveHijriOffset(): number {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      let saved = localStorage.getItem('mosque_admin_prayer_settings');
+      if (!saved) {
+        saved = localStorage.getItem('mosque_admin_live_backup');
+      }
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.hijriDateAdjustment === 'number') {
+          return parsed.hijriDateAdjustment;
+        }
+      }
+    }
+  } catch (_) {}
+  return 0;
+}
+
+/**
+ * Accurately calculate Islamic / Hijri date for Pakistan & Karachi.
+ * Changes daily at Maghrib (sunset in Karachi) as required by Islamic jurisprudence.
+ * Supports manual admin date adjustment (+1, -1, 0 day) when officially announced by local moon-sighting authorities.
+ */
+export function getAccurateHijriDate(
+  targetDate: Date = new Date(),
+  offsetDays?: number
+): AccurateHijriDate {
+  const effectiveOffset = typeof offsetDays === 'number' ? offsetDays : getActiveHijriOffset();
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Karachi',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(targetDate);
+  let year = targetDate.getFullYear();
+  let month = targetDate.getMonth() + 1;
+  let day = targetDate.getDate();
+  let hour = targetDate.getHours();
+  let minute = targetDate.getMinutes();
+
+  for (const p of parts) {
+    if (p.type === 'year') year = parseInt(p.value, 10);
+    if (p.type === 'month') month = parseInt(p.value, 10);
+    if (p.type === 'day') day = parseInt(p.value, 10);
+    if (p.type === 'hour') hour = parseInt(p.value, 10);
+    if (p.type === 'minute') minute = parseInt(p.value, 10);
+  }
+
+  // Exact Sunset / Maghrib in Karachi via astronomy-engine
+  const fallbackMaghrib = KARACHI_MONTHLY_MAGHRIB[month] || { h: 17, m: 50 };
+  let maghribHour = fallbackMaghrib.h;
+  let maghribMin = fallbackMaghrib.m;
+
+  try {
+    const observer = new Astronomy.Observer(24.9961, 67.0673, 20);
+    const dtUtc = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
+    const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, -1, dtUtc, 1);
+    if (sunset && sunset.date) {
+      const sParts = formatter.formatToParts(sunset.date);
+      for (const p of sParts) {
+        if (p.type === 'hour') maghribHour = parseInt(p.value, 10);
+        if (p.type === 'minute') maghribMin = parseInt(p.value, 10);
+      }
+    }
+  } catch (_) {}
+
+  const currentMins = hour * 60 + minute;
+  const maghribMins = maghribHour * 60 + maghribMin;
   const isPostMaghrib = currentMins >= maghribMins;
 
-  // Apply offsetDays in terms of days
-  const effectiveCivilUtc = Date.UTC(year, month - 1, day) + offsetDays * 86400000;
-  const effDate = new Date(effectiveCivilUtc);
-  const effY = effDate.getUTCFullYear();
-  const effM = effDate.getUTCMonth() + 1;
-  const effD = effDate.getUTCDate();
-  const civilDateStr = `${effY}-${String(effM).padStart(2, '0')}-${String(effD).padStart(2, '0')}`;
+  // In Islamic calendar, night precedes the daytime.
+  // After Maghrib on the civil day, the Islamic date advances to the upcoming civil daylight.
+  const civilDayShift = (isPostMaghrib ? 1 : 0) + effectiveOffset;
+  const shiftedDate = new Date(Date.UTC(year, month - 1, day) + civilDayShift * 86400000);
 
-  // Find active Central Ruet-e-Hilal confirmed month start
-  let activeMonth = PAKISTAN_RUET_MONTH_STARTS[8]; // Default: Jumada al-Awwal 1448 AH (start 2026-10-13)
-  for (let i = PAKISTAN_RUET_MONTH_STARTS.length - 1; i >= 0; i--) {
-    if (civilDateStr >= PAKISTAN_RUET_MONTH_STARTS[i].startCivilDate) {
-      activeMonth = PAKISTAN_RUET_MONTH_STARTS[i];
-      break;
-    }
+  // Use Intl standard Islamic civil calendar calculation
+  const hijriFmt = new Intl.DateTimeFormat('en-u-ca-islamic-civil', {
+    timeZone: 'Asia/Karachi',
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  });
+  const hijriParts = hijriFmt.formatToParts(shiftedDate);
+  let hDay = 1;
+  let hMonth = 6;
+  let hYear = 1448;
+
+  for (const p of hijriParts) {
+    if (p.type === 'day') hDay = parseInt(p.value, 10);
+    if (p.type === 'month') hMonth = parseInt(p.value, 10);
+    if (p.type === 'year') hYear = parseInt(p.value, 10);
   }
 
-  const [sY, sM, sD] = activeMonth.startCivilDate.split('-').map(Number);
-  const startUtc = Date.UTC(sY, sM - 1, sD);
-  const diffDays = Math.round((effectiveCivilUtc - startUtc) / 86400000);
-
-  // In Islamic calendar, the new date begins at sunset (Maghrib)
-  let hijriDay = diffDays + 1;
-  if (isPostMaghrib && offsetDays === 0) {
-    hijriDay += 1;
-  }
-
-  let hijriMonthNum = activeMonth.month;
-  let hijriYearNum = activeMonth.year;
-
-  if (hijriDay > 30) {
-    hijriDay -= 30;
-    hijriMonthNum += 1;
-    if (hijriMonthNum > 12) {
-      hijriMonthNum = 1;
-      hijriYearNum += 1;
-    }
-  } else if (hijriDay < 1) {
-    hijriDay = 29;
-    hijriMonthNum -= 1;
-    if (hijriMonthNum < 1) {
-      hijriMonthNum = 12;
-      hijriYearNum -= 1;
-    }
-  }
-
-  const mInfo = HIJRI_MONTHS[hijriMonthNum - 1] || HIJRI_MONTHS[4];
+  const mInfo = HIJRI_MONTHS[hMonth - 1] || HIJRI_MONTHS[5];
+  const maghribTimeStr = `${String(maghribHour).padStart(2, '0')}:${String(maghribMin).padStart(2, '0')}`;
 
   return {
-    day: hijriDay,
+    day: hDay,
     month: mInfo,
-    year: hijriYearNum,
-    formattedUr: `${hijriDay} ${mInfo.ur} ${hijriYearNum}ھ`,
-    formattedAr: `${hijriDay} ${mInfo.ar} ${hijriYearNum} هـ`,
-    formattedEn: `${hijriDay} ${mInfo.en} ${hijriYearNum} AH`,
+    year: hYear,
+    formattedUr: `${hDay} ${mInfo.ur} ${hYear}ھ`,
+    formattedAr: `${hDay} ${mInfo.ar} ${hYear} هـ`,
+    formattedEn: `${hDay} ${mInfo.en} ${hYear} AH`,
     isPostMaghrib,
-    maghribTimeStr: `${String(maghrib.h).padStart(2, '0')}:${String(maghrib.m).padStart(2, '0')}`,
+    maghribTimeStr,
   };
 }
 
@@ -807,7 +826,7 @@ export function getMonthMoonCalendar(
 export function calculateMoonPhase(
   targetDate: Date = new Date(),
   coords: { lat: number; lng: number } = { lat: 24.9961, lng: 67.0673 },
-  hijriOffsetDays: number = 0
+  hijriOffsetDays?: number
 ): DynamicMoonData {
   const observer = new Astronomy.Observer(coords.lat, coords.lng, 20);
 
@@ -863,7 +882,8 @@ export function calculateMoonPhase(
   const azimuthDegrees = Math.round(hor.azimuth * 10) / 10;
 
   // 7. Hijri Date calculation
-  const hijriDate = getAccurateHijriDate(targetDate, hijriOffsetDays);
+  const effectiveOffset = typeof hijriOffsetDays === 'number' ? hijriOffsetDays : getActiveHijriOffset();
+  const hijriDate = getAccurateHijriDate(targetDate, effectiveOffset);
 
   const orderedPhaseKeys: MoonPhaseType[] = [
     'new_moon',

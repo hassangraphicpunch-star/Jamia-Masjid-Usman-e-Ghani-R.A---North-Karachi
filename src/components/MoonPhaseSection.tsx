@@ -38,12 +38,14 @@ import {
   PAKISTAN_RUET_REGISTRY,
 } from '../services/ruetHilalSyncService';
 import { RealisticMoon } from './RealisticMoon';
+import { AdminPrayerSettings } from '../types';
 
 interface MoonPhaseSectionProps {
   language?: 'ur' | 'en';
   onDateChange?: (date: Date) => void;
   className?: string;
   isCompact?: boolean;
+  adminSettings?: AdminPrayerSettings;
 }
 
 /**
@@ -51,7 +53,6 @@ interface MoonPhaseSectionProps {
  * 
  * Synchronizes:
  * 1. Pakistan Officially Observed Hijri Calendar (Central Ruet-e-Hilal Committee / Ministry of Religious Affairs)
- *    - 1 Jumada al-Awwal 1448 AH on Tuesday, 13 October 2026
  *    - Advances daily at Maghrib (sunset in Karachi) as required by Shariah
  *    - Automatic background refresh every 6 hours and on demand
  * 2. High-precision Astronomical Moon Phase Calculations for Karachi, Pakistan (Timeanddate & USNO standards)
@@ -64,6 +65,7 @@ export const MoonPhaseSection: React.FC<MoonPhaseSectionProps> = ({
   language = 'ur',
   className = '',
   isCompact = false,
+  adminSettings,
 }) => {
   const isUrdu = language === 'ur';
 
@@ -99,7 +101,7 @@ export const MoonPhaseSection: React.FC<MoonPhaseSectionProps> = ({
 
     const performSync = async (force: boolean = false) => {
       try {
-        const data = await getSyncedMoonAndHijriData(force, currentNow);
+        const data = await getSyncedMoonAndHijriData(force, currentNow, adminSettings?.hijriDateAdjustment);
         if (isMounted) {
           setSyncedData(data);
           const syncDate = new Date(data.lastSyncedAt);
@@ -127,13 +129,13 @@ export const MoonPhaseSection: React.FC<MoonPhaseSectionProps> = ({
       isMounted = false;
       clearInterval(sixHourTimer);
     };
-  }, [currentNow, isUrdu]);
+  }, [currentNow, isUrdu, adminSettings?.hijriDateAdjustment]);
 
   // Manual refresh handler
   const handleManualRefresh = async () => {
     setIsSyncing(true);
     try {
-      const data = await getSyncedMoonAndHijriData(true, selectedDate);
+      const data = await getSyncedMoonAndHijriData(true, selectedDate, adminSettings?.hijriDateAdjustment);
       setSyncedData(data);
       const syncDate = new Date(data.lastSyncedAt);
       setLastSyncTimeFormatted(
@@ -152,13 +154,13 @@ export const MoonPhaseSection: React.FC<MoonPhaseSectionProps> = ({
 
   // Compute detailed moon data for the selected date
   const activeMoonData: DynamicMoonData = useMemo(() => {
-    return calculateMoonPhase(selectedDate, { lat: 24.9961, lng: 67.0673 });
-  }, [selectedDate]);
+    return calculateMoonPhase(selectedDate, { lat: 24.9961, lng: 67.0673 }, adminSettings?.hijriDateAdjustment);
+  }, [selectedDate, adminSettings?.hijriDateAdjustment]);
 
   // Compute verified Pakistan Hijri status for the selected date
   const activeHijriStatus = useMemo(() => {
-    return calculatePakistanVerifiedHijri(selectedDate);
-  }, [selectedDate]);
+    return calculatePakistanVerifiedHijri(selectedDate, adminSettings?.hijriDateAdjustment);
+  }, [selectedDate, adminSettings?.hijriDateAdjustment]);
 
   // Compute monthly calendar data
   const monthData = useMemo(() => {

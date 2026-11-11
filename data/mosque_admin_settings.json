@@ -1,9 +1,10 @@
 {
-  "fajrJamaat": "06:10 AM",
+  "fajrJamaat": "06:15 AM",
   "dhuhrJamaat": "01:30 PM",
-  "asrJamaat": "04:45 PM",
+  "asrJamaat": "04:30 PM",
   "maghribJamaat": "+5 mins after Azan",
   "ishaJamaat": "07:45 PM",
+  "hijriDateAdjustment": 0,
   "jummaAzan": "12:50 PM",
   "jummaAzan2": "01:40 PM",
   "jummaBayan": "01:10 PM",

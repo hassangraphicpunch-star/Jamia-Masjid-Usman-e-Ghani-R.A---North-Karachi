@@ -316,6 +316,7 @@ export default function App() {
         onOpenDuasModal={() => setDuasModalOpen(true)}
         onOpenWeatherModal={() => handleOpenWeatherModal('overview')}
         weatherData={weatherData}
+        adminSettings={adminSettings}
       />
 
       {/* Main Content Sections */}
@@ -464,6 +465,7 @@ export default function App() {
         onRefreshWeather={loadWeather}
         isRefreshing={isWeatherRefreshing}
         initialTab={weatherModalTab}
+        adminSettings={adminSettings}
       />
 
       {/* Floating & Mobile Bottom-Sheet Mosque Chatbot */}

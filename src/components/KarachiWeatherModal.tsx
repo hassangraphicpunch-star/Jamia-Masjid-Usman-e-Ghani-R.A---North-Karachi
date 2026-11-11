@@ -56,6 +56,7 @@ interface KarachiWeatherModalProps {
     | 'air_quality'
     | 'islamic_duas'
     | 'mosque_advice';
+  adminSettings?: any;
 }
 
 export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
@@ -66,6 +67,7 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
   onRefreshWeather,
   isRefreshing = false,
   initialTab,
+  adminSettings,
 }) => {
   const isUrdu = language === 'ur';
   const [activeTab, setActiveTab] = useState<
@@ -80,16 +82,18 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
   }, [isOpen, initialTab]);
 
   // Dynamic astronomical calculation for Karachi (Transitions daily at Maghrib prayer)
+  const hijriOffset = adminSettings?.hijriDateAdjustment || 0;
   const [liveMoon, setLiveMoon] = React.useState(() =>
-    calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 })
+    calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }, hijriOffset)
   );
 
   React.useEffect(() => {
+    setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }, hijriOffset));
     const timer = setInterval(() => {
-      setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }));
+      setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }, hijriOffset));
     }, 30000);
     return () => clearInterval(timer);
-  }, []);
+  }, [hijriOffset]);
 
   if (!isOpen || !weatherData) return null;
 
@@ -762,7 +766,7 @@ export const KarachiWeatherModal: React.FC<KarachiWeatherModalProps> = ({
           {/* TAB: DEDICATED MOON PHASE & CURRENT MOON TYPE */}
           {activeTab === 'moon_phase' && (
             <div className="space-y-4 animate-in fade-in duration-200">
-              <MoonPhaseSection language={language} />
+              <MoonPhaseSection language={language} adminSettings={adminSettings} />
             </div>
           )}
 

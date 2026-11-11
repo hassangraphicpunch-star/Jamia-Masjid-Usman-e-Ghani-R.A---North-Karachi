@@ -21,7 +21,7 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
-import { Language } from '../types';
+import { Language, AdminPrayerSettings } from '../types';
 import { MOSQUE_INFO } from '../data/mockData';
 import { getStoredNotifications, getReadNotificationIds } from '../services/notificationService';
 import { KarachiWeatherData } from '../services/weatherService';
@@ -47,6 +47,7 @@ interface NavbarProps {
   onOpenDuasModal?: () => void;
   onOpenWeatherModal?: () => void;
   weatherData?: KarachiWeatherData | null;
+  adminSettings?: AdminPrayerSettings;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -65,6 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenDuasModal,
   onOpenWeatherModal,
   weatherData,
+  adminSettings,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -76,17 +78,19 @@ export const Navbar: React.FC<NavbarProps> = ({
   const weatherDropdownRef = useRef<HTMLDivElement>(null);
 
   // Accurate moon phase and verified Islamic Date (Transitions daily at Maghrib prayer)
+  const hijriOffset = adminSettings?.hijriDateAdjustment || 0;
   const [liveMoon, setLiveMoon] = useState(() =>
-    calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 })
+    calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }, hijriOffset)
   );
 
   useEffect(() => {
+    setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }, hijriOffset));
     // Check every 30 seconds so the Islamic date updates automatically at Maghrib sunset
     const timer = setInterval(() => {
-      setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }));
+      setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }, hijriOffset));
     }, 30000);
     return () => clearInterval(timer);
-  }, []);
+  }, [hijriOffset]);
 
   // Check unread notifications count
   const checkUnread = () => {

@@ -139,17 +139,20 @@ export const HeroPrayerTimes: React.FC<HeroPrayerTimesProps> = ({
   const isUrdu = language === 'ur';
 
   // Dynamic astronomical calculation for Karachi (Transitions daily at Maghrib prayer)
+  const hijriOffset = adminSettings?.hijriDateAdjustment || 0;
   const [liveMoon, setLiveMoon] = useState(() =>
-    calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 })
+    calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }, hijriOffset)
   );
 
   useEffect(() => {
+    // Immediate update when adminSettings change
+    setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }, hijriOffset));
     // Check every 30 seconds so the Islamic date and moon telemetry update automatically at Maghrib sunset
     const timer = setInterval(() => {
-      setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }));
+      setLiveMoon(calculateMoonPhase(new Date(), { lat: 24.9961, lng: 67.0673 }, hijriOffset));
     }, 30000);
     return () => clearInterval(timer);
-  }, []);
+  }, [hijriOffset]);
 
   // Determine effective Iqamah state (simulation overrides real live clock for demonstration)
   const effectiveIqamah =

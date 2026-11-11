@@ -38,7 +38,9 @@ import {
   Cloud,
   RefreshCw,
   Compass,
+  Moon,
 } from 'lucide-react';
+import { getAccurateHijriDate } from '../services/astronomyService';
 import {
   Language,
   AdminPrayerSettings,
@@ -259,9 +261,9 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     let preset: Partial<AdminPrayerSettings> = {};
     if (presetName === 'current') {
       preset = {
-        fajrJamaat: '06:10 AM',
+        fajrJamaat: '06:15 AM',
         dhuhrJamaat: '01:30 PM',
-        asrJamaat: '04:45 PM',
+        asrJamaat: '04:30 PM',
         maghribJamaat: '+5 mins after Azan',
         ishaJamaat: '07:45 PM',
         jummaAzan: '12:50 PM',
@@ -275,9 +277,9 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
       };
     } else if (presetName === 'winter') {
       preset = {
-        fajrJamaat: '06:10 AM',
+        fajrJamaat: '06:15 AM',
         dhuhrJamaat: '01:15 PM',
-        asrJamaat: '04:45 PM',
+        asrJamaat: '04:30 PM',
         maghribJamaat: '+5 mins after Azan',
         ishaJamaat: '07:45 PM',
         jummaAzan: '12:45 PM',
@@ -477,7 +479,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
         titleUr: annForm.titleUr || 'جامع مسجد کا نیا اعلان',
         category: annForm.category || 'general',
         date: annForm.date || new Date().toISOString().split('T')[0],
-        hijriDate: annForm.hijriDate || '1448 AH',
+        hijriDate: annForm.hijriDate || getAccurateHijriDate(new Date(), settings.hijriDateAdjustment || 0).formattedUr,
         contentEn: annForm.contentEn || '',
         contentUr: annForm.contentUr || '',
         speakerEn: annForm.speakerEn || '',
@@ -817,6 +819,68 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                   </p>
                 </div>
 
+                {/* Automatic Islamic Hijri Date System & Ruet-e-Hilal Adjustment Card */}
+                <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/60 to-stone-950 border border-amber-700/50 space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <Moon className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs font-bold text-amber-200 uppercase tracking-wide">
+                        {isUrdu ? 'خودکار اسلامی ہجری کیلنڈر و رویتِ ہلال تاریخ (Automatic Hijri Date System)' : 'Automatic Islamic Hijri Date System (Karachi Ruet-e-Hilal)'}
+                      </span>
+                    </div>
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-amber-900/80 text-amber-300 border border-amber-700 font-bold">
+                      {getAccurateHijriDate(new Date(), settings.hijriDateAdjustment || 0).formattedUr}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-stone-300 leading-relaxed">
+                    {isUrdu
+                      ? 'اسلامی تاریخ شریعت کے مطابق روزانہ نمازِ مغرب (غروبِ آفتاب) کے وقت خودکار طریقے سے اگلے دن پر منتقل ہو جاتی ہے۔ مقامی رویتِ ہلال کے سرکاری اعلان کے مطابق آپ یہاں سے تاریخ میں +1 یا -1 دن کی تصحیح کر سکتے ہیں۔'
+                      : 'The Islamic date automatically advances every evening at Maghrib (sunset in Karachi). In case of official local moon-sighting authority announcements, you can adjust the date by +1 or -1 day below.'}
+                  </p>
+
+                  <div className="flex items-center gap-2 flex-wrap pt-1">
+                    <label className="text-xs text-stone-300 font-medium">
+                      {isUrdu ? 'رویتِ ہلال تاریخ کی تصحیح (Date Adjustment):' : 'Local Sighting Adjustment:'}
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setSettings({ ...settings, hijriDateAdjustment: -1 })}
+                        className={`px-2.5 py-1 text-xs rounded border transition-colors ${
+                          (settings.hijriDateAdjustment || 0) === -1
+                            ? 'bg-amber-600 text-stone-950 font-bold border-amber-400'
+                            : 'bg-stone-900 text-stone-300 border-stone-700 hover:border-amber-500'
+                        }`}
+                      >
+                        -1 {isUrdu ? 'دن (پچھلا دن)' : 'Day'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSettings({ ...settings, hijriDateAdjustment: 0 })}
+                        className={`px-2.5 py-1 text-xs rounded border transition-colors ${
+                          (settings.hijriDateAdjustment || 0) === 0
+                            ? 'bg-emerald-600 text-stone-950 font-bold border-emerald-400'
+                            : 'bg-stone-900 text-stone-300 border-stone-700 hover:border-emerald-500'
+                        }`}
+                      >
+                        {isUrdu ? 'معیاری خودکار (0 Default)' : 'Standard Auto (0)'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSettings({ ...settings, hijriDateAdjustment: 1 })}
+                        className={`px-2.5 py-1 text-xs rounded border transition-colors ${
+                          (settings.hijriDateAdjustment || 0) === 1
+                            ? 'bg-amber-600 text-stone-950 font-bold border-amber-400'
+                            : 'bg-stone-900 text-stone-300 border-stone-700 hover:border-amber-500'
+                        }`}
+                      >
+                        +1 {isUrdu ? 'دن (اگلا دن)' : 'Day'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {/* Fajr Card */}
                   <div className="p-3.5 rounded-xl bg-stone-950/90 border border-sky-900/40 space-y-2.5">
@@ -837,7 +901,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         type="text"
                         value={settings.fajrJamaat}
                         onChange={(e) => setSettings({ ...settings, fajrJamaat: e.target.value })}
-                        placeholder="06:10 AM"
+                        placeholder="06:15 AM"
                         className="w-full px-3 py-2 bg-stone-900 border border-sky-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-sky-400"
                       />
                     </div>
@@ -979,7 +1043,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         type="text"
                         value={settings.asrJamaat}
                         onChange={(e) => setSettings({ ...settings, asrJamaat: e.target.value })}
-                        placeholder="04:45 PM"
+                        placeholder="04:30 PM"
                         className="w-full px-3 py-2 bg-stone-900 border border-orange-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-orange-400"
                       />
                     </div>
@@ -2176,7 +2240,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                           titleEn: '',
                           category: 'general',
                           date: new Date().toISOString().split('T')[0],
-                          hijriDate: 'Safar 1448 AH',
+                          hijriDate: getAccurateHijriDate(new Date(), settings.hijriDateAdjustment || 0).formattedUr,
                           contentUr: '',
                           contentEn: '',
                           badgeUr: 'اہم اعلان',
@@ -2398,7 +2462,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-stone-400">
-                          Fajr 06:10 AM • Dhuhr 01:30 PM • Asr 04:45 PM • Isha 07:45 PM • Jumma 01:50 PM
+                          Fajr 06:15 AM • Dhuhr 01:30 PM • Asr 04:30 PM • Isha 07:45 PM • Jumma 01:50 PM
                         </p>
                       </div>
                       <button
@@ -2419,7 +2483,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-stone-400">
-                          Fajr 06:10 AM • Dhuhr 01:15 PM • Asr 04:45 PM • Isha 07:45 PM • Jumma 01:30 PM
+                          Fajr 06:15 AM • Dhuhr 01:15 PM • Asr 04:30 PM • Isha 07:45 PM • Jumma 01:30 PM
                         </p>
                       </div>
                       <button

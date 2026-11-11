@@ -8,11 +8,12 @@ const SETTINGS_FILE = path.join(DATA_DIR, 'mosque_admin_settings.json');
 
 // Default initial settings if file does not exist
 const DEFAULT_INITIAL_SETTINGS = {
-  fajrJamaat: '06:10 AM',
+  fajrJamaat: '06:15 AM',
   dhuhrJamaat: '01:30 PM',
-  asrJamaat: '04:45 PM',
+  asrJamaat: '04:30 PM',
   maghribJamaat: '+5 mins after Azan',
   ishaJamaat: '07:45 PM',
+  hijriDateAdjustment: 0,
   jummaAzan: '12:50 PM',
   jummaAzan2: '01:40 PM',
   jummaBayan: '01:10 PM',
@@ -57,11 +58,14 @@ function readPublishedSettings() {
       if (parsed && parsed.zawalTime === '12:12 PM - 12:28 PM') {
         parsed.zawalTime = '';
       }
-      if (parsed && (parsed.fajrJamaat === '06:05 AM' || parsed.fajrJamaat === '06:00 AM' || parsed.fajrJamaat === '05:55 AM' || parsed.fajrJamaat === '05:45 AM' || parsed.fajrJamaat === '05:40 AM' || parsed.fajrJamaat === '05:50 AM' || parsed.fajrJamaat === '05:00 AM')) {
-        parsed.fajrJamaat = '06:10 AM';
+      if (parsed && (parsed.fajrJamaat === '06:10 AM' || parsed.fajrJamaat === '06:05 AM' || parsed.fajrJamaat === '06:00 AM' || parsed.fajrJamaat === '05:55 AM' || parsed.fajrJamaat === '05:45 AM' || parsed.fajrJamaat === '05:40 AM' || parsed.fajrJamaat === '05:50 AM' || parsed.fajrJamaat === '05:00 AM')) {
+        parsed.fajrJamaat = '06:15 AM';
       }
-      if (parsed && (parsed.asrJamaat === '05:00 PM' || parsed.asrJamaat === '05:15 PM' || parsed.asrJamaat === '05:30 PM')) {
-        parsed.asrJamaat = '04:45 PM';
+      if (parsed && (parsed.asrJamaat === '04:45 PM' || parsed.asrJamaat === '05:00 PM' || parsed.asrJamaat === '05:15 PM' || parsed.asrJamaat === '05:30 PM')) {
+        parsed.asrJamaat = '04:30 PM';
+      }
+      if (parsed && parsed.hijriDateAdjustment === undefined) {
+        parsed.hijriDateAdjustment = 0;
       }
       if (parsed && (parsed.ishaJamaat === '08:00 PM' || parsed.ishaJamaat === '08:15 PM' || parsed.ishaJamaat === '08:30 PM' || parsed.ishaJamaat === '08:45 PM')) {
         parsed.ishaJamaat = '07:45 PM';
@@ -494,7 +498,10 @@ async function startServer() {
 
   // Helper: Accurate Pakistan / Karachi Central Ruet-e-Hilal Hijri Date
   // In Islamic lunar calendar, the date changes daily at MAGHRIB (sunset), NOT at midnight!
-  function getPakistanVerifiedHijriDate(d: Date = new Date()) {
+  function getPakistanVerifiedHijriDate(d: Date = new Date(), customOffset?: number) {
+    const published = readPublishedSettings();
+    const adminOffset = typeof customOffset === 'number' ? customOffset : (published.hijriDateAdjustment || 0);
+
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Karachi',
       year: 'numeric',
@@ -520,47 +527,34 @@ async function startServer() {
     }
 
     // Check if Maghrib (sunset) has arrived today in Karachi
-    const maghrib = KARACHI_MONTHLY_MAGHRIB[month] || { h: 18, m: 15 };
+    const maghrib = KARACHI_MONTHLY_MAGHRIB[month] || { h: 17, m: 50 };
+    let maghribHour = maghrib.h;
+    let maghribMin = maghrib.m;
+
     const currentMins = hour * 60 + minute;
-    const maghribMins = maghrib.h * 60 + maghrib.m;
+    const maghribMins = maghribHour * 60 + maghribMin;
     const isPostMaghrib = currentMins >= maghribMins;
 
-    const civilDateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    let activeMonth = PAKISTAN_RUET_MONTH_STARTS[8]; // Default: Jumada al-Awwal 1448 AH (start 2026-10-13)
-    for (let i = PAKISTAN_RUET_MONTH_STARTS.length - 1; i >= 0; i--) {
-      if (civilDateStr >= PAKISTAN_RUET_MONTH_STARTS[i].startCivilDate) {
-        activeMonth = PAKISTAN_RUET_MONTH_STARTS[i];
-        break;
-      }
-    }
+    // In Islamic calendar, night precedes the daytime.
+    // After Maghrib, the Islamic date belongs to the upcoming civil daylight.
+    const civilDayShift = (isPostMaghrib ? 1 : 0) + adminOffset;
+    const shiftedDate = new Date(Date.UTC(year, month - 1, day) + civilDayShift * 86400000);
 
-    const [sY, sM, sD] = activeMonth.startCivilDate.split('-').map(Number);
-    const startUtc = Date.UTC(sY, sM - 1, sD);
-    const currentUtc = Date.UTC(year, month - 1, day);
-    const diffDays = Math.round((currentUtc - startUtc) / 86400000);
+    const hijriFmt = new Intl.DateTimeFormat('en-u-ca-islamic-civil', {
+      timeZone: 'Asia/Karachi',
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+    });
+    const hijriParts = hijriFmt.formatToParts(shiftedDate);
+    let hijriDay = 1;
+    let hijriMonth = 6;
+    let hijriYear = 1448;
 
-    let hijriDay = diffDays + 1;
-    if (isPostMaghrib) {
-      hijriDay += 1;
-    }
-
-    let hijriMonth = activeMonth.month;
-    let hijriYear = activeMonth.year;
-
-    if (hijriDay > 30) {
-      hijriDay -= 30;
-      hijriMonth += 1;
-      if (hijriMonth > 12) {
-        hijriMonth = 1;
-        hijriYear += 1;
-      }
-    } else if (hijriDay < 1) {
-      hijriDay = 29;
-      hijriMonth -= 1;
-      if (hijriMonth < 1) {
-        hijriMonth = 12;
-        hijriYear -= 1;
-      }
+    for (const p of hijriParts) {
+      if (p.type === 'day') hijriDay = parseInt(p.value, 10);
+      if (p.type === 'month') hijriMonth = parseInt(p.value, 10);
+      if (p.type === 'year') hijriYear = parseInt(p.value, 10);
     }
 
     const months = [
@@ -578,7 +572,7 @@ async function startServer() {
       { num: 12, en: 'Dhu al-Hijjah', ar: 'ذو الحجة', ur: 'ذی الحجہ' },
     ];
 
-    const mInfo = months[hijriMonth - 1] || months[4];
+    const mInfo = months[hijriMonth - 1] || months[5];
 
     return {
       day: hijriDay,
@@ -593,7 +587,7 @@ async function startServer() {
       formattedAr: `${hijriDay} ${mInfo.ar} ${hijriYear} هـ`,
       date: `${hijriYear}-${String(hijriMonth).padStart(2, '0')}-${String(hijriDay).padStart(2, '0')}`,
       is_post_maghrib: isPostMaghrib,
-      maghrib_time: `${String(maghrib.h).padStart(2, '0')}:${String(maghrib.m).padStart(2, '0')}`,
+      maghrib_time: `${String(maghribHour).padStart(2, '0')}:${String(maghribMin).padStart(2, '0')}`,
       verified_by: 'Central Ruet-e-Hilal Committee Pakistan (مرکزی رویتِ ہلال کمیٹی)',
     };
   }

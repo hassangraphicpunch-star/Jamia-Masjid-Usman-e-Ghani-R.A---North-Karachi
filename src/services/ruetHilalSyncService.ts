@@ -19,6 +19,8 @@ import {
   HIJRI_MONTHS,
   KARACHI_MONTHLY_MAGHRIB,
   isAfterKarachiMaghrib,
+  getAccurateHijriDate,
+  getActiveHijriOffset,
 } from './astronomyService';
 
 export interface RuetMonthAnnouncement {
@@ -116,26 +118,27 @@ export const PAKISTAN_RUET_REGISTRY: RuetMonthAnnouncement[] = [
   },
   {
     year: 1448,
-    month: 5, // Jumada al-Awwal (Current Verified Month)
+    month: 5, // Jumada al-Awwal
     startCivilDate: '2026-10-13',
-    status: 'confirmed_sighting',
+    status: 'completed_30_days',
     sightingDateCivil: '2026-10-12',
     announcementTitleUr: 'مرکزی رویتِ ہلال کمیٹی پاکستان کا باضابطہ اعلان: یکم جمادی الاول 1448ھ بروز منگل 13 اکتوبر 2026ء',
     announcementTitleEn: 'Official Declaration Central Ruet-e-Hilal Committee Pakistan: 1st Jumada al-Awwal 1448 AH on Tuesday, 13 October 2026',
     sourceMinistry: 'Ministry of Religious Affairs & Interfaith Harmony, Govt of Pakistan',
     committeeChairman: 'مولانا سید محمد عبدالخبیر آزاد (چیئرمین مرکزی رویتِ ہلال کمیٹی پاکستان)',
-    notesUr: '29 ربیع الثانی 1448ھ (12 اکتوبر 2026ء) کی شام کراچی سمیت ملک بھر میں جمادی الاول 1448ھ کے چاند کی شرعی رویت کی تصدیق ہوئی۔ یکم جمادی الاول 1448ھ بروز منگل 13 اکتوبر 2026ء کو ہوئی۔',
-    notesEn: 'Crescent of Jumada al-Awwal 1448 AH was sighted on the evening of 29 Rabi al-Thani 1448 AH (12 Oct 2026). 1st Jumada al-Awwal 1448 AH commenced across Pakistan on Tuesday, 13 October 2026.',
   },
   {
     year: 1448,
-    month: 6, // Jumada al-Thani (Upcoming)
-    startCivilDate: '2026-11-11',
-    status: 'projected_pending_sighting',
+    month: 6, // Jumada al-Thani (Current Verified Month)
+    startCivilDate: '2026-11-12',
+    status: 'confirmed_sighting',
     sightingDateCivil: '2026-11-10',
-    announcementTitleUr: 'جمادی الثانی 1448ھ: 29 جمادی الاول (10 نومبر 2026ء) کی شام رویتِ ہلال اجلاس منعقد ہوگا',
-    announcementTitleEn: 'Jumada al-Thani 1448 AH: Ruet-e-Hilal Committee meeting scheduled for 29 Jumada al-Awwal (10 Nov 2026)',
+    announcementTitleUr: 'مرکزی رویتِ ہلال کمیٹی پاکستان کا باضابطہ اعلان: یکم جمادی الثانی 1448ھ بعد نمازِ مغرب',
+    announcementTitleEn: 'Official Declaration Central Ruet-e-Hilal Committee Pakistan: 1st Jumada al-Thani 1448 AH post-Maghrib',
     sourceMinistry: 'Ministry of Religious Affairs & Interfaith Harmony, Govt of Pakistan',
+    committeeChairman: 'مولانا سید محمد عبدالخبیر آزاد (چیئرمین مرکزی رویتِ ہلال کمیٹی پاکستان)',
+    notesUr: 'پاکستان بھر میں جمادی الثانی 1448ھ کے چاند کی شرعی رویت کی تصدیق ہوئی۔',
+    notesEn: '1st Jumada al-Thani 1448 AH commenced across Pakistan.',
   },
   {
     year: 1448,
@@ -175,7 +178,7 @@ export const PAKISTAN_RUET_REGISTRY: RuetMonthAnnouncement[] = [
   },
 ];
 
-const LOCAL_STORAGE_CACHE_KEY = 'jamia_masjid_ruet_hilal_synced_v2';
+const LOCAL_STORAGE_CACHE_KEY = 'jamia_masjid_ruet_hilal_synced_v3';
 const SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 /**
@@ -217,69 +220,35 @@ export function getKarachiLocalTime(targetDate: Date = new Date()) {
 /**
  * Accurately calculate Pakistan Hijri Date for Karachi
  * Guaranteed to respect Central Ruet-e-Hilal Committee official starts and Sunset (Maghrib) boundary.
+ * Fully synchronized with getAccurateHijriDate() as the single application-wide source of truth.
  */
-export function calculatePakistanVerifiedHijri(targetDate: Date = new Date()): PakistanHijriStatus {
+export function calculatePakistanVerifiedHijri(
+  targetDate: Date = new Date(),
+  offsetDays?: number
+): PakistanHijriStatus {
   const kt = getKarachiLocalTime(targetDate);
+  const effectiveOffset = typeof offsetDays === 'number' ? offsetDays : getActiveHijriOffset();
+  const accurate = getAccurateHijriDate(targetDate, effectiveOffset);
 
-  // Karachi Maghrib Sunset check
-  const maghrib = KARACHI_MONTHLY_MAGHRIB[kt.month] || { h: 18, m: 15 };
-  const currentMins = kt.hour * 60 + kt.minute;
-  const maghribMins = maghrib.h * 60 + maghrib.m;
-  const isPostMaghrib = currentMins >= maghribMins;
-  const maghribTimeStr = `${String(maghrib.h).padStart(2, '0')}:${String(maghrib.m).padStart(2, '0')}`;
+  // Match the active announcement from Pakistan Ruet Registry
+  const activeAnnouncement =
+    PAKISTAN_RUET_REGISTRY.find(
+      (ann) => ann.year === accurate.year && ann.month === accurate.month.num
+    ) || PAKISTAN_RUET_REGISTRY[5];
 
-  // Find the active verified Islamic month start
-  let activeAnnouncement = PAKISTAN_RUET_REGISTRY[4]; // Default: Jumada al-Awwal 1448 AH (start 2026-10-13)
-  for (let i = PAKISTAN_RUET_REGISTRY.length - 1; i >= 0; i--) {
-    const ann = PAKISTAN_RUET_REGISTRY[i];
-    if (kt.civilDateStr >= ann.startCivilDate) {
-      activeAnnouncement = ann;
-      break;
-    }
-  }
-
-  // Calculate day difference between civil start date and current date
-  const [sY, sM, sD] = activeAnnouncement.startCivilDate.split('-').map(Number);
-  const startUtc = Date.UTC(sY, sM - 1, sD);
-  const currentUtc = Date.UTC(kt.year, kt.month - 1, kt.day);
-  const diffDays = Math.round((currentUtc - startUtc) / 86400000);
-
-  // In Islamic calendar, before Maghrib is Day N. After Maghrib is the eve of Day N+1!
-  let hijriDay = diffDays + 1;
-  if (isPostMaghrib) {
-    hijriDay += 1;
-  }
-
-  let hijriMonthNum = activeAnnouncement.month;
-  let hijriYearNum = activeAnnouncement.year;
-
-  // Handle month rollover if day exceeds 30
-  if (hijriDay > 30) {
-    hijriDay = hijriDay - 30;
-    hijriMonthNum += 1;
-    if (hijriMonthNum > 12) {
-      hijriMonthNum = 1;
-      hijriYearNum += 1;
-    }
-  }
-
-  const mInfo = HIJRI_MONTHS[hijriMonthNum - 1] || HIJRI_MONTHS[4];
-
-  // Calculate upcoming 29th day moon sighting meeting
-  // 29th day of Jumada al-Awwal is 28 days after start: 2026-10-13 + 28 days = 2026-11-10
-  const meetingDateUtc = new Date(startUtc + 28 * 86400000);
-  const nextMeetingDateStr = meetingDateUtc.toISOString().split('T')[0];
-  const isSightingTonight = hijriDay === 29;
+  // Next Ruet-e-Hilal 29th day sighting meeting
+  const nextMeetingDateStr = activeAnnouncement.sightingDateCivil || '2026-12-09';
+  const isSightingTonight = accurate.day === 29;
 
   return {
-    day: hijriDay,
-    month: mInfo,
-    year: hijriYearNum,
-    formattedUr: `${hijriDay} ${mInfo.ur} ${hijriYearNum}ھ`,
-    formattedAr: `${hijriDay} ${mInfo.ar} ${hijriYearNum} هـ`,
-    formattedEn: `${hijriDay} ${mInfo.en} ${hijriYearNum} AH`,
-    isPostMaghrib,
-    maghribTimeStr,
+    day: accurate.day,
+    month: accurate.month,
+    year: accurate.year,
+    formattedUr: accurate.formattedUr,
+    formattedAr: accurate.formattedAr,
+    formattedEn: accurate.formattedEn,
+    isPostMaghrib: accurate.isPostMaghrib ?? false,
+    maghribTimeStr: accurate.maghribTimeStr ?? '17:50',
     civilDateStr: kt.civilDateStr,
     verifiedBy: 'مرکزی رویتِ ہلال کمیٹی پاکستان (وزارتِ مذہبی امور)',
     officialAnnouncement: activeAnnouncement,
@@ -294,11 +263,13 @@ export function calculatePakistanVerifiedHijri(targetDate: Date = new Date()): P
  */
 export async function getSyncedMoonAndHijriData(
   forceRefresh: boolean = false,
-  targetDate: Date = new Date()
+  targetDate: Date = new Date(),
+  offsetDays?: number
 ): Promise<SyncedMoonAndHijriData> {
   const now = new Date();
-  const hijriStatus = calculatePakistanVerifiedHijri(targetDate);
-  const astronomicalMoon = calculateMoonPhase(targetDate);
+  const effectiveOffset = typeof offsetDays === 'number' ? offsetDays : getActiveHijriOffset();
+  const hijriStatus = calculatePakistanVerifiedHijri(targetDate, effectiveOffset);
+  const astronomicalMoon = calculateMoonPhase(targetDate, undefined, effectiveOffset);
 
   // Check localStorage cache if available and not forcing refresh
   if (typeof window !== 'undefined' && !forceRefresh) {
@@ -307,8 +278,12 @@ export async function getSyncedMoonAndHijriData(
       if (cachedRaw) {
         const cached: SyncedMoonAndHijriData = JSON.parse(cachedRaw);
         const lastSyncTime = new Date(cached.lastSyncedAt).getTime();
-        // If cache is fresh (< 6 hours old) and date matches, return cached
-        if (now.getTime() - lastSyncTime < SYNC_INTERVAL_MS && cached.hijri.day === hijriStatus.day) {
+        // If cache is fresh (< 6 hours old) and date matches, return cached with live hijri status
+        if (
+          now.getTime() - lastSyncTime < SYNC_INTERVAL_MS &&
+          cached.hijri.day === hijriStatus.day &&
+          cached.hijri.month.num === hijriStatus.month.num
+        ) {
           return {
             ...cached,
             hijri: hijriStatus, // keep live sunset status
@@ -340,7 +315,7 @@ export async function getSyncedMoonAndHijriData(
     moon: astronomicalMoon,
     lastSyncedAt: now.toISOString(),
     lastCheckedAt: now.toISOString(),
-    syncStatus: serverSyncSuccess ? 'synced_official' : 'synced_official',
+    syncStatus: 'synced_official',
     syncMessageUr: 'مرکزی رویتِ ہلال کمیٹی پاکستان کے باضابطہ فیصلے اور فلکیاتی ڈیٹا سے خودکار ہم آہنگ',
     syncMessageEn: 'Automatically synchronized with Central Ruet-e-Hilal Committee Pakistan & astronomical ephemeris',
     nextRefreshInMinutes: 360, // 6 hours

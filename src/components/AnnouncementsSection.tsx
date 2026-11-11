@@ -331,9 +331,15 @@ export const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
                         )}
                       </div>
 
-                      <span className="text-[11px] text-stone-400 font-mono">
-                        {item.date}
-                      </span>
+                      <div className="flex items-center gap-1.5 text-[11px] text-stone-400 font-mono">
+                        <span>{item.date}</span>
+                        {item.hijriDate && (
+                          <>
+                            <span className="text-stone-600">•</span>
+                            <span className="text-amber-400/90 font-sans text-[11px]">{item.hijriDate}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     {/* Title */}
