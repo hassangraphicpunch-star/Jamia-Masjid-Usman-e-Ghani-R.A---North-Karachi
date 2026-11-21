@@ -261,7 +261,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
     let preset: Partial<AdminPrayerSettings> = {};
     if (presetName === 'current') {
       preset = {
-        fajrJamaat: '06:15 AM',
+        fajrJamaat: '06:20 AM',
         dhuhrJamaat: '01:30 PM',
         asrJamaat: '04:30 PM',
         maghribJamaat: '+5 mins after Azan',
@@ -277,7 +277,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
       };
     } else if (presetName === 'winter') {
       preset = {
-        fajrJamaat: '06:15 AM',
+        fajrJamaat: '06:20 AM',
         dhuhrJamaat: '01:15 PM',
         asrJamaat: '04:30 PM',
         maghribJamaat: '+5 mins after Azan',
@@ -901,7 +901,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                         type="text"
                         value={settings.fajrJamaat}
                         onChange={(e) => setSettings({ ...settings, fajrJamaat: e.target.value })}
-                        placeholder="06:15 AM"
+                        placeholder="06:20 AM"
                         className="w-full px-3 py-2 bg-stone-900 border border-sky-700/60 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-sky-400"
                       />
                     </div>
@@ -2462,7 +2462,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-stone-400">
-                          Fajr 06:15 AM • Dhuhr 01:30 PM • Asr 04:30 PM • Isha 07:45 PM • Jumma 01:50 PM
+                          Fajr 06:20 AM • Dhuhr 01:30 PM • Asr 04:30 PM • Isha 07:45 PM • Jumma 01:50 PM
                         </p>
                       </div>
                       <button
@@ -2483,7 +2483,7 @@ export const AdminPortalModal: React.FC<AdminPortalModalProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-stone-400">
-                          Fajr 06:15 AM • Dhuhr 01:15 PM • Asr 04:30 PM • Isha 07:45 PM • Jumma 01:30 PM
+                          Fajr 06:20 AM • Dhuhr 01:15 PM • Asr 04:30 PM • Isha 07:45 PM • Jumma 01:30 PM
                         </p>
                       </div>
                       <button

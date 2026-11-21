@@ -309,7 +309,7 @@ export const DEFAULT_MEDIA_SETTINGS: MosqueMediaSettings = {
 };
 
 // Default settings configured for Jamia Masjid Usman-e-Ghani:
-// Fajr Jamaat is 06:15 AM
+// Fajr Jamaat is 06:20 AM
 // Ishraq is 12 mins after Tuloo (or custom)
 // Dhuhr Jamaat is 01:30 PM
 // Asr Jamaat is 04:30 PM
@@ -321,7 +321,7 @@ export const DEFAULT_MEDIA_SETTINGS: MosqueMediaSettings = {
 // Jumma Khutbah is 01:45 PM
 // Jumma Jamaat is 01:50 PM
 export const DEFAULT_ADMIN_SETTINGS: AdminPrayerSettings = {
-  fajrJamaat: '06:15 AM',
+  fajrJamaat: '06:20 AM',
   dhuhrJamaat: '01:30 PM',
   asrJamaat: '04:30 PM',
   maghribJamaat: '+5 mins after Azan',
@@ -447,7 +447,7 @@ export function getStoredAdminSettings(): AdminPrayerSettings {
       if (!merged.jummaKhateebUr) merged.jummaKhateebUr = 'حضرت مولانا یونس منصوری صاحب (خطیب جامع مسجد)';
 
       // Migrate legacy standard prayer timings to new configured defaults
-      if (!merged.fajrJamaat || merged.fajrJamaat === '06:10 AM' || merged.fajrJamaat === '06:05 AM' || merged.fajrJamaat === '06:00 AM' || merged.fajrJamaat === '05:55 AM' || merged.fajrJamaat === '05:40 AM' || merged.fajrJamaat === '05:45 AM' || merged.fajrJamaat === '05:50 AM' || merged.fajrJamaat === '05:00 AM') merged.fajrJamaat = '06:15 AM';
+      if (!merged.fajrJamaat || merged.fajrJamaat === '06:15 AM' || merged.fajrJamaat === '06:10 AM' || merged.fajrJamaat === '06:05 AM' || merged.fajrJamaat === '06:00 AM' || merged.fajrJamaat === '05:55 AM' || merged.fajrJamaat === '05:40 AM' || merged.fajrJamaat === '05:45 AM' || merged.fajrJamaat === '05:50 AM' || merged.fajrJamaat === '05:00 AM') merged.fajrJamaat = '06:20 AM';
       if (!merged.dhuhrJamaat) merged.dhuhrJamaat = '01:30 PM';
       if (!merged.asrJamaat || merged.asrJamaat === '04:45 PM' || merged.asrJamaat === '05:00 PM' || merged.asrJamaat === '05:15 PM' || merged.asrJamaat === '05:30 PM') merged.asrJamaat = '04:30 PM';
       if (merged.hijriDateAdjustment === undefined) merged.hijriDateAdjustment = 0;
@@ -511,8 +511,8 @@ export async function fetchPublishedAdminSettings(): Promise<AdminPrayerSettings
           ...data.settings,
         };
 
-        if (!merged.fajrJamaat || merged.fajrJamaat === '06:10 AM' || merged.fajrJamaat === '06:05 AM' || merged.fajrJamaat === '06:00 AM' || merged.fajrJamaat === '05:55 AM' || merged.fajrJamaat === '05:45 AM' || merged.fajrJamaat === '05:40 AM' || merged.fajrJamaat === '05:50 AM') {
-          merged.fajrJamaat = '06:15 AM';
+        if (!merged.fajrJamaat || merged.fajrJamaat === '06:15 AM' || merged.fajrJamaat === '06:10 AM' || merged.fajrJamaat === '06:05 AM' || merged.fajrJamaat === '06:00 AM' || merged.fajrJamaat === '05:55 AM' || merged.fajrJamaat === '05:45 AM' || merged.fajrJamaat === '05:40 AM' || merged.fajrJamaat === '05:50 AM') {
+          merged.fajrJamaat = '06:20 AM';
         }
 
         if (!merged.asrJamaat || merged.asrJamaat === '04:45 PM' || merged.asrJamaat === '05:00 PM' || merged.asrJamaat === '05:15 PM' || merged.asrJamaat === '05:30 PM') {
@@ -858,7 +858,7 @@ export function calculateJamaatTimes(
     const mins = parseInt(fajrJamaat.replace(/[^0-9]/g, ''), 10) || 30;
     fajrJamaat = getOffsetTime(athanTimes.fajr, mins);
   } else if (!fajrJamaat) {
-    fajrJamaat = '06:15 AM';
+    fajrJamaat = '06:20 AM';
   }
 
   // Helper for dynamic or fixed Ishraq
@@ -904,7 +904,7 @@ export function calculateJamaatTimes(
   );
 
   return {
-    fajr: fajrJamaat || '06:15 AM',
+    fajr: fajrJamaat || '06:20 AM',
     sunrise: formatTo12Hour(athanTimes.sunrise),
     ishraq: ishraqTime,
     chasht: chashtTime,

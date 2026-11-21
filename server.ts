@@ -8,7 +8,7 @@ const SETTINGS_FILE = path.join(DATA_DIR, 'mosque_admin_settings.json');
 
 // Default initial settings if file does not exist
 const DEFAULT_INITIAL_SETTINGS = {
-  fajrJamaat: '06:15 AM',
+  fajrJamaat: '06:20 AM',
   dhuhrJamaat: '01:30 PM',
   asrJamaat: '04:30 PM',
   maghribJamaat: '+5 mins after Azan',
@@ -58,8 +58,8 @@ function readPublishedSettings() {
       if (parsed && parsed.zawalTime === '12:12 PM - 12:28 PM') {
         parsed.zawalTime = '';
       }
-      if (parsed && (parsed.fajrJamaat === '06:10 AM' || parsed.fajrJamaat === '06:05 AM' || parsed.fajrJamaat === '06:00 AM' || parsed.fajrJamaat === '05:55 AM' || parsed.fajrJamaat === '05:45 AM' || parsed.fajrJamaat === '05:40 AM' || parsed.fajrJamaat === '05:50 AM' || parsed.fajrJamaat === '05:00 AM')) {
-        parsed.fajrJamaat = '06:15 AM';
+      if (parsed && (parsed.fajrJamaat === '06:15 AM' || parsed.fajrJamaat === '06:10 AM' || parsed.fajrJamaat === '06:05 AM' || parsed.fajrJamaat === '06:00 AM' || parsed.fajrJamaat === '05:55 AM' || parsed.fajrJamaat === '05:45 AM' || parsed.fajrJamaat === '05:40 AM' || parsed.fajrJamaat === '05:50 AM' || parsed.fajrJamaat === '05:00 AM')) {
+        parsed.fajrJamaat = '06:20 AM';
       }
       if (parsed && (parsed.asrJamaat === '04:45 PM' || parsed.asrJamaat === '05:00 PM' || parsed.asrJamaat === '05:15 PM' || parsed.asrJamaat === '05:30 PM')) {
         parsed.asrJamaat = '04:30 PM';
